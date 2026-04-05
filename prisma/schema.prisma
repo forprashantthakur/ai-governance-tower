@@ -1,0 +1,411 @@
+// ============================================================
+// AI Governance Control Tower — Prisma Schema
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  RISK_OFFICER
+  AUDITOR
+  VIEWER
+}
+
+enum ModelType {
+  LLM
+  ML
+  AGENT
+  COMPUTER_VISION
+  NLP
+  RECOMMENDATION
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ModelStatus {
+  ACTIVE
+  INACTIVE
+  DEPRECATED
+  UNDER_REVIEW
+  SUSPENDED
+}
+
+enum ComplianceStatus {
+  PASS
+  FAIL
+  PARTIAL
+  NOT_APPLICABLE
+  PENDING_REVIEW
+}
+
+enum DataSensitivity {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+  PII
+}
+
+enum AgentStatus {
+  RUNNING
+  IDLE
+  SUSPENDED
+  ERROR
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  APPROVE
+  REJECT
+  ESCALATE
+}
+
+enum ConsentType {
+  DATA_PROCESSING
+  AI_DECISION
+  DATA_SHARING
+  MARKETING
+}
+
+enum ConsentStatus {
+  GRANTED
+  REVOKED
+  PENDING
+  EXPIRED
+}
+
+// ─── Core Identity ────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(VIEWER)
+  department   String?
+  avatarUrl    String?  @map("avatar_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  ownedModels       AIModel[]       @relation("ModelOwner")
+  riskAssessments   RiskAssessment[]
+  auditLogs         AuditLog[]
+  apiKeys           ApiKey[]
+  promptLogs        PromptLog[]
+
+  @@map("users")
+}
+
+model ApiKey {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  keyHash     String   @unique @map("key_hash")
+  keyPrefix   String   @map("key_prefix")
+  permissions String[] @default([])
+  lastUsedAt  DateTime? @map("last_used_at")
+  expiresAt   DateTime? @map("expires_at")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+// ─── AI Model Registry ────────────────────────────────────────────────────────
+
+model AIModel {
+  id               String       @id @default(uuid())
+  name             String
+  version          String       @default("1.0.0")
+  description      String?
+  type             ModelType
+  status           ModelStatus  @default(ACTIVE)
+  ownerId          String       @map("owner_id")
+  department       String?
+  vendor           String?
+  framework        String?      // e.g. PyTorch, TensorFlow, OpenAI
+  endpoint         String?      // API endpoint if applicable
+  tags             String[]     @default([])
+  metadata         Json?        // flexible extra fields
+  isPiiProcessing  Boolean      @default(false) @map("is_pii_processing")
+  isFinancial      Boolean      @default(false) @map("is_financial")
+  isCritical       Boolean      @default(false) @map("is_critical")
+  humanOversight   Boolean      @default(true)  @map("human_oversight")
+  explainability   Int          @default(50)    // 0-100 score
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  owner             User              @relation("ModelOwner", fields: [ownerId], references: [id])
+  riskAssessments   RiskAssessment[]
+  complianceControls ComplianceControl[]
+  dataAssets        ModelDataAsset[]
+  agents            Agent[]
+  promptLogs        PromptLog[]
+  auditLogs         AuditLog[]
+
+  @@map("ai_models")
+}
+
+// ─── Risk & Compliance ────────────────────────────────────────────────────────
+
+model RiskAssessment {
+  id                  String    @id @default(uuid())
+  modelId             String    @map("model_id")
+  assessorId          String    @map("assessor_id")
+  riskLevel           RiskLevel
+  overallScore        Float     @map("overall_score")      // 0-100
+
+  // Score dimensions
+  dataSensitivityScore    Float @default(0) @map("data_sensitivity_score")
+  modelComplexityScore    Float @default(0) @map("model_complexity_score")
+  explainabilityScore     Float @default(0) @map("explainability_score")
+  humanOversightScore     Float @default(0) @map("human_oversight_score")
+  regulatoryExposureScore Float @default(0) @map("regulatory_exposure_score")
+
+  findings        String?
+  mitigations     String?
+  reviewedAt      DateTime? @map("reviewed_at")
+  nextReviewDate  DateTime? @map("next_review_date")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  model    AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  assessor User    @relation(fields: [assessorId], references: [id])
+
+  @@map("risk_assessments")
+}
+
+model ComplianceControl {
+  id           String           @id @default(uuid())
+  modelId      String           @map("model_id")
+  framework    String           // e.g. "DPDP", "ISO42001", "ISO42005"
+  controlId    String           @map("control_id")   // e.g. "DPDP-7.2"
+  controlName  String           @map("control_name")
+  description  String?
+  status       ComplianceStatus @default(PENDING_REVIEW)
+  evidence     String?
+  notes        String?
+  reviewedAt   DateTime?        @map("reviewed_at")
+  reviewedBy   String?          @map("reviewed_by")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, framework, controlId])
+  @@map("compliance_controls")
+}
+
+// ─── Data Governance ─────────────────────────────────────────────────────────
+
+model DataAsset {
+  id               String          @id @default(uuid())
+  name             String
+  description      String?
+  source           String          // e.g. "CRM", "S3 bucket", "API"
+  dataType         String          @map("data_type")  // e.g. "structured", "unstructured"
+  sensitivity      DataSensitivity
+  hasPii           Boolean         @default(false) @map("has_pii")
+  piiFields        String[]        @default([]) @map("pii_fields")
+  retentionDays    Int?            @map("retention_days")
+  location         String?         // storage location / path
+  format           String?         // CSV, JSON, Parquet, etc.
+  owner            String?
+  tags             String[]        @default([])
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  models         ModelDataAsset[]
+  consentRecords ConsentRecord[]
+
+  @@map("data_assets")
+}
+
+model ModelDataAsset {
+  modelId     String   @map("model_id")
+  dataAssetId String   @map("data_asset_id")
+  role        String   @default("input") // input | output | training
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  model     AIModel   @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  dataAsset DataAsset @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+
+  @@id([modelId, dataAssetId])
+  @@map("model_data_assets")
+}
+
+model ConsentRecord {
+  id           String        @id @default(uuid())
+  dataAssetId  String        @map("data_asset_id")
+  subjectId    String        @map("subject_id")    // data subject identifier
+  consentType  ConsentType   @map("consent_type")
+  status       ConsentStatus
+  grantedAt    DateTime?     @map("granted_at")
+  revokedAt    DateTime?     @map("revoked_at")
+  expiresAt    DateTime?     @map("expires_at")
+  ipAddress    String?       @map("ip_address")
+  metadata     Json?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  dataAsset DataAsset @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+
+  @@map("consent_records")
+}
+
+// ─── Agent Governance ────────────────────────────────────────────────────────
+
+model Agent {
+  id           String      @id @default(uuid())
+  name         String
+  description  String?
+  modelId      String      @map("model_id")
+  status       AgentStatus @default(IDLE)
+  systemPrompt String?     @map("system_prompt")
+  tools        String[]    @default([])  // tool names the agent can use
+  version      String      @default("1.0.0")
+  maxTokens    Int?        @map("max_tokens")
+  temperature  Float?
+  metadata     Json?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  model      AIModel     @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  promptLogs PromptLog[]
+
+  @@map("agents")
+}
+
+model PromptLog {
+  id               String   @id @default(uuid())
+  agentId          String?  @map("agent_id")
+  modelId          String   @map("model_id")
+  userId           String?  @map("user_id")
+  sessionId        String?  @map("session_id")
+
+  // Request
+  prompt           String
+  systemPrompt     String?  @map("system_prompt")
+  toolsUsed        String[] @default([]) @map("tools_used")
+
+  // Response
+  response         String?
+  inputTokens      Int?     @map("input_tokens")
+  outputTokens     Int?     @map("output_tokens")
+  latencyMs        Int?     @map("latency_ms")
+
+  // Quality flags
+  isHallucination  Boolean  @default(false) @map("is_hallucination")
+  isPolicyViolation Boolean @default(false) @map("is_policy_violation")
+  toxicityScore    Float?   @map("toxicity_score")   // 0-1
+  accuracyScore    Float?   @map("accuracy_score")   // 0-1 (manual)
+  biasScore        Float?   @map("bias_score")        // 0-1
+  flagged          Boolean  @default(false)
+  flagReason       String?  @map("flag_reason")
+
+  // Metadata
+  environment      String   @default("production")
+  ipAddress        String?  @map("ip_address")
+  metadata         Json?
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  agent  Agent?  @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  model  AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([modelId, createdAt])
+  @@index([agentId, createdAt])
+  @@index([flagged])
+  @@map("prompt_logs")
+}
+
+// ─── Monitoring & Alerts ─────────────────────────────────────────────────────
+
+model Alert {
+  id         String        @id @default(uuid())
+  title      String
+  message    String
+  severity   AlertSeverity
+  modelId    String?       @map("model_id")
+  agentId    String?       @map("agent_id")
+  isRead     Boolean       @default(false) @map("is_read")
+  resolvedAt DateTime?     @map("resolved_at")
+  resolvedBy String?       @map("resolved_by")
+  metadata   Json?
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  @@index([isRead, severity])
+  @@map("alerts")
+}
+
+// ─── Audit Trail ─────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String?     @map("user_id")
+  action     AuditAction
+  resource   String      // e.g. "AIModel", "RiskAssessment"
+  resourceId String?     @map("resource_id")
+  modelId    String?     @map("model_id")
+  before     Json?       // previous state snapshot
+  after      Json?       // new state snapshot
+  ipAddress  String?     @map("ip_address")
+  userAgent  String?     @map("user_agent")
+  metadata   Json?
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  user  User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  model AIModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Policy Configuration ─────────────────────────────────────────────────────
+
+model PolicyConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  description String?
+  updatedBy   String?  @map("updated_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("policy_configs")
+}
