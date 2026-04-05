@@ -5,6 +5,8 @@ import { withAuth } from "@/lib/with-auth";
 import { ok, created, badRequest, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
+export const dynamic = 'force-dynamic';
+
 const CreateControlSchema = z.object({
   modelId: z.string().uuid(),
   framework: z.enum(["DPDP", "ISO42001", "ISO42005", "GDPR", "SOC2"]),

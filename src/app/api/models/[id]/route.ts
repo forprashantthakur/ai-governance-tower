@@ -6,6 +6,8 @@ import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-resp
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { deleteCachePattern } from "@/lib/redis";
 
+export const dynamic = 'force-dynamic';
+
 const UpdateModelSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   version: z.string().optional(),

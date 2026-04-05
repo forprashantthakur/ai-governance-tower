@@ -4,6 +4,8 @@ import { withAuth } from "@/lib/with-auth";
 import { ok, serverError } from "@/lib/api-response";
 import { getCache, setCache } from "@/lib/redis";
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/dashboard — aggregated KPIs for the main dashboard
 export const GET = withAuth(async () => {
   try {

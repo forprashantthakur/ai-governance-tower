@@ -6,6 +6,8 @@ import { ok, created, badRequest, notFound, serverError } from "@/lib/api-respon
 import { calculateRiskScore } from "@/lib/risk-scoring";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
+export const dynamic = 'force-dynamic';
+
 const AssessmentSchema = z.object({
   dataSensitivity: z.enum(["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED", "PII"]),
   explainability: z.number().min(0).max(100),

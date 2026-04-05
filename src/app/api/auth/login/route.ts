@@ -6,6 +6,8 @@ import { signJwt } from "@/lib/auth/jwt";
 import { ok, badRequest, unauthorized, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
+export const dynamic = 'force-dynamic';
+
 const LoginSchema = z.object({
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),

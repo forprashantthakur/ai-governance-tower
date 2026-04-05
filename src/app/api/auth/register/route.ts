@@ -6,6 +6,8 @@ import { signJwt } from "@/lib/auth/jwt";
 import { created, badRequest, conflict, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
+export const dynamic = 'force-dynamic';
+
 const RegisterSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),

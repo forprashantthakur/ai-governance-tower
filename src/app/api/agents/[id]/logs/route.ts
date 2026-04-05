@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, notFound, serverError } from "@/lib/api-response";
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/agents/:id/logs
 export const GET = withAuth(async (req, { params }) => {
   try {

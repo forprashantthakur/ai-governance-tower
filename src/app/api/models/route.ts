@@ -13,6 +13,8 @@ import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { calculateRiskScore } from "@/lib/risk-scoring";
 import { getCache, setCache, deleteCachePattern } from "@/lib/redis";
 
+export const dynamic = 'force-dynamic';
+
 const CreateModelSchema = z.object({
   name: z.string().min(1).max(200),
   version: z.string().default("1.0.0"),
