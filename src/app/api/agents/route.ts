@@ -50,7 +50,8 @@ export const POST = withAuth(async (req, { user }) => {
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const agent = await prisma.agent.create({
-      data: parsed.data,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: parsed.data as any,
       include: { model: { select: { id: true, name: true } } },
     });
 

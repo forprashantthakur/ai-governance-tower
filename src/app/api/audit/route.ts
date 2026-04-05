@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, serverError } from "@/lib/api-response";
@@ -15,10 +16,10 @@ export const GET = withAuth(async (req) => {
     const from = searchParams.get("from");
     const to = searchParams.get("to");
 
-    const where: Parameters<typeof prisma.auditLog.findMany>[0]["where"] = {
+    const where: Prisma.AuditLogWhereInput = {
       ...(userId && { userId }),
       ...(resource && { resource }),
-      ...(action && { action: action as never }),
+      ...(action && { action: action as Prisma.EnumAuditActionFilter }),
       ...(from || to
         ? {
             createdAt: {

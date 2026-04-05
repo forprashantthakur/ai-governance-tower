@@ -30,7 +30,7 @@ export function noContent(): NextResponse {
 
 export function badRequest(message: string, details?: unknown): NextResponse<ApiError> {
   return NextResponse.json(
-    { success: false, error: message, ...(details && { details }) },
+    { success: false, error: message, ...(details !== undefined && { details }) } as ApiError,
     { status: 400 }
   );
 }

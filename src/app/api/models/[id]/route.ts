@@ -58,10 +58,8 @@ export const PATCH = withAuth(async (req, { params, user }) => {
 
     const updated = await prisma.aIModel.update({
       where: { id: params.id },
-      data: {
-        ...parsed.data,
-        endpoint: parsed.data.endpoint || null,
-      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { ...parsed.data, endpoint: parsed.data.endpoint || null } as any,
       include: { owner: { select: { id: true, name: true, email: true } } },
     });
 

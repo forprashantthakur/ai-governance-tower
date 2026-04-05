@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import {
@@ -46,7 +47,7 @@ export const GET = withAuth(async (req, { user }) => {
     const cached = await getCache(cacheKey);
     if (cached) return ok(cached as object);
 
-    const where: Parameters<typeof prisma.aIModel.findMany>[0]["where"] = {
+    const where: Prisma.AIModelWhereInput = {
       ...(search && {
         OR: [
           { name: { contains: search, mode: "insensitive" } },
@@ -102,15 +103,9 @@ export const POST = withAuth(async (req, { user }) => {
     const parsed = CreateModelSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
-    const data = parsed.data;
-
     const model = await prisma.aIModel.create({
-      data: {
-        ...data,
-        ownerId: user.userId,
-        endpoint: data.endpoint || null,
-        metadata: data.metadata ?? undefined,
-      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { ...parsed.data, ownerId: user.userId, endpoint: parsed.data.endpoint || null } as any,
       include: {
         owner: { select: { id: true, name: true, email: true } },
       },
@@ -118,13 +113,13 @@ export const POST = withAuth(async (req, { user }) => {
 
     // Auto-generate initial risk assessment
     const riskInputs = {
-      dataSensitivity: (data.isPiiProcessing ? "PII" : "INTERNAL") as never,
-      modelType: data.type,
-      explainability: data.explainability,
-      humanOversight: data.humanOversight,
-      isPiiProcessing: data.isPiiProcessing,
-      isFinancial: data.isFinancial,
-      isCritical: data.isCritical,
+      dataSensitivity: (parsed.data.isPiiProcessing ? "PII" : "INTERNAL") as never,
+      modelType: parsed.data.type,
+      explainability: parsed.data.explainability,
+      humanOversight: parsed.data.humanOversight,
+      isPiiProcessing: parsed.data.isPiiProcessing,
+      isFinancial: parsed.data.isFinancial,
+      isCritical: parsed.data.isCritical,
     };
 
     const scores = calculateRiskScore(riskInputs);

@@ -27,7 +27,7 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
         after: params.after ? JSON.parse(JSON.stringify(params.after)) : undefined,
         ipAddress: params.ipAddress,
         userAgent: params.userAgent,
-        metadata: params.metadata,
+        metadata: params.metadata as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       },
     });
   } catch (err) {
