@@ -187,7 +187,7 @@ export default function AuditPage() {
         <CardContent>
           <DataTable
             columns={columns}
-            data={(response?.logs ?? []) as unknown as Record<string, unknown>[]}
+            data={response?.logs ?? []}
             loading={loading}
             emptyMessage="No audit logs found."
             pagination={response ? { ...response.pagination, onPageChange: setPage } : undefined}

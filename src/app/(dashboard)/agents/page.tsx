@@ -192,7 +192,7 @@ export default function AgentsPage() {
         <CardContent>
           <DataTable
             columns={agentColumns}
-            data={agents as unknown as Record<string, unknown>[]}
+            data={agents}
             loading={loading}
             emptyMessage="No agents registered. Register your first AI agent."
           />
@@ -210,7 +210,7 @@ export default function AgentsPage() {
           <CardContent>
             <DataTable
               columns={logColumns}
-              data={logs as unknown as Record<string, unknown>[]}
+              data={logs}
               loading={logsLoading}
               emptyMessage="No prompt logs for this agent."
             />

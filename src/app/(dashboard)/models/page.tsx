@@ -172,7 +172,7 @@ export default function ModelsPage() {
       {/* Table */}
       <DataTable
         columns={columns}
-        data={(response?.models ?? []) as unknown as Record<string, unknown>[]}
+        data={response?.models ?? []}
         loading={loading}
         emptyMessage="No AI models registered yet. Add your first model."
         pagination={

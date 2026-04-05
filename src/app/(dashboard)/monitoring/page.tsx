@@ -180,7 +180,7 @@ export default function MonitoringPage() {
         <CardContent>
           <DataTable
             columns={flaggedColumns}
-            data={(data?.recentFlagged ?? []) as unknown as Record<string, unknown>[]}
+            data={data?.recentFlagged ?? []}
             emptyMessage="No flagged interactions. Your models are behaving well."
           />
         </CardContent>

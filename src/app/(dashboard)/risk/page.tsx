@@ -241,7 +241,7 @@ export default function RiskPage() {
         <CardContent>
           <DataTable
             columns={complianceColumns}
-            data={(compliance?.controls ?? []) as unknown as Record<string, unknown>[]}
+            data={compliance?.controls ?? []}
             loading={loading}
             emptyMessage={`No ${framework} controls mapped yet.`}
           />

@@ -214,7 +214,7 @@ export default function DataGovernancePage() {
         <CardContent>
           <DataTable
             columns={assetColumns}
-            data={assets as unknown as Record<string, unknown>[]}
+            data={assets}
             loading={loading}
             emptyMessage="No data assets registered yet."
           />
