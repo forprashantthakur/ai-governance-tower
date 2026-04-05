@@ -33,7 +33,7 @@ interface DataTableProps<T> {
   };
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends object>({
   columns,
   data,
   loading,
@@ -54,8 +54,8 @@ export function DataTable<T extends Record<string, unknown>>({
 
   const sorted = sortKey
     ? [...data].sort((a, b) => {
-        const av = a[sortKey];
-        const bv = b[sortKey];
+        const av = (a as Record<string, unknown>)[sortKey];
+        const bv = (b as Record<string, unknown>)[sortKey];
         const cmp =
           typeof av === "string" && typeof bv === "string"
             ? av.localeCompare(bv)
