@@ -561,27 +561,37 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
 </div>
 
 <script>
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function fmt(s){
+  s=Math.max(0,Math.round(s));
+  return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+}
+
 // ── SLIDE DATA ──────────────────────────────────────────────────────────────
-const SLIDES = [
-  { label:"Intro",           dur:5000,  narration:"Welcome to the A-I Governance Control Tower — your enterprise platform for governing, monitoring, and explaining every A-I system in your organisation. This walkthrough covers all eight key modules. Press play to begin." },
-  { label:"Login",           dur:18000, narration:"Step 1: Login. Open the application and sign in with your role-based credentials. The platform supports three roles — Admin for full access, Risk Officer for risk and compliance management, and Auditor for read-only reporting." },
-  { label:"Dashboard",       dur:20000, narration:"Step 2: Dashboard. After logging in, the dashboard gives you an instant snapshot of your A-I portfolio — total models, open risks, overall compliance score, and active alerts. The compliance bars show real-time coverage across D-P-D-P, ISO 42001, GDPR, and the EU A-I Act." },
-  { label:"AI Inventory",    dur:20000, narration:"Step 3: A-I Model Inventory. This is your central registry for all A-I models. Each model shows its version, framework, type, deployment status, risk level, and assigned owner. Click any model to see its full profile, data lineage, and compliance history." },
-  { label:"Risk Assessment", dur:20000, narration:"Step 4: Risk Assessment. The risk module scores every model across five dimensions — data sensitivity, regulatory exposure, explainability, model complexity, and human oversight. Risk Officers can add their findings, mitigation plans, and review dates to each assessment." },
-  { label:"Compliance",      dur:20000, narration:"Step 5: Compliance Controls. Each A-I model is mapped to specific regulatory controls across D-P-D-P, ISO 42001, GDPR, and the EU A-I Act. Controls show pass, fail, or partial status. Attach evidence, add reviewer sign-offs, and track due dates — all in one place." },
-  { label:"Data Governance", dur:20000, narration:"Step 6: Data Governance. Track every data asset feeding your A-I models — including P-I-I classification, encryption status, retention periods, and individual consent records. This end-to-end data lineage is critical for D-P-D-P and GDPR compliance." },
-  { label:"Agent Governance",dur:20000, narration:"Step 7: Agent Governance. Every A-I agent is registered with defined tool permissions, token budgets, and system prompts. Supervised agents require human approval before acting. All prompts and responses are logged — giving you complete visibility into autonomous A-I activity." },
-  { label:"Audit Trail",     dur:20000, narration:"Step 8: Audit and Reports. Every action taken on the platform is recorded in an immutable audit log — who did what, when, and on which A-I system. Click Export Report to generate a regulator-ready compliance document in seconds." },
-  { label:"Outro",           dur:12000, narration:"That's everything! You've seen the complete AI Governance Control Tower — from model registration and risk scoring, to compliance controls, data governance, agent monitoring, and audit-ready reporting. Launch the app to get started today." },
+const SLIDES=[
+  {label:"Intro",        narration:"Welcome to the A-I Governance Control Tower — your enterprise platform for governing, monitoring, and explaining every A-I system in your organisation. This walkthrough covers eight key modules: Login, Dashboard, A-I Inventory, Risk Assessment, Compliance Controls, Data Governance, Agent Governance, and Audit Trail. Let's get started."},
+  {label:"Login",        narration:"Step 1: Login. Open the application and sign in with your role-based credentials. The platform supports three roles — Admin for full access, Risk Officer for risk and compliance management, and Auditor for read-only reporting. Each role sees only the screens and actions relevant to their responsibilities."},
+  {label:"Dashboard",    narration:"Step 2: Dashboard. After logging in, the dashboard gives you an instant snapshot of your A-I portfolio — total models registered, open risks, overall compliance score, and active alerts. The compliance progress bars show real-time coverage across D-P-D-P, ISO 42001, GDPR, and the EU A-I Act."},
+  {label:"AI Inventory", narration:"Step 3: A-I Model Inventory. This is your central registry for all A-I models in the organisation. Each model entry shows its version, framework, type, deployment environment, risk level, and assigned owner. Click any model to view its full profile, data lineage, and compliance history."},
+  {label:"Risk Assessment",narration:"Step 4: Risk Assessment. The risk module automatically scores every model across five dimensions — data sensitivity, regulatory exposure, explainability, model complexity, and degree of human oversight. Risk Officers can add their own findings, mitigation plans, and scheduled review dates to each assessment."},
+  {label:"Compliance",   narration:"Step 5: Compliance Controls. Each A-I model is mapped to specific regulatory controls across D-P-D-P, ISO 42001, GDPR, and the EU A-I Act. Controls show a pass, fail, or partial status. You can attach evidence documents, add reviewer sign-offs, and track due dates — all in one place."},
+  {label:"Data Governance",narration:"Step 6: Data Governance. Track every data asset feeding your A-I models — including P-I-I classification, encryption status, retention periods, and individual consent records. This end-to-end data lineage view is critical for demonstrating D-P-D-P and GDPR compliance to regulators."},
+  {label:"Agent Governance",narration:"Step 7: Agent Governance. Every autonomous A-I agent is registered with clearly defined tool permissions, token budgets, and system prompts. Supervised agents require explicit human approval before taking any action. All prompts and responses are logged, giving you complete visibility into autonomous A-I activity."},
+  {label:"Audit Trail",  narration:"Step 8: Audit and Reports. Every action taken on the platform is recorded in an immutable audit log — capturing who did what, when, and on which A-I system. Click Export Report to instantly generate a regulator-ready compliance document covering your entire A-I portfolio."},
+  {label:"Outro",        narration:"That's the complete AI Governance Control Tower! You've seen model registration, risk scoring, compliance control mapping, data governance tracking, agent monitoring, and audit-ready reporting — all in one unified platform. Launch the application today and take full control of your A-I governance journey."},
 ];
-const TOTAL = SLIDES.reduce((a,s)=>a+s.dur,0);
 
-let cur=0, playing=false, elapsed=0, lastTick=null, rafId=null;
-let audioEnabled = true;
-let speaking = false;
+// Progress is character-count weighted (longer narrations = more progress bar)
+const totalChars=SLIDES.reduce((a,s)=>a+s.narration.length,0);
+// Estimated total duration: ~130 words/min, avg 5 chars/word, rate 0.9
+const EST_TOTAL_S=Math.round(totalChars/5/130*60/0.9);
 
-// ── BUILD DOTS ──────────────────────────────────────────────────────────────
-const dotsEl = document.getElementById('dots');
+let cur=0, playing=false, audioEnabled=true;
+let playId=0, slideStartTime=performance.now();
+let rafId=null;
+
+// ── BUILD DOTS ───────────────────────────────────────────────────────────────
+const dotsEl=document.getElementById('dots');
 SLIDES.forEach((_,i)=>{
   const d=document.createElement('div');
   d.className='ch-dot';
@@ -589,29 +599,42 @@ SLIDES.forEach((_,i)=>{
   d.onclick=()=>go(i);
   dotsEl.appendChild(d);
 });
-document.getElementById('totalLbl').textContent=fmt(TOTAL/1000);
+document.getElementById('totalLbl').textContent=fmt(EST_TOTAL_S);
 
-// ── AUDIO (Web Speech API) ──────────────────────────────────────────────────
-function speak(text){
-  if(!audioEnabled||!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.rate=0.95;
-  u.pitch=1.05;
-  u.volume=1;
-  // Pick a clear English voice if available
+// ── AUDIO (Web Speech API) ───────────────────────────────────────────────────
+function getVoice(){
+  if(!window.speechSynthesis) return null;
   const voices=window.speechSynthesis.getVoices();
-  const pref=voices.find(v=>v.lang.startsWith('en')&&(v.name.includes('Samantha')||v.name.includes('Google US')||v.name.includes('Daniel')||v.name.includes('Karen')));
-  if(pref) u.voice=pref;
-  u.onstart=()=>{ speaking=true; document.getElementById('audioBadge').classList.add('show'); };
-  u.onend=()=>{ speaking=false; document.getElementById('audioBadge').classList.remove('show'); };
-  u.onerror=()=>{ speaking=false; document.getElementById('audioBadge').classList.remove('show'); };
+  return voices.find(v=>v.lang.startsWith('en')&&(
+    v.name.includes('Samantha')||v.name.includes('Google US English')||
+    v.name.includes('Daniel')||v.name.includes('Karen')||v.name.includes('Zira')
+  ))||voices.find(v=>v.lang.startsWith('en'))||null;
+}
+
+function speak(text,id,onDone){
+  if(!window.speechSynthesis){if(onDone)setTimeout(()=>{if(playId===id)onDone();},2000);return;}
+  window.speechSynthesis.cancel();
+  if(!audioEnabled){if(onDone)setTimeout(()=>{if(playId===id)onDone();},400);return;}
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=0.9; u.pitch=1.0; u.volume=1;
+  const v=getVoice(); if(v) u.voice=v;
+  u.onstart=()=>{
+    slideStartTime=performance.now();
+    document.getElementById('audioBadge').classList.add('show');
+  };
+  u.onend=()=>{
+    document.getElementById('audioBadge').classList.remove('show');
+    if(playId===id&&onDone) onDone();
+  };
+  u.onerror=()=>{
+    document.getElementById('audioBadge').classList.remove('show');
+    if(playId===id&&onDone) onDone();
+  };
   window.speechSynthesis.speak(u);
 }
 
 function stopAudio(){
   if(window.speechSynthesis) window.speechSynthesis.cancel();
-  speaking=false;
   document.getElementById('audioBadge').classList.remove('show');
 }
 
@@ -621,27 +644,41 @@ function toggleAudio(){
   if(!audioEnabled) stopAudio();
 }
 
-// ── NAVIGATION ──────────────────────────────────────────────────────────────
-function go(idx){
-  stopAudio();
-  cur=Math.max(0,Math.min(SLIDES.length-1,idx));
-  elapsed=0; lastTick=null;
+// ── PLAYBACK ENGINE (narration-driven) ───────────────────────────────────────
+function playFromCurrent(id){
+  if(!playing||playId!==id||cur>=SLIDES.length){
+    if(cur>=SLIDES.length){playing=false;updatePlayBtn();}
+    return;
+  }
+  slideStartTime=performance.now();
   render();
-  if(audioEnabled) setTimeout(()=>speak(SLIDES[cur].narration),600);
+  speak(SLIDES[cur].narration,id,()=>{
+    if(!playing||playId!==id) return;
+    if(cur<SLIDES.length-1){cur++;playFromCurrent(id);}
+    else{playing=false;updatePlayBtn();}
+  });
 }
-function prev(){ go(cur-1); }
-function next(){ if(cur<SLIDES.length-1) go(cur+1); else{ playing=false; updatePlayBtn(); stopAudio(); } }
+
+function ensureVoices(cb){
+  if(!window.speechSynthesis){cb();return;}
+  if(window.speechSynthesis.getVoices().length>0){cb();return;}
+  let done=false;
+  const finish=()=>{if(!done){done=true;cb();}};
+  window.speechSynthesis.onvoiceschanged=finish;
+  setTimeout(finish,1200);
+}
 
 function togglePlay(){
   playing=!playing;
+  playId++;
   updatePlayBtn();
   if(playing){
-    lastTick=performance.now();
-    rafId=requestAnimationFrame(tick);
-    if(audioEnabled) setTimeout(()=>speak(SLIDES[cur].narration),300);
+    const id=playId;
+    ensureVoices(()=>playFromCurrent(id));
+    if(!rafId) rafId=requestAnimationFrame(progressLoop);
   } else {
-    cancelAnimationFrame(rafId);
     stopAudio();
+    cancelAnimationFrame(rafId); rafId=null;
   }
 }
 
@@ -651,51 +688,60 @@ function updatePlayBtn(){
     :'<polygon points="5 3 19 12 5 21 5 3"/>';
 }
 
-function tick(now){
-  if(!playing) return;
-  const dt=now-(lastTick??now); lastTick=now;
-  elapsed+=dt;
-  if(elapsed>=SLIDES[cur].dur){
-    if(cur<SLIDES.length-1){
-      cur++; elapsed=0; lastTick=null;
-      render();
-      if(audioEnabled) setTimeout(()=>speak(SLIDES[cur].narration),600);
-    } else {
-      playing=false; updatePlayBtn(); stopAudio(); return;
-    }
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function go(idx){
+  playId++;
+  cur=Math.max(0,Math.min(SLIDES.length-1,idx));
+  slideStartTime=performance.now();
+  render();
+  const id=playId;
+  if(playing){
+    speak(SLIDES[cur].narration,id,()=>{
+      if(!playing||playId!==id) return;
+      if(cur<SLIDES.length-1){cur++;playFromCurrent(id);}
+      else{playing=false;updatePlayBtn();}
+    });
+  } else {
+    speak(SLIDES[cur].narration,id,null);
   }
+}
+function prev(){go(cur>0?cur-1:0);}
+function next(){if(cur<SLIDES.length-1)go(cur+1);else{playId++;playing=false;stopAudio();updatePlayBtn();}}
+
+// ── PROGRESS BAR ─────────────────────────────────────────────────────────────
+function progressLoop(){
   updateProgress();
-  rafId=requestAnimationFrame(tick);
+  if(playing) rafId=requestAnimationFrame(progressLoop);
+  else rafId=null;
+}
+
+function updateProgress(){
+  const prevChars=SLIDES.slice(0,cur).reduce((a,s)=>a+s.narration.length,0);
+  const elapsed=performance.now()-slideStartTime;
+  // ~65ms per character at rate 0.9
+  const within=Math.min(1,elapsed/(SLIDES[cur].narration.length*65));
+  const doneChars=prevChars+SLIDES[cur].narration.length*within;
+  const pct=(doneChars/totalChars)*100;
+  document.getElementById('thumb').style.width=pct+'%';
+  const estS=Math.round((doneChars/totalChars)*EST_TOTAL_S);
+  document.getElementById('timeLbl').textContent=fmt(estS);
 }
 
 function seek(e){
   const rail=document.getElementById('rail');
   const rect=rail.getBoundingClientRect();
   const pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
-  const tgt=pct*TOTAL;
+  const targetChars=pct*totalChars;
   let acc=0;
   for(let i=0;i<SLIDES.length;i++){
-    if(acc+SLIDES[i].dur>=tgt||i===SLIDES.length-1){ cur=i; elapsed=tgt-acc; lastTick=null; break; }
-    acc+=SLIDES[i].dur;
+    if(acc+SLIDES[i].narration.length>=targetChars||i===SLIDES.length-1){go(i);break;}
+    acc+=SLIDES[i].narration.length;
   }
-  stopAudio();
-  render();
-  if(audioEnabled) setTimeout(()=>speak(SLIDES[cur].narration),400);
 }
 
-function updateProgress(){
-  let start=0;
-  for(let i=0;i<cur;i++) start+=SLIDES[i].dur;
-  const total=start+Math.min(elapsed,SLIDES[cur].dur);
-  const pct=(total/TOTAL)*100;
-  document.getElementById('thumb').style.width=pct+'%';
-  document.getElementById('timeLbl').textContent=fmt(total/1000);
-}
-
+// ── RENDER ───────────────────────────────────────────────────────────────────
 function render(){
-  SLIDES.forEach((_,i)=>{
-    document.getElementById('s'+i).classList.toggle('active',i===cur);
-  });
+  SLIDES.forEach((_,i)=>document.getElementById('s'+i).classList.toggle('active',i===cur));
   document.getElementById('stepBadge').textContent=(cur+1)+' / '+SLIDES.length;
   document.getElementById('slideLbl').textContent=SLIDES[cur].label;
   dotsEl.querySelectorAll('.ch-dot').forEach((d,i)=>{
@@ -711,15 +757,15 @@ function render(){
 
 // ── TOUCH SWIPE ──────────────────────────────────────────────────────────────
 let tx0=null;
-document.getElementById('screen').addEventListener('touchstart',e=>{ tx0=e.touches[0].clientX; },{passive:true});
+document.getElementById('screen').addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;},{passive:true});
 document.getElementById('screen').addEventListener('touchend',e=>{
   if(tx0===null) return;
   const dx=e.changedTouches[0].clientX-tx0;
-  if(Math.abs(dx)>50){ dx<0?next():prev(); }
+  if(Math.abs(dx)>50){dx<0?next():prev();}
   tx0=null;
 },{passive:true});
 
-// ── KEYBOARD ────────────────────────────────────────────────────────────────
+// ── KEYBOARD ─────────────────────────────────────────────────────────────────
 window.addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();togglePlay();}
   if(e.code==='ArrowRight') next();
@@ -728,7 +774,6 @@ window.addEventListener('keydown',e=>{
 });
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
-// Load voices (async on some browsers)
 if(window.speechSynthesis){
   window.speechSynthesis.getVoices();
   window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
