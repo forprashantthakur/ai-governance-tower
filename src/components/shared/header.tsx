@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Search } from "lucide-react";
+import { Bell, Home, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/auth.store";
@@ -43,6 +44,12 @@ export function Header() {
             className="pl-9 w-64 h-9 text-sm bg-muted/50"
           />
         </div>
+
+        <Button variant="ghost" size="icon" asChild title="Back to Home">
+          <Link href="/landing">
+            <Home className="h-5 w-5" />
+          </Link>
+        </Button>
 
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
