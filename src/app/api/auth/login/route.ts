@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { signJwt } from "@/lib/auth/jwt";
 import { ok, badRequest, unauthorized, serverError } from "@/lib/api-response";
@@ -24,17 +24,19 @@ export async function POST(req: NextRequest) {
 
     const { email, password } = parsed.data;
 
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        passwordHash: true,
-        isActive: true,
-      },
-    });
+    const user = await withRetry(() =>
+      prisma.user.findUnique({
+        where: { email: email.toLowerCase() },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          passwordHash: true,
+          isActive: true,
+        },
+      })
+    );
 
     if (!user || !user.isActive) {
       return unauthorized("Invalid credentials");
