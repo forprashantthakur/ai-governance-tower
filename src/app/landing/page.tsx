@@ -300,7 +300,7 @@ export default function LandingPage() {
               <li><a href="#faq">FAQ</a></li>
             </ul>
             <div className="lp-nav-cta">
-              <Link href="/login" className="lp-btn lp-btn-outline">Sign In</Link>
+              <a href="/demo.html" target="_blank" className="lp-btn lp-btn-outline">Watch Demo ▶</a>
               <Link href="/login" className="lp-btn lp-btn-primary">Launch App →</Link>
             </div>
           </div>
@@ -324,7 +324,7 @@ export default function LandingPage() {
               </p>
               <div className="lp-hero-actions">
                 <Link href="/login" className="lp-btn lp-btn-primary lp-btn-primary-lg">Launch Control Tower →</Link>
-                <a href="#features" className="lp-btn-ghost-lg">See How It Works</a>
+                <a href="/demo.html" target="_blank" className="lp-btn-ghost-lg">▶ Watch Demo</a>
               </div>
               <div className="lp-trust">
                 <span>DPDP Compliant</span><div className="lp-trust-div" />
@@ -598,7 +598,7 @@ export default function LandingPage() {
             <p className="lp-cta-desc">Join forward-thinking enterprises that treat AI governance as a strategic advantage — not a compliance checkbox. Get full visibility, control, and audit-readiness across your entire AI portfolio today.</p>
             <div className="lp-cta-actions">
               <Link href="/login" className="lp-btn-white">Launch Control Tower →</Link>
-              <a href="#faq" className="lp-btn-ghost-lg">Learn More</a>
+              <a href="/demo.html" target="_blank" className="lp-btn-ghost-lg">▶ Watch Demo</a>
             </div>
             <p className="lp-cta-note">No credit card required · Enterprise ready · DPDP / ISO 42001 / GDPR / EU AI Act</p>
           </div>
