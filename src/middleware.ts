@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt, extractBearerToken } from "./lib/auth/jwt";
 
 const PUBLIC_PATHS = new Set([
+  "/landing",
   "/login",
   "/register",
   "/api/auth/login",
@@ -59,7 +60,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
       extractBearerToken(req.headers.get("authorization"));
 
     if (!token) {
-      return NextResponse.redirect(new URL("/login", req.url));
+      return NextResponse.redirect(new URL("/landing", req.url));
     }
 
     try {
