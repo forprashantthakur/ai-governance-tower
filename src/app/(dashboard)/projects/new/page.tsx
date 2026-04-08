@@ -29,6 +29,7 @@ export default function NewProjectPage() {
     budget: "",
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function NewProjectPage() {
 
   async function createProject() {
     setSaving(true);
+    setError(null);
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
@@ -53,7 +55,13 @@ export default function NewProjectPage() {
         }),
       });
       const data = await res.json();
-      if (data.data?.id) router.push(`/projects/${data.data.id}`);
+      if (data.data?.id) {
+        router.push(`/projects/${data.data.id}`);
+      } else {
+        setError(data.error ?? data.message ?? `Server error (${res.status})`);
+      }
+    } catch (err) {
+      setError(String(err));
     } finally {
       setSaving(false);
     }
@@ -218,6 +226,12 @@ export default function NewProjectPage() {
               Template: <strong>{selectedTemplate.name}</strong> — will auto-create{" "}
               {selectedTemplate.scaffold?.tasks?.length ?? 0} tasks and{" "}
               {selectedTemplate.scaffold?.milestones?.length ?? 0} milestones
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-red-400">
+              {error}
             </div>
           )}
 
