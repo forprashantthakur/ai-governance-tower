@@ -82,7 +82,9 @@ function NodeBox({
 
       {/* Icon */}
       <foreignObject x={10} y={14} width={22} height={22}>
-        <Icon className="h-5 w-5" style={{ color: def.color }} />
+        <div style={{ color: def.color }}>
+          <Icon className="h-5 w-5" />
+        </div>
       </foreignObject>
 
       {/* Label */}
