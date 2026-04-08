@@ -396,6 +396,22 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* AD VIDEO — hero intro */}
+        <section style={{background:"#060f1e",padding:"2.5rem 1rem 0"}}>
+          <div style={{maxWidth:"960px",margin:"0 auto"}}>
+            <div style={{textAlign:"center",marginBottom:"1.25rem"}}>
+              <span style={{display:"inline-flex",alignItems:"center",gap:"6px",background:"rgba(37,99,235,.15)",border:"1px solid rgba(37,99,235,.4)",color:"#60a5fa",padding:".28rem .9rem",borderRadius:"100px",fontSize:".7rem",fontWeight:700,letterSpacing:".07em",textTransform:"uppercase"}}>
+                <span style={{width:"6px",height:"6px",borderRadius:"50%",background:"#60a5fa",display:"inline-block"}}/>Platform Overview · 90 Seconds
+              </span>
+              <h2 style={{fontSize:"clamp(1.2rem,3.5vw,1.9rem)",fontWeight:800,color:"#fff",marginTop:".6rem",letterSpacing:"-.02em",lineHeight:1.2}}>See the Control Tower in Action</h2>
+              <p style={{fontSize:".85rem",color:"rgba(255,255,255,.5)",marginTop:".4rem"}}>Watch how we solve the AI governance crisis — from spreadsheet chaos to audit-ready compliance.</p>
+            </div>
+            <div className="lp-video-wrap" style={{maxWidth:"900px",margin:"0 auto",borderRadius:"14px",boxShadow:"0 0 0 1px rgba(37,99,235,.25), 0 30px 80px rgba(6,15,30,.7)"}}>
+              <iframe src="/demo-marketing.html" title="AI Governance Control Tower — Platform Ad Video" allowFullScreen loading="lazy" />
+            </div>
+          </div>
+        </section>
+
         {/* STATS */}
         <div className="lp-stats">
           <div className="lp-stats-inner">
