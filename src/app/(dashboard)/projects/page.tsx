@@ -113,7 +113,7 @@ export default function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
     const headers = { Authorization: `Bearer ${token}` };
     Promise.all([
       fetch(`/api/projects?limit=50${statusFilter ? `&status=${statusFilter}` : ""}`, { headers }),

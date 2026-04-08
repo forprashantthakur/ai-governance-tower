@@ -57,7 +57,7 @@ export default function ProjectOverviewPage() {
   } | null>(null);
   const [tasks, setTasks] = useState<{ status: string }[]>([]);
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
     const h = { Authorization: `Bearer ${token}` };
     Promise.all([
       fetch(`/api/projects/${params.id}`, { headers: h }),

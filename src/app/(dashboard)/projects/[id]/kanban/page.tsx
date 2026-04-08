@@ -108,7 +108,7 @@ export default function KanbanPage() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [saving, setSaving] = useState(false);
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
     fetch(`/api/projects/${params.id}/tasks`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -135,7 +135,7 @@ export default function KanbanPage() {
 
     fetch(`/api/projects/${params.id}/tasks/${draggingId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` },
       body: JSON.stringify({ status }),
     }).catch(() => {
       if (prev) updateTaskStatus(draggingId!, prev); // revert on error
@@ -148,7 +148,7 @@ export default function KanbanPage() {
     try {
       const res = await fetch(`/api/projects/${params.id}/tasks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` },
         body: JSON.stringify({
           title: newTaskTitle.trim(),
           status,

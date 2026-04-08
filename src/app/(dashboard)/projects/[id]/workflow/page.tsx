@@ -138,7 +138,7 @@ export default function WorkflowPage() {
   const panStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
   const dragNode = useRef<{ id: string; ox: number; oy: number; mx: number; my: number } | null>(null);
   const saveTimer = useRef<NodeJS.Timeout>();
-  const getH = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
+  const getH = () => ({ Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` });
 
   // Load canvas list
   useEffect(() => {

@@ -32,7 +32,7 @@ export default function NewProjectPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
     fetch("/api/projects/templates", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setTemplates(d.data ?? []));
@@ -42,7 +42,7 @@ export default function NewProjectPage() {
     setSaving(true);
     setError(null);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

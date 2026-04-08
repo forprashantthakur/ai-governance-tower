@@ -24,7 +24,7 @@ export default function ResourcesPage() {
   const [users, setUsers] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
   const [form, setForm] = useState({ userId: "", role: "CONTRIBUTOR" as ResourceRole, allocationPct: 50 });
   const [saving, setSaving] = useState(false);
-  const getH = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
+  const getH = () => ({ Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` });
 
   useEffect(() => {
     Promise.all([

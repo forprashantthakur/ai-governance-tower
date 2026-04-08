@@ -39,7 +39,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const [project, setProject] = useState<Project | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
     fetch(`/api/projects/${params.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
