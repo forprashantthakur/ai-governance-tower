@@ -15,6 +15,7 @@ import {
   ChevronRight,
   LogOut,
   Shield,
+  FolderKanban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/projects", icon: FolderKanban, label: "AI Projects" },
   { href: "/models", icon: BrainCircuit, label: "AI Inventory" },
   { href: "/risk", icon: ShieldAlert, label: "Risk & Compliance" },
   { href: "/data-governance", icon: Database, label: "Data Governance" },

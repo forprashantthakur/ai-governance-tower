@@ -231,6 +231,231 @@ export interface DashboardData {
   }[];
 }
 
+// ─── AI Project Management ────────────────────────────────────────────────────
+
+export type ProjectStatus = "DRAFT" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+export type ProjectPhase = "BUSINESS_CASE" | "DATA_DISCOVERY" | "MODEL_DEVELOPMENT" | "TESTING_VALIDATION" | "DEPLOYMENT" | "MONITORING";
+export type TaskStatus = "BACKLOG" | "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE" | "BLOCKED";
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type ResourceRole = "LEAD" | "CONTRIBUTOR" | "REVIEWER" | "STAKEHOLDER" | "OBSERVER";
+export type WorkflowNodeType = "DATA_SOURCE" | "TRANSFORM" | "MODEL" | "EVALUATION" | "OUTPUT" | "DECISION" | "TRIGGER" | "NOTIFICATION";
+export type N8nTriggerEvent = "PHASE_COMPLETE" | "MILESTONE_REACHED" | "TASK_DONE" | "RISK_THRESHOLD" | "EXPERIMENT_LOGGED";
+export type ProjectHealthStatus = "HEALTHY" | "AT_RISK" | "CRITICAL" | "UNKNOWN";
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  status: ProjectStatus;
+  currentPhase: ProjectPhase;
+  ownerId: string;
+  owner?: Pick<AuthUser, "id" | "name" | "email">;
+  templateId?: string;
+  startDate?: string;
+  targetDate?: string;
+  completedAt?: string;
+  healthScore: number;
+  healthStatus: ProjectHealthStatus;
+  budget?: number;
+  tags: string[];
+  metadata?: Record<string, unknown>;
+  _count?: { tasks: number; experiments: number; milestones: number };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectPhaseRecord {
+  id: string;
+  projectId: string;
+  phase: ProjectPhase;
+  status: TaskStatus;
+  startDate?: string;
+  endDate?: string;
+  plannedDays?: number;
+  actualDays?: number;
+  progress: number;
+  notes?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+export interface ProjectTask {
+  id: string;
+  projectId: string;
+  phase: ProjectPhase;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assigneeId?: string;
+  assignee?: Pick<AuthUser, "id" | "name">;
+  reporterId?: string;
+  dueDate?: string;
+  startDate?: string;
+  estimatedHrs?: number;
+  actualHrs?: number;
+  sortOrder: number;
+  parentTaskId?: string;
+  tags: string[];
+  completedAt?: string;
+  subtasks?: ProjectTask[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Milestone {
+  id: string;
+  projectId: string;
+  phase: ProjectPhase;
+  name: string;
+  description?: string;
+  targetDate: string;
+  completedAt?: string;
+  completedBy?: string;
+  isGate: boolean;
+  createdAt: string;
+}
+
+export interface ProjectResource {
+  id: string;
+  projectId: string;
+  userId: string;
+  user?: Pick<AuthUser, "id" | "name" | "email" | "role">;
+  role: ResourceRole;
+  allocationPct: number;
+  startDate?: string;
+  endDate?: string;
+  hourlyRate?: number;
+  createdAt: string;
+}
+
+export interface Experiment {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  status: string;
+  runId?: string;
+  hyperparams?: Record<string, unknown>;
+  metrics?: Record<string, number>;
+  artifacts?: { name: string; type: string; url: string }[];
+  datasetRef?: string;
+  modelRef?: string;
+  startedAt: string;
+  completedAt?: string;
+  createdBy: string;
+  notes?: string;
+  tags: string[];
+  runs?: ExperimentRun[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExperimentRun {
+  id: string;
+  experimentId: string;
+  runNumber: number;
+  hyperparams?: Record<string, unknown>;
+  metrics?: Record<string, number>;
+  artifacts?: { name: string; type: string; url: string }[];
+  status: string;
+  duration?: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CanvasNode {
+  id: string;
+  type: WorkflowNodeType;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  config: Record<string, unknown>;
+  inputs: string[];
+  outputs: string[];
+}
+
+export interface CanvasEdge {
+  id: string;
+  sourceNodeId: string;
+  sourcePort: string;
+  targetNodeId: string;
+  targetPort: string;
+}
+
+export interface CanvasViewport {
+  x: number;
+  y: number;
+  scale: number;
+}
+
+export interface WorkflowCanvas {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  canvasData: { nodes: CanvasNode[]; edges: CanvasEdge[]; viewport: CanvasViewport };
+  version: number;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface N8nWebhook {
+  id: string;
+  projectId: string;
+  name: string;
+  webhookUrl: string;
+  triggerEvent: N8nTriggerEvent;
+  milestoneId?: string;
+  isActive: boolean;
+  payloadTemplate?: Record<string, unknown>;
+  lastTriggeredAt?: string;
+  lastStatus?: string;
+  lastResponse?: unknown;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectAIModel {
+  projectId: string;
+  modelId: string;
+  model?: Pick<AIModel, "id" | "name" | "type" | "status">;
+  role: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface ProjectTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  scaffold: TemplateScaffold;
+  isBuiltIn: boolean;
+  createdAt: string;
+}
+
+export interface TemplateScaffold {
+  phases: { phase: ProjectPhase; plannedDays: number }[];
+  tasks: { phase: ProjectPhase; title: string; priority: TaskPriority; estimatedHrs: number; description?: string }[];
+  milestones: { phase: ProjectPhase; name: string; daysFromStart: number; isGate: boolean }[];
+  workflowCanvas?: { nodes: CanvasNode[]; edges: CanvasEdge[] };
+}
+
+export interface PortfolioStats {
+  totalProjects: number;
+  byStatus: Record<ProjectStatus, number>;
+  byPhase: Record<ProjectPhase, number>;
+  avgHealthScore: number;
+  atRiskCount: number;
+  criticalCount: number;
+  recentActivity: { projectId: string; projectName: string; action: string; at: string }[];
+}
+
 // ─── API Response Wrapper ─────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {

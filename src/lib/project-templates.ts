@@ -1,0 +1,178 @@
+import type { TemplateScaffold } from "@/types";
+
+export interface BuiltInTemplate {
+  name: string;
+  description: string;
+  category: string;
+  scaffold: TemplateScaffold;
+}
+
+export const BUILT_IN_TEMPLATES: BuiltInTemplate[] = [
+  {
+    name: "Credit Scoring Model",
+    description: "16-week RBI-compliant credit scoring with bias testing and explainability reporting",
+    category: "BFSI",
+    scaffold: {
+      phases: [
+        { phase: "BUSINESS_CASE", plannedDays: 10 },
+        { phase: "DATA_DISCOVERY", plannedDays: 21 },
+        { phase: "MODEL_DEVELOPMENT", plannedDays: 30 },
+        { phase: "TESTING_VALIDATION", plannedDays: 21 },
+        { phase: "DEPLOYMENT", plannedDays: 14 },
+        { phase: "MONITORING", plannedDays: 14 },
+      ],
+      tasks: [
+        { phase: "BUSINESS_CASE", title: "Define credit scoring objectives and KPIs", priority: "HIGH", estimatedHrs: 8 },
+        { phase: "BUSINESS_CASE", title: "Regulatory requirements review (RBI, DPDP)", priority: "CRITICAL", estimatedHrs: 12 },
+        { phase: "BUSINESS_CASE", title: "Stakeholder sign-off on business case", priority: "HIGH", estimatedHrs: 4 },
+        { phase: "DATA_DISCOVERY", title: "Identify and catalog training data sources", priority: "HIGH", estimatedHrs: 16 },
+        { phase: "DATA_DISCOVERY", title: "PII classification and DPDP consent audit", priority: "CRITICAL", estimatedHrs: 12 },
+        { phase: "DATA_DISCOVERY", title: "Data quality assessment and profiling", priority: "HIGH", estimatedHrs: 20 },
+        { phase: "DATA_DISCOVERY", title: "Feature engineering and selection", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "MODEL_DEVELOPMENT", title: "Baseline model development", priority: "HIGH", estimatedHrs: 32 },
+        { phase: "MODEL_DEVELOPMENT", title: "Hyperparameter tuning experiments", priority: "MEDIUM", estimatedHrs: 24 },
+        { phase: "MODEL_DEVELOPMENT", title: "Explainability implementation (SHAP/LIME)", priority: "CRITICAL", estimatedHrs: 16 },
+        { phase: "MODEL_DEVELOPMENT", title: "Reason code generation for denials", priority: "HIGH", estimatedHrs: 12 },
+        { phase: "TESTING_VALIDATION", title: "Bias and fairness testing across demographics", priority: "CRITICAL", estimatedHrs: 20 },
+        { phase: "TESTING_VALIDATION", title: "Model performance validation (Gini, KS, AUC)", priority: "HIGH", estimatedHrs: 16 },
+        { phase: "TESTING_VALIDATION", title: "Shadow deployment and parallel testing", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "TESTING_VALIDATION", title: "Regulatory compliance review", priority: "CRITICAL", estimatedHrs: 16 },
+        { phase: "DEPLOYMENT", title: "Production deployment with monitoring hooks", priority: "HIGH", estimatedHrs: 16 },
+        { phase: "DEPLOYMENT", title: "RBI approval documentation", priority: "CRITICAL", estimatedHrs: 20 },
+        { phase: "MONITORING", title: "Set up drift detection alerts", priority: "HIGH", estimatedHrs: 8 },
+        { phase: "MONITORING", title: "Monthly bias score review schedule", priority: "HIGH", estimatedHrs: 4 },
+      ],
+      milestones: [
+        { phase: "BUSINESS_CASE", name: "Business Case Approved", daysFromStart: 10, isGate: true },
+        { phase: "DATA_DISCOVERY", name: "Data Lineage Documented", daysFromStart: 31, isGate: false },
+        { phase: "TESTING_VALIDATION", name: "Bias Score < 5%", daysFromStart: 82, isGate: true },
+        { phase: "TESTING_VALIDATION", name: "Regulatory Approval", daysFromStart: 96, isGate: true },
+        { phase: "DEPLOYMENT", name: "Production Go-Live", daysFromStart: 110, isGate: true },
+      ],
+    },
+  },
+  {
+    name: "Fraud Detection System",
+    description: "12-week real-time fraud detection with low false-positive SLA",
+    category: "BFSI",
+    scaffold: {
+      phases: [
+        { phase: "BUSINESS_CASE", plannedDays: 7 },
+        { phase: "DATA_DISCOVERY", plannedDays: 21 },
+        { phase: "MODEL_DEVELOPMENT", plannedDays: 21 },
+        { phase: "TESTING_VALIDATION", plannedDays: 21 },
+        { phase: "DEPLOYMENT", plannedDays: 10 },
+        { phase: "MONITORING", plannedDays: 4 },
+      ],
+      tasks: [
+        { phase: "BUSINESS_CASE", title: "Define fraud typology and attack vectors", priority: "HIGH", estimatedHrs: 8 },
+        { phase: "BUSINESS_CASE", title: "SLA definition: latency and false positive rate", priority: "CRITICAL", estimatedHrs: 6 },
+        { phase: "DATA_DISCOVERY", title: "Transaction data ingestion pipeline", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "DATA_DISCOVERY", title: "Feature engineering for behavioral patterns", priority: "HIGH", estimatedHrs: 32 },
+        { phase: "DATA_DISCOVERY", title: "Historical fraud label curation", priority: "CRITICAL", estimatedHrs: 16 },
+        { phase: "MODEL_DEVELOPMENT", title: "Real-time scoring model (XGBoost/NN)", priority: "HIGH", estimatedHrs: 40 },
+        { phase: "MODEL_DEVELOPMENT", title: "Latency optimization (< 100ms)", priority: "CRITICAL", estimatedHrs: 16 },
+        { phase: "MODEL_DEVELOPMENT", title: "Rule engine integration", priority: "MEDIUM", estimatedHrs: 12 },
+        { phase: "TESTING_VALIDATION", title: "Precision/recall threshold testing", priority: "CRITICAL", estimatedHrs: 20 },
+        { phase: "TESTING_VALIDATION", title: "Load testing (10k TPS)", priority: "HIGH", estimatedHrs: 16 },
+        { phase: "TESTING_VALIDATION", title: "A/B test vs existing rule engine", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "DEPLOYMENT", title: "Canary deployment (5% traffic)", priority: "HIGH", estimatedHrs: 12 },
+        { phase: "MONITORING", title: "Real-time fraud rate dashboard", priority: "HIGH", estimatedHrs: 8 },
+      ],
+      milestones: [
+        { phase: "TESTING_VALIDATION", name: "False Positive Rate < 0.1%", daysFromStart: 63, isGate: true },
+        { phase: "TESTING_VALIDATION", name: "Latency P99 < 100ms", daysFromStart: 70, isGate: true },
+        { phase: "DEPLOYMENT", name: "Full Production Rollout", daysFromStart: 80, isGate: true },
+      ],
+    },
+  },
+  {
+    name: "LLM Application",
+    description: "8-week RAG or fine-tuning LLM application with safety guardrails",
+    category: "GenAI",
+    scaffold: {
+      phases: [
+        { phase: "BUSINESS_CASE", plannedDays: 5 },
+        { phase: "DATA_DISCOVERY", plannedDays: 10 },
+        { phase: "MODEL_DEVELOPMENT", plannedDays: 21 },
+        { phase: "TESTING_VALIDATION", plannedDays: 14 },
+        { phase: "DEPLOYMENT", plannedDays: 7 },
+        { phase: "MONITORING", plannedDays: 3 },
+      ],
+      tasks: [
+        { phase: "BUSINESS_CASE", title: "Use case definition and user journey mapping", priority: "HIGH", estimatedHrs: 8 },
+        { phase: "DATA_DISCOVERY", title: "Knowledge base curation for RAG", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "DATA_DISCOVERY", title: "Embedding model selection and benchmarking", priority: "MEDIUM", estimatedHrs: 8 },
+        { phase: "MODEL_DEVELOPMENT", title: "RAG pipeline implementation", priority: "HIGH", estimatedHrs: 40 },
+        { phase: "MODEL_DEVELOPMENT", title: "Prompt engineering and system prompt design", priority: "HIGH", estimatedHrs: 16 },
+        { phase: "MODEL_DEVELOPMENT", title: "Guardrails implementation (toxicity, PII, hallucination)", priority: "CRITICAL", estimatedHrs: 20 },
+        { phase: "MODEL_DEVELOPMENT", title: "Fine-tuning (if applicable)", priority: "MEDIUM", estimatedHrs: 24 },
+        { phase: "TESTING_VALIDATION", title: "Red-teaming and adversarial testing", priority: "CRITICAL", estimatedHrs: 20 },
+        { phase: "TESTING_VALIDATION", title: "Factual accuracy benchmarking", priority: "HIGH", estimatedHrs: 16 },
+        { phase: "TESTING_VALIDATION", title: "Latency and cost optimization", priority: "MEDIUM", estimatedHrs: 8 },
+        { phase: "DEPLOYMENT", title: "Production deployment with rate limiting", priority: "HIGH", estimatedHrs: 12 },
+        { phase: "MONITORING", title: "Hallucination and toxicity monitoring setup", priority: "CRITICAL", estimatedHrs: 8 },
+      ],
+      milestones: [
+        { phase: "MODEL_DEVELOPMENT", name: "Prompt Safety Review Passed", daysFromStart: 36, isGate: true },
+        { phase: "TESTING_VALIDATION", name: "Latency < 200ms P99", daysFromStart: 50, isGate: false },
+        { phase: "DEPLOYMENT", name: "Go-Live", daysFromStart: 57, isGate: true },
+      ],
+      workflowCanvas: {
+        nodes: [
+          { id: "n1", type: "DATA_SOURCE", label: "Knowledge Base", x: 80, y: 200, width: 160, height: 70, config: { source: "S3 / Vector DB" }, inputs: [], outputs: ["docs"] },
+          { id: "n2", type: "TRANSFORM", label: "Embedding & Chunking", x: 300, y: 200, width: 160, height: 70, config: { model: "text-embedding-3-small" }, inputs: ["docs"], outputs: ["vectors"] },
+          { id: "n3", type: "TRIGGER", label: "User Query", x: 80, y: 360, width: 160, height: 70, config: {}, inputs: [], outputs: ["query"] },
+          { id: "n4", type: "MODEL", label: "RAG Retrieval", x: 300, y: 360, width: 160, height: 70, config: { topK: 5 }, inputs: ["vectors", "query"], outputs: ["context"] },
+          { id: "n5", type: "MODEL", label: "LLM (GPT-4o)", x: 520, y: 360, width: 160, height: 70, config: { model: "gpt-4o" }, inputs: ["context"], outputs: ["response"] },
+          { id: "n6", type: "EVALUATION", label: "Guardrails Check", x: 740, y: 360, width: 160, height: 70, config: { checks: ["toxicity", "pii", "hallucination"] }, inputs: ["response"], outputs: ["safe_response"] },
+          { id: "n7", type: "OUTPUT", label: "API Response", x: 960, y: 360, width: 160, height: 70, config: {}, inputs: ["safe_response"], outputs: [] },
+        ],
+        edges: [
+          { id: "e1", sourceNodeId: "n1", sourcePort: "docs", targetNodeId: "n2", targetPort: "docs" },
+          { id: "e2", sourceNodeId: "n2", sourcePort: "vectors", targetNodeId: "n4", targetPort: "vectors" },
+          { id: "e3", sourceNodeId: "n3", sourcePort: "query", targetNodeId: "n4", targetPort: "query" },
+          { id: "e4", sourceNodeId: "n4", sourcePort: "context", targetNodeId: "n5", targetPort: "context" },
+          { id: "e5", sourceNodeId: "n5", sourcePort: "response", targetNodeId: "n6", targetPort: "response" },
+          { id: "e6", sourceNodeId: "n6", sourcePort: "safe_response", targetNodeId: "n7", targetPort: "safe_response" },
+        ],
+      },
+    },
+  },
+  {
+    name: "Computer Vision Pipeline",
+    description: "14-week CV model with data annotation and training phases",
+    category: "Vision",
+    scaffold: {
+      phases: [
+        { phase: "BUSINESS_CASE", plannedDays: 7 },
+        { phase: "DATA_DISCOVERY", plannedDays: 28 },
+        { phase: "MODEL_DEVELOPMENT", plannedDays: 28 },
+        { phase: "TESTING_VALIDATION", plannedDays: 21 },
+        { phase: "DEPLOYMENT", plannedDays: 10 },
+        { phase: "MONITORING", plannedDays: 4 },
+      ],
+      tasks: [
+        { phase: "BUSINESS_CASE", title: "Vision task definition (detection/classification/segmentation)", priority: "HIGH", estimatedHrs: 8 },
+        { phase: "DATA_DISCOVERY", title: "Image dataset collection and licensing review", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "DATA_DISCOVERY", title: "Data annotation (labeling tool setup)", priority: "HIGH", estimatedHrs: 80, description: "Manual annotation sprint with quality checkpoints" },
+        { phase: "DATA_DISCOVERY", title: "Annotation quality review (IoU > 0.85)", priority: "CRITICAL", estimatedHrs: 16 },
+        { phase: "DATA_DISCOVERY", title: "Data augmentation strategy", priority: "MEDIUM", estimatedHrs: 12 },
+        { phase: "MODEL_DEVELOPMENT", title: "Architecture selection and baseline", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "MODEL_DEVELOPMENT", title: "Training pipeline on GPU cluster", priority: "HIGH", estimatedHrs: 40 },
+        { phase: "MODEL_DEVELOPMENT", title: "Transfer learning and fine-tuning", priority: "HIGH", estimatedHrs: 24 },
+        { phase: "TESTING_VALIDATION", title: "mAP / F1 evaluation on test set", priority: "CRITICAL", estimatedHrs: 16 },
+        { phase: "TESTING_VALIDATION", title: "Edge case and bias analysis", priority: "HIGH", estimatedHrs: 20 },
+        { phase: "TESTING_VALIDATION", title: "Inference latency benchmarking", priority: "HIGH", estimatedHrs: 12 },
+        { phase: "DEPLOYMENT", title: "Model optimization (ONNX/TensorRT)", priority: "MEDIUM", estimatedHrs: 16 },
+        { phase: "DEPLOYMENT", title: "Production API deployment", priority: "HIGH", estimatedHrs: 12 },
+        { phase: "MONITORING", title: "Concept drift monitoring for visual features", priority: "HIGH", estimatedHrs: 8 },
+      ],
+      milestones: [
+        { phase: "DATA_DISCOVERY", name: "100k Annotated Images Ready", daysFromStart: 35, isGate: true },
+        { phase: "TESTING_VALIDATION", name: "mAP > 0.85 on Test Set", daysFromStart: 84, isGate: true },
+        { phase: "DEPLOYMENT", name: "Production Deployment", daysFromStart: 94, isGate: true },
+      ],
+    },
+  },
+];
