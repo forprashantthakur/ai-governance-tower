@@ -200,6 +200,31 @@ html { scroll-behavior: smooth; }
 .lp-footer-credit { color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: right; }
 .lp-footer-credit strong { color: rgba(255,255,255,0.65); }
 
+/* AI PROJECT MGMT SECTION */
+.lp-pm-section { background: linear-gradient(180deg, #f8fafc 0%, #fff 100%); padding: 6rem 2rem; }
+.lp-pm-split { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; margin-top: 4rem; }
+.lp-pm-features { display: flex; flex-direction: column; gap: 1.5rem; }
+.lp-pm-feat { display: flex; align-items: flex-start; gap: 1rem; }
+.lp-pm-feat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lp-pm-feat-icon svg { width: 20px; height: 20px; }
+.lp-pm-feat-title { font-size: 0.9rem; font-weight: 700; color: var(--navy); margin-bottom: 0.2rem; }
+.lp-pm-feat-desc { font-size: 0.8rem; color: var(--gray-600); line-height: 1.55; }
+.lp-pm-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
+.lp-pm-tag { background: rgba(37,99,235,0.08); color: var(--blue); border: 1px solid rgba(37,99,235,0.2); padding: 0.3rem 0.85rem; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
+
+/* VIDEO PLAYER */
+.lp-video-wrap { position: relative; border-radius: 16px; overflow: hidden; background: var(--navy); box-shadow: 0 24px 80px rgba(10,35,66,0.25), 0 0 0 1px rgba(255,255,255,0.08); aspect-ratio: 16/9; }
+.lp-video-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+.lp-video-badge { position: absolute; top: 14px; left: 14px; background: rgba(16,185,129,0.9); color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; }
+.lp-video-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; background: linear-gradient(135deg, #0a2342 0%, #0f3060 50%, #0d2952 100%); cursor: pointer; text-decoration: none; position: relative; overflow: hidden; }
+.lp-video-placeholder::before { content:''; position:absolute; inset:0; background-image: linear-gradient(rgba(37,99,235,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.06) 1px, transparent 1px); background-size: 40px 40px; }
+.lp-video-play { width: 72px; height: 72px; border-radius: 50%; background: rgba(37,99,235,0.9); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 12px rgba(37,99,235,0.2), 0 0 0 24px rgba(37,99,235,0.08); transition: transform 0.2s, box-shadow 0.2s; position: relative; z-index: 1; }
+.lp-video-placeholder:hover .lp-video-play { transform: scale(1.1); box-shadow: 0 0 0 14px rgba(37,99,235,0.25), 0 0 0 28px rgba(37,99,235,0.1); }
+.lp-video-play svg { width: 28px; height: 28px; color: #fff; margin-left: 4px; }
+.lp-video-label { color: rgba(255,255,255,0.7); font-size: 0.85rem; font-weight: 500; position: relative; z-index: 1; }
+.lp-video-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.7)); z-index: 1; }
+.lp-video-title-overlay span { color: #fff; font-size: 0.85rem; font-weight: 600; }
+
 /* ANIMATIONS */
 .lp-fade { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
 .lp-fade.visible { opacity: 1; transform: translateY(0); }
@@ -213,6 +238,7 @@ html { scroll-behavior: smooth; }
   .lp-split-rev { direction: ltr; }
   .lp-cap-grid { grid-template-columns: 1fr 1fr; }
   .lp-fw-grid { grid-template-columns: 1fr 1fr; }
+  .lp-pm-split { grid-template-columns: 1fr; }
   .lp-faq-grid { grid-template-columns: 1fr; }
   .lp-stats-inner { grid-template-columns: repeat(2,1fr); }
   .lp-footer-grid { grid-template-columns: 1fr 1fr; }
@@ -297,6 +323,7 @@ export default function LandingPage() {
               <li><a href="#features">Features</a></li>
               <li><a href="#capabilities">Capabilities</a></li>
               <li><a href="#frameworks">Frameworks</a></li>
+              <li><a href="#ai-projects">AI Projects</a></li>
               <li><a href="#faq">FAQ</a></li>
             </ul>
             <div className="lp-nav-cta">
@@ -522,6 +549,7 @@ export default function LandingPage() {
                 { icon: <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>, title: "Audit & Reports", desc: "Immutable audit trail of every action taken on AI systems with exportable reports for regulators and boards." },
                 { icon: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></>, title: "Role-Based Access", desc: "Granular RBAC with Admin, Risk Officer, and Auditor roles — each with appropriate visibility and permissions." },
                 { icon: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>, title: "Policy Configuration", desc: "Define and enforce organization-wide AI policies — bias thresholds, retention rules, consent expiry, and more." },
+                { icon: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></>, title: "AI Project Management", desc: "Plan, track, and deliver AI projects with Gantt charts, Kanban boards, phase gates, milestones, and n8n workflow automation." },
               ].map((c, i) => (
                 <div key={c.title} className={`lp-cap lp-fade ${i % 3 === 1 ? "lp-fade-d1" : i % 3 === 2 ? "lp-fade-d2" : ""}`}>
                   <div className="lp-cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{c.icon}</svg></div>
@@ -554,6 +582,87 @@ export default function LandingPage() {
                   <div className="lp-fw-tags">{f.tags.map((t) => <span key={t} className="lp-fw-tag">{t}</span>)}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* AI PROJECT MANAGEMENT */}
+        <section className="lp-pm-section" id="ai-projects">
+          <div className="lp-inner">
+            <div className="lp-header-center">
+              <span className="lp-section-label" style={{color:"var(--blue)"}}>New Module</span>
+              <h2 className="lp-section-title">AI Project Lifecycle Management</h2>
+              <p className="lp-section-desc">Plan, execute, and deliver AI initiatives end-to-end — from business case to production monitoring — with purpose-built project management tools designed for AI teams.</p>
+            </div>
+
+            <div className="lp-pm-split">
+              {/* Left: features */}
+              <div className="lp-pm-features">
+                {[
+                  { bg: "rgba(37,99,235,0.1)", color: "#2563eb", icon: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>, title: "6-Phase AI Lifecycle", desc: "Structured phases from Business Case → Data Discovery → Model Development → Testing → Deployment → Monitoring with phase-gate milestones." },
+                  { bg: "rgba(139,92,246,0.1)", color: "#8b5cf6", icon: <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>, title: "Kanban & Gantt Boards", desc: "Visualize task progress across columns with drag-and-drop Kanban. Plan timelines with SVG Gantt charts supporting day/week/month zoom." },
+                  { bg: "rgba(16,185,129,0.1)", color: "#10b981", icon: <><path d="M13 10V3L4 14h7v7l9-11h-7z"/></>, title: "n8n Workflow Automation", desc: "Connect n8n webhooks to project events — auto-trigger Slack alerts, Jira tickets, or any workflow when a phase completes or milestone is reached." },
+                  { bg: "rgba(245,158,11,0.1)", color: "#f59e0b", icon: <><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></>, title: "ML Experiment Tracking", desc: "Log experiment runs with hyperparameters and metrics. Compare accuracy/loss curves across runs with interactive line charts." },
+                  { bg: "rgba(6,182,212,0.1)", color: "#06b6d4", icon: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>, title: "Health Score & Alerts", desc: "Automatic project health scoring (0–100) based on overdue milestones, blocked tasks, and activity gaps — with HEALTHY / AT_RISK / CRITICAL status." },
+                  { bg: "rgba(99,102,241,0.1)", color: "#6366f1", icon: <><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 012 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></>, title: "Visual Workflow Canvas", desc: "Build AI pipeline diagrams with a node-based canvas editor (like n8n/Visio) — connect data sources, transforms, models, evaluations, and outputs." },
+                ].map((f) => (
+                  <div key={f.title} className="lp-pm-feat lp-fade">
+                    <div className="lp-pm-feat-icon" style={{background: f.bg}}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke={f.color} strokeWidth="2">{f.icon}</svg>
+                    </div>
+                    <div>
+                      <div className="lp-pm-feat-title">{f.title}</div>
+                      <div className="lp-pm-feat-desc">{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+                <div className="lp-pm-tags">
+                  {["Gantt Charts","Kanban Board","Phase Gates","Milestones","Experiment Tracking","n8n Webhooks","Workflow Canvas","Team Resources","Health Score","Project Templates"].map(t => (
+                    <span key={t} className="lp-pm-tag">{t}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: demo video */}
+              <div className="lp-fade lp-fade-d1">
+                <div className="lp-video-wrap">
+                  <span className="lp-video-badge">● Live Module</span>
+                  <a href="/demo.html" target="_blank" rel="noopener" className="lp-video-placeholder">
+                    {/* Mock kanban/gantt preview */}
+                    <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.07}} viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+                      {[0,1,2,3,4,5].map(i=><rect key={i} x={30+i*130} y="60" width="115" height="340" rx="8" fill="white"/>)}
+                      {[0,1,2,3,4,5].map(i=>[0,1,2].map(j=><rect key={`${i}${j}`} x={38+i*130} y={90+j*90} width="99" height="75" rx="5" fill="rgba(255,255,255,0.3)"/>))}
+                      <rect x="30" y="30" width="740" height="22" rx="4" fill="rgba(37,99,235,0.4)"/>
+                    </svg>
+                    <div className="lp-video-play">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </div>
+                    <span className="lp-video-label">Watch Module Demo</span>
+                    <div className="lp-video-title-overlay">
+                      <span>AI Project Management · Kanban, Gantt, Workflow Canvas & n8n Integration</span>
+                    </div>
+                  </a>
+                </div>
+
+                {/* Stats row */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"1rem",marginTop:"1.25rem"}}>
+                  {[
+                    {val:"6",label:"Project Phases"},
+                    {val:"4",label:"Built-in Templates"},
+                    {val:"∞",label:"n8n Integrations"},
+                  ].map(s=>(
+                    <div key={s.label} style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:"10px",padding:"1rem",textAlign:"center"}}>
+                      <div style={{fontSize:"1.5rem",fontWeight:800,color:"var(--navy)"}}>{s.val}</div>
+                      <div style={{fontSize:"0.72rem",color:"var(--gray-600)",marginTop:"2px"}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{marginTop:"1.25rem",display:"flex",gap:"0.75rem"}}>
+                  <Link href="/login" className="lp-btn lp-btn-primary" style={{flex:1,justifyContent:"center"}}>Launch AI Projects →</Link>
+                  <a href="/demo.html" target="_blank" rel="noopener" className="lp-btn" style={{background:"#f1f5f9",color:"var(--navy)",border:"1px solid #e2e8f0"}}>▶ Full Demo</a>
+                </div>
+              </div>
             </div>
           </div>
         </section>
