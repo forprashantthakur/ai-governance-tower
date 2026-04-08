@@ -3,737 +3,600 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>AI Governance Control Tower — Platform Video</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<title>AI Governance Control Tower — 90-Second Marketing Video</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0a2342;--blue:#2563eb;--blue-light:#3b82f6;--cyan:#06b6d4;
-  --green:#10b981;--amber:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--dark:#060f1e;
+  --navy:#0a2342;--blue:#2563eb;--cyan:#06b6d4;
+  --green:#10b981;--amber:#f59e0b;--red:#ef4444;
 }
 html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:#000;color:#fff;-webkit-font-smoothing:antialiased;touch-action:none;}
 .player{width:100%;height:100%;display:flex;flex-direction:column;}
 .screen{flex:1;position:relative;overflow:hidden;}
-.slide{position:absolute;inset:0;opacity:0;transition:opacity .5s ease;display:flex;flex-direction:column;pointer-events:none;}
+
+/* ─── SLIDE BASE ─── */
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .6s ease;pointer-events:none;display:flex;flex-direction:column;}
 .slide.active{opacity:1;pointer-events:all;}
 
-/* ── CINEMATIC INTRO / OUTRO ── */
-.slide-intro{background:linear-gradient(135deg,#060f1e 0%,#0a2342 55%,#0a1628 100%);align-items:center;justify-content:center;text-align:center;padding:1.5rem;}
-.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.07) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,black 20%,transparent 100%);}
-.glow-blue{position:absolute;top:-15%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(37,99,235,.22) 0%,transparent 65%);pointer-events:none;}
-.glow-cyan{position:absolute;bottom:-20%;left:-5%;width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,.14) 0%,transparent 65%);pointer-events:none;}
-.intro-body{position:relative;z-index:1;max-width:640px;padding:0 1rem;}
-.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);color:#60a5fa;padding:.3rem 1rem;border-radius:100px;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.1rem;}
-.bdot{width:6px;height:6px;border-radius:50%;background:#60a5fa;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
-.intro-title{font-size:clamp(1.7rem,5.5vw,3.2rem);font-weight:800;line-height:1.12;letter-spacing:-.03em;margin-bottom:.7rem;}
-.intro-title .grad{background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.intro-sub{color:rgba(255,255,255,.62);font-size:clamp(.8rem,2.5vw,.95rem);line-height:1.65;margin-bottom:1.4rem;}
-.intro-tags{display:flex;gap:.45rem;justify-content:center;flex-wrap:wrap;}
-.tag{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);padding:.22rem .65rem;border-radius:5px;font-size:.68rem;color:rgba(255,255,255,.6);}
+/* ─── BACKGROUNDS ─── */
+.bg-crisis{background:radial-gradient(ellipse at 60% 40%,#1a0404 0%,#0d0101 100%);}
+.bg-news{background:linear-gradient(160deg,#060c1a 0%,#0a1428 60%,#060c1a 100%);}
+.bg-reveal{background:radial-gradient(ellipse at 50% 50%,#071535 0%,#030a18 100%);}
+.bg-app{background:#060f1e;}
+.bg-impact{background:radial-gradient(ellipse at 40% 60%,#071a2e 0%,#030a15 100%);}
 
-/* ── PROBLEM SLIDES ── */
-.slide-problem{background:linear-gradient(135deg,#1a0505 0%,#2d0a0a 50%,#160404 100%);align-items:center;justify-content:center;text-align:center;padding:1.5rem;}
-.glow-red{position:absolute;top:-10%;right:-5%;width:450px;height:450px;background:radial-gradient(circle,rgba(239,68,68,.18) 0%,transparent 65%);pointer-events:none;}
-.glow-amber{position:absolute;bottom:-15%;left:-5%;width:380px;height:380px;background:radial-gradient(circle,rgba(245,158,11,.12) 0%,transparent 65%);pointer-events:none;}
-.grid-bg-red{position:absolute;inset:0;background-image:linear-gradient(rgba(239,68,68,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.06) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,black 20%,transparent 100%);}
-.badge-red{display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#f87171;padding:.3rem 1rem;border-radius:100px;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.1rem;}
-.rdot{width:6px;height:6px;border-radius:50%;background:#f87171;animation:pulse 1.5s infinite;}
+/* ─── GRID OVERLAYS ─── */
+.grid-red{position:absolute;inset:0;background-image:linear-gradient(rgba(239,68,68,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.06) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse 85% 75% at 50% 50%,black 20%,transparent 100%);}
+.grid-blue{position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.07) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse 85% 75% at 50% 50%,black 20%,transparent 100%);}
+.glow-r{position:absolute;top:-10%;right:-5%;width:420px;height:420px;background:radial-gradient(circle,rgba(239,68,68,.22) 0%,transparent 65%);pointer-events:none;}
+.glow-b{position:absolute;bottom:-15%;left:-5%;width:480px;height:480px;background:radial-gradient(circle,rgba(37,99,235,.2) 0%,transparent 65%);pointer-events:none;}
+.glow-c{position:absolute;top:-10%;right:-5%;width:380px;height:380px;background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 65%);pointer-events:none;}
 
-/* ── APP CHROME ── */
-.app-header{background:rgba(10,35,66,.97);border-bottom:1px solid rgba(255,255,255,.08);padding:.55rem 1rem;display:flex;align-items:center;gap:.6rem;flex-shrink:0;}
-.logo-icon{width:24px;height:24px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.logo-icon svg{width:13px;height:13px;color:#fff;}
-.logo-text{font-size:.75rem;font-weight:700;color:#fff;line-height:1.15;}
-.logo-sub{font-size:.56rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;}
-.app-nav{display:flex;gap:.85rem;margin-left:.85rem;overflow:hidden;}
-.app-nav span{font-size:.68rem;color:rgba(255,255,255,.4);white-space:nowrap;}
+/* ─── BADGE ─── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:.28rem .9rem;border-radius:100px;font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.85rem;}
+.badge-red{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#f87171;}
+.badge-blue{background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);color:#60a5fa;}
+.badge-green{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#34d399;}
+.dot{width:6px;height:6px;border-radius:50%;animation:pulse 1.5s infinite;}
+.dot-r{background:#f87171;}.dot-b{background:#60a5fa;}.dot-g{background:#34d399;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+
+/* ─── HOOK SLIDE ─── */
+.hook-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.5rem;position:relative;z-index:1;}
+.hook-stat{font-size:clamp(3rem,14vw,7rem);font-weight:900;line-height:1;letter-spacing:-.04em;color:#f87171;text-shadow:0 0 60px rgba(239,68,68,.5);}
+.hook-label{font-size:clamp(.85rem,2.8vw,1.1rem);color:rgba(255,255,255,.55);margin-top:.5rem;letter-spacing:.04em;text-transform:uppercase;}
+.hook-sub{font-size:clamp(1.1rem,3.5vw,1.7rem);font-weight:800;margin-top:.75rem;line-height:1.2;}
+.hook-sub .grad{background:linear-gradient(90deg,#f87171,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* ─── NEWS SLIDE ─── */
+.news-wrap{flex:1;display:flex;flex-direction:column;gap:.5rem;padding:.75rem 1rem;position:relative;z-index:1;}
+.news-ticker{background:#ef4444;padding:.25rem .75rem;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+.ticker-live{background:#fff;color:#ef4444;padding:.1rem .4rem;border-radius:3px;font-size:.58rem;font-weight:800;}
+.news-headline-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;flex:1;}
+@media(max-width:500px){.news-headline-row{grid-template-columns:1fr;}}
+.news-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.7rem;display:flex;flex-direction:column;gap:.3rem;overflow:hidden;}
+.news-source{display:flex;align-items:center;gap:.35rem;}
+.news-source-logo{height:14px;padding:1px 6px;border-radius:3px;font-size:.58rem;font-weight:800;letter-spacing:.04em;}
+.news-date{font-size:.58rem;color:rgba(255,255,255,.35);}
+.news-title{font-size:.72rem;font-weight:700;color:#fff;line-height:1.35;}
+.news-desc{font-size:.6rem;color:rgba(255,255,255,.45);line-height:1.45;}
+.news-tag{display:inline-block;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25);padding:.1rem .5rem;border-radius:3px;font-size:.55rem;font-weight:700;margin-top:.1rem;}
+.linkedin-card{background:rgba(255,255,255,.04);border:1px solid rgba(10,102,194,.3);border-radius:8px;padding:.65rem;display:flex;gap:.5rem;}
+.li-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0a66c2,#0073b1);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0;}
+.li-name{font-size:.68rem;font-weight:700;color:#fff;}
+.li-title{font-size:.58rem;color:rgba(255,255,255,.4);}
+.li-text{font-size:.65rem;color:rgba(255,255,255,.7);line-height:1.45;margin-top:.3rem;}
+.li-react{font-size:.58rem;color:rgba(255,255,255,.35);margin-top:.3rem;}
+
+/* ─── CHAOS SLIDE ─── */
+.chaos-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;position:relative;z-index:1;gap:.75rem;}
+.chaos-title{font-size:clamp(1rem,3.5vw,1.5rem);font-weight:800;text-align:center;}
+.spreadsheet{background:#1e2d3d;border:1px solid rgba(255,255,255,.12);border-radius:8px;overflow:hidden;width:100%;max-width:520px;}
+.ss-toolbar{background:#2d3f52;padding:.3rem .6rem;font-size:.6rem;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:.5rem;border-bottom:1px solid rgba(255,255,255,.08);}
+.ss-filename{color:#93c5fd;font-weight:600;}
+.ss-head{display:grid;grid-template-columns:.8fr 1.2fr 1fr .8fr .9fr;background:#253447;padding:.28rem .5rem;border-bottom:1px solid rgba(255,255,255,.1);}
+.ss-col{font-size:.58rem;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.04em;}
+.ss-row{display:grid;grid-template-columns:.8fr 1.2fr 1fr .8fr .9fr;padding:.28rem .5rem;border-bottom:1px solid rgba(255,255,255,.05);align-items:center;}
+.ss-cell{font-size:.62rem;color:rgba(255,255,255,.75);}
+.ss-red{background:rgba(239,68,68,.2);color:#f87171;border-radius:3px;padding:1px 5px;}
+.ss-amber{background:rgba(245,158,11,.2);color:#fbbf24;border-radius:3px;padding:1px 5px;}
+.ss-miss{color:rgba(255,255,255,.2);font-style:italic;}
+.chaos-callout{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:.55rem .75rem;text-align:center;max-width:520px;}
+.cc-title{font-size:.72rem;font-weight:700;color:#f87171;}
+.cc-sub{font-size:.62rem;color:rgba(255,255,255,.5);margin-top:.2rem;}
+
+/* ─── REVEAL SLIDE ─── */
+.reveal-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.5rem;position:relative;z-index:1;}
+.reveal-logo{width:60px;height:60px;background:linear-gradient(135deg,#2563eb,#06b6d4);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem;box-shadow:0 0 50px rgba(37,99,235,.5),0 0 100px rgba(37,99,235,.2);}
+.reveal-logo svg{width:30px;height:30px;color:#fff;}
+.reveal-title{font-size:clamp(1.5rem,5.5vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.1;margin-bottom:.6rem;}
+.reveal-title .grad{background:linear-gradient(90deg,#60a5fa,#06b6d4,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.reveal-sub{font-size:clamp(.78rem,2.5vw,.95rem);color:rgba(255,255,255,.55);max-width:480px;margin:0 auto .9rem;line-height:1.6;}
+.module-pills{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;}
+.mpill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:.22rem .6rem;border-radius:5px;font-size:.63rem;color:rgba(255,255,255,.65);}
+
+/* ─── APP CHROME ─── */
+.app-header{background:rgba(6,15,30,.98);border-bottom:1px solid rgba(255,255,255,.08);padding:.5rem .9rem;display:flex;align-items:center;gap:.55rem;flex-shrink:0;}
+.logo-icon{width:22px;height:22px;background:linear-gradient(135deg,#2563eb,#06b6d4);border-radius:5px;display:flex;align-items:center;justify-content:center;}
+.logo-icon svg{width:12px;height:12px;color:#fff;}
+.logo-text{font-size:.72rem;font-weight:700;color:#fff;line-height:1.15;}
+.logo-sub{font-size:.54rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;}
+.app-nav{display:flex;gap:.8rem;margin-left:.8rem;}
+.app-nav span{font-size:.65rem;color:rgba(255,255,255,.4);}
 .app-nav span.on{color:#60a5fa;font-weight:600;}
-.app-avatar{margin-left:auto;width:24px;height:24px;border-radius:50%;background:rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#60a5fa;flex-shrink:0;}
-@media(max-width:480px){.app-nav{display:none;}}
+.app-avatar{margin-left:auto;width:22px;height:22px;border-radius:50%;background:rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#60a5fa;}
+@media(max-width:460px){.app-nav{display:none;}}
+.slide-content{flex:1;padding:.65rem .9rem;display:flex;flex-direction:column;gap:.6rem;overflow:hidden;}
 
-/* ── SLIDE CONTENT ── */
-.slide-content{flex:1;padding:.75rem 1rem;overflow:hidden;display:flex;flex-direction:column;gap:.65rem;}
+/* ─── STAT ROW ─── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;}
+@media(max-width:540px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;}
+.sc-lbl{font-size:.58rem;color:rgba(255,255,255,.45);margin-bottom:.15rem;}
+.sc-val{font-size:clamp(1.1rem,3vw,1.45rem);font-weight:800;line-height:1;}
+.sc-sub{font-size:.56rem;margin-top:.1rem;}
+.c-green{color:#34d399}.c-amber{color:#fbbf24}.c-red{color:#f87171}.c-blue{color:#60a5fa}.c-cyan{color:#67e8f9}
 
-/* ── STAT ROW ── */
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;flex-shrink:0;}
-@media(max-width:580px){.stat-row{grid-template-columns:repeat(2,1fr);}}
-.stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.65rem;}
-.sc-lbl{font-size:.6rem;color:rgba(255,255,255,.45);margin-bottom:.2rem;}
-.sc-val{font-size:clamp(1.1rem,3vw,1.5rem);font-weight:800;line-height:1;}
-.sc-sub{font-size:.58rem;margin-top:.15rem;}
-
-/* ── COLOURS ── */
-.c-green{color:var(--green)}.c-amber{color:var(--amber)}.c-red{color:#f87171}.c-blue{color:#60a5fa}.c-cyan{color:#67e8f9}.c-purple{color:#a78bfa}
-
-/* ── PILLS ── */
-.pill{padding:2px 7px;border-radius:4px;font-size:.58rem;font-weight:700;text-transform:uppercase;}
+/* ─── PILLS ─── */
+.pill{padding:2px 7px;border-radius:4px;font-size:.56rem;font-weight:700;text-transform:uppercase;}
 .p-green{background:rgba(16,185,129,.15);color:#34d399;}
 .p-amber{background:rgba(245,158,11,.15);color:#fbbf24;}
 .p-red{background:rgba(239,68,68,.15);color:#f87171;}
 .p-blue{background:rgba(37,99,235,.15);color:#60a5fa;}
-.p-purple{background:rgba(139,92,246,.15);color:#a78bfa;}
 .p-gray{background:rgba(148,163,184,.1);color:#94a3b8;}
 
-/* ── PANEL ── */
-.panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.75rem;overflow:hidden;}
-.panel-title{font-size:.7rem;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:.55rem;display:flex;align-items:center;gap:.35rem;}
-.panel-title svg{width:11px;height:11px;color:#60a5fa;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;flex:1;min-height:0;}
-@media(max-width:560px){.two-col{grid-template-columns:1fr;}}
+/* ─── PANEL ─── */
+.panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.7rem;overflow:hidden;}
+.panel-title{font-size:.67rem;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:.5rem;display:flex;align-items:center;gap:.32rem;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;flex:1;min-height:0;}
+@media(max-width:520px){.two-col{grid-template-columns:1fr;}}
 
-/* ── TABLE ── */
-.tbl{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden;}
-.tbl-head{display:grid;padding:.45rem .7rem;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06);}
-.tbl-row{display:grid;padding:.45rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);align-items:center;}
-.tbl-row:last-child{border-bottom:none;}
-.tbl-lbl{font-size:.58rem;color:rgba(255,255,255,.4);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-.tbl-val{font-size:.7rem;color:rgba(255,255,255,.85);}
-.tbl-sub{font-size:.6rem;color:rgba(255,255,255,.4);}
-.cols-5{grid-template-columns:2fr 1fr 1fr 1fr 1fr;}
-.cols-4{grid-template-columns:1fr 1fr 1.5fr 1fr;}
-.cols-3{grid-template-columns:1.5fr .8fr .8fr;}
-@media(max-width:580px){
-  .cols-5{grid-template-columns:1.5fr 1fr 1fr;}.cols-5 .h-mob,.cols-5 .d-mob{display:none;}
-  .cols-4{grid-template-columns:1fr 1fr 1fr;}.cols-4 .h-mob2,.cols-4 .d-mob2{display:none;}
-}
-
-/* ── PROGRESS BARS ── */
-.pb-wrap{margin-top:.2rem;}
-.pb-lbl{display:flex;justify-content:space-between;font-size:.6rem;color:rgba(255,255,255,.4);margin-bottom:3px;}
-.pb-track{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+/* ─── PROGRESS BARS ─── */
+.pb-lbl{display:flex;justify-content:space-between;font-size:.58rem;color:rgba(255,255,255,.4);margin-bottom:3px;}
+.pb-track{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:.35rem;}
 .pb-fill{height:100%;border-radius:3px;}
-.pb-blue{background:linear-gradient(90deg,var(--blue),var(--cyan));}
-.pb-green{background:linear-gradient(90deg,var(--green),#34d399);}
-.pb-amber{background:linear-gradient(90deg,var(--amber),#fbbf24);}
-.pb-red{background:linear-gradient(90deg,var(--red),#f87171);}
+.pb-green{background:linear-gradient(90deg,#10b981,#34d399);}
+.pb-amber{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.pb-blue{background:linear-gradient(90deg,#2563eb,#06b6d4);}
+.pb-red{background:linear-gradient(90deg,#ef4444,#f87171);}
 
-/* ── ALERTS ── */
-.alert-item{display:flex;align-items:flex-start;gap:.5rem;padding:.45rem .5rem;background:rgba(255,255,255,.03);border-radius:6px;border-left:3px solid;margin-bottom:.35rem;}
-.alert-item:last-child{margin-bottom:0;}
-.a-title{font-size:.68rem;font-weight:600;color:rgba(255,255,255,.85);}
-.a-sub{font-size:.6rem;color:rgba(255,255,255,.4);margin-top:1px;}
+/* ─── TABLE ─── */
+.tbl{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden;}
+.tbl-head{display:grid;padding:.42rem .65rem;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06);}
+.tbl-row{display:grid;padding:.42rem .65rem;border-bottom:1px solid rgba(255,255,255,.04);align-items:center;}
+.tbl-row:last-child{border-bottom:none;}
+.tbl-lbl{font-size:.56rem;color:rgba(255,255,255,.4);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.tbl-val{font-size:.68rem;color:rgba(255,255,255,.85);}
+.tbl-sub{font-size:.58rem;color:rgba(255,255,255,.4);}
+.c3{grid-template-columns:1.5fr .8fr .8fr;}
+.c4{grid-template-columns:2fr 1fr 1fr 1fr;}
 
-/* ── FEATURE CARDS (problem slide) ── */
-.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;width:100%;max-width:600px;margin:0 auto;}
-@media(max-width:450px){.feat-grid{grid-template-columns:1fr;}}
-.feat-card{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.75rem;}
-.feat-card-icon{font-size:1.1rem;margin-bottom:.35rem;}
-.feat-card-title{font-size:.75rem;font-weight:700;color:#f87171;margin-bottom:.2rem;}
-.feat-card-desc{font-size:.65rem;color:rgba(255,255,255,.55);line-height:1.5;}
+/* ─── ALERTS ─── */
+.alert{display:flex;align-items:flex-start;gap:.45rem;padding:.4rem .45rem;background:rgba(255,255,255,.03);border-radius:6px;border-left:3px solid;margin-bottom:.3rem;}
+.alert:last-child{margin-bottom:0;}
+.at{font-size:.65rem;font-weight:600;color:rgba(255,255,255,.85);}
+.as{font-size:.58rem;color:rgba(255,255,255,.4);margin-top:1px;}
 
-/* ── SOLUTION FEATURE CARDS ── */
-.sol-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;width:100%;max-width:600px;margin:0 auto;}
-@media(max-width:450px){.sol-grid{grid-template-columns:1fr;}}
-.sol-card{background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.2);border-radius:10px;padding:.7rem;}
-.sol-card-icon{font-size:1rem;margin-bottom:.3rem;}
-.sol-card-title{font-size:.73rem;font-weight:700;color:#60a5fa;margin-bottom:.18rem;}
-.sol-card-desc{font-size:.62rem;color:rgba(255,255,255,.5);line-height:1.45;}
+/* ─── KANBAN MINI ─── */
+.kb{display:flex;gap:.32rem;flex:1;min-height:0;overflow:hidden;}
+.kb-col{flex:1;display:flex;flex-direction:column;gap:.25rem;min-width:0;}
+.kb-head{font-size:.56rem;font-weight:700;padding:.2rem .38rem;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kb-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:.34rem .4rem;}
+.kb-stripe{height:2px;border-radius:1px;margin-bottom:.22rem;}
+.kb-title{font-size:.58rem;font-weight:600;color:rgba(255,255,255,.82);line-height:1.3;}
 
-/* ── SPLIT SLIDE (transition) ── */
-.split-wrap{flex:1;display:flex;gap:0;overflow:hidden;}
-.split-left{flex:1;background:linear-gradient(135deg,#1a0505,#2d0a0a);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;border-right:2px solid rgba(255,255,255,.1);}
-.split-right{flex:1;background:linear-gradient(135deg,#0a1628,#0d2952);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;}
-.split-label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.65rem;padding:.2rem .7rem;border-radius:100px;}
-.split-label-red{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);}
-.split-label-blue{background:rgba(37,99,235,.15);color:#60a5fa;border:1px solid rgba(37,99,235,.3);}
-.split-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;border-radius:6px;margin-bottom:.3rem;width:100%;}
-.split-item-bad{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);}
-.split-item-good{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.15);}
-.si-icon{font-size:.85rem;flex-shrink:0;}
-.si-text{font-size:.68rem;color:rgba(255,255,255,.75);line-height:1.35;}
+/* ─── GANTT ─── */
+.gantt-row{display:flex;align-items:center;gap:.3rem;margin-bottom:.28rem;}
+.gantt-lbl{width:85px;flex-shrink:0;font-size:.58rem;color:rgba(255,255,255,.65);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gantt-area{flex:1;position:relative;height:15px;}
+.gbar{position:absolute;height:11px;top:2px;border-radius:3px;}
 
-/* ── PRODUCT REVEAL ── */
-.reveal-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#060f1e,#0a2342);padding:1rem;}
-.reveal-card{width:min(520px,100%);background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.25);border-radius:16px;padding:1.75rem;text-align:center;}
-.reveal-logo{width:56px;height:56px;background:linear-gradient(135deg,#2563eb,#06b6d4);border-radius:14px;margin:0 auto .85rem;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(37,99,235,.4);}
-.reveal-logo svg{width:28px;height:28px;color:#fff;}
-.reveal-title{font-size:clamp(1.1rem,3.5vw,1.6rem);font-weight:800;letter-spacing:-.02em;margin-bottom:.4rem;}
-.reveal-sub{font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:1.1rem;}
-.reveal-modules{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center;}
-.rm{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:.22rem .6rem;border-radius:5px;font-size:.62rem;color:rgba(255,255,255,.6);}
+/* ─── IMPACT SLIDE ─── */
+.impact-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.2rem;position:relative;z-index:1;gap:.8rem;}
+.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;width:100%;max-width:560px;}
+@media(max-width:460px){.impact-grid{grid-template-columns:repeat(2,1fr);}}
+.ic{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.8rem .5rem;text-align:center;}
+.ic-val{font-size:clamp(1.4rem,4.5vw,2.1rem);font-weight:900;line-height:1;margin-bottom:.2rem;}
+.ic-lbl{font-size:.6rem;color:rgba(255,255,255,.5);line-height:1.4;}
 
-/* ── IMPACT NUMBERS ── */
-.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;width:100%;max-width:580px;margin:0 auto;}
-@media(max-width:450px){.impact-grid{grid-template-columns:1fr 1fr;}}
-.impact-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.85rem;text-align:center;}
-.impact-val{font-size:clamp(1.4rem,4vw,2rem);font-weight:800;line-height:1;margin-bottom:.25rem;}
-.impact-lbl{font-size:.62rem;color:rgba(255,255,255,.5);line-height:1.4;}
+/* ─── CTA SLIDE ─── */
+.cta-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.5rem;position:relative;z-index:1;}
+.cta-title{font-size:clamp(1.4rem,5vw,2.8rem);font-weight:900;letter-spacing:-.03em;line-height:1.1;margin-bottom:.6rem;}
+.cta-title .g1{background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.cta-sub{font-size:clamp(.78rem,2.3vw,.9rem);color:rgba(255,255,255,.55);max-width:440px;line-height:1.65;margin:0 auto .9rem;}
+.cta-btns{display:flex;gap:.65rem;flex-wrap:wrap;justify-content:center;}
+.cta-btn-primary{background:linear-gradient(90deg,#2563eb,#06b6d4);color:#fff;padding:.65rem 1.5rem;border-radius:8px;font-weight:800;font-size:.82rem;text-decoration:none;border:none;cursor:pointer;}
+.cta-btn-ghost{background:transparent;color:#fff;padding:.65rem 1.4rem;border-radius:8px;font-weight:700;font-size:.82rem;border:1.5px solid rgba(255,255,255,.3);text-decoration:none;}
+.cta-tags{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.8rem;}
+.ctag{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:.18rem .55rem;border-radius:4px;font-size:.62rem;color:rgba(255,255,255,.5);}
 
-/* ── KANBAN MINI ── */
-.kb-wrap{display:flex;gap:.35rem;flex:1;min-height:0;overflow-x:hidden;}
-.kb-col{flex:1;display:flex;flex-direction:column;gap:.28rem;}
-.kb-col-head{font-size:.58rem;font-weight:700;padding:.22rem .4rem;border-radius:4px;margin-bottom:.1rem;}
-.kb-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:.38rem .42rem;}
-.kb-card-stripe{height:2px;border-radius:1px;margin-bottom:.25rem;}
-.kb-card-title{font-size:.6rem;font-weight:600;color:rgba(255,255,255,.83);line-height:1.3;}
-.kb-card-meta{font-size:.55rem;color:rgba(255,255,255,.35);margin-top:.15rem;}
-
-/* ── GANTT MINI ── */
-.gantt-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:.28rem;}
-.gantt-row{display:flex;align-items:center;gap:.35rem;}
-.gantt-lbl{width:90px;flex-shrink:0;font-size:.6rem;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.gantt-area{flex:1;position:relative;height:16px;}
-.gantt-bar{position:absolute;height:12px;top:2px;border-radius:3px;}
-
-/* ── WORKFLOW CANVAS MINI ── */
-.canvas-wrap{flex:1;position:relative;background:rgba(0,0,0,.3);border-radius:8px;overflow:hidden;}
-.canvas-grid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.05) 1px,transparent 1px);background-size:18px 18px;}
-.wf-node{position:absolute;width:75px;border-radius:7px;padding:.4rem .45rem;border:1px solid;}
-.wf-node-label{font-size:.56rem;font-weight:700;line-height:1.2;}
-.wf-node-type{font-size:.5rem;opacity:.55;margin-top:.1rem;}
-
-/* ── AUDIT ROWS ── */
-.audit-row{display:flex;align-items:center;gap:.55rem;padding:.4rem .5rem;border-radius:6px;background:rgba(255,255,255,.025);margin-bottom:.3rem;}
-.audit-icon{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.audit-icon svg{width:11px;height:11px;}
-.audit-action{font-size:.68rem;font-weight:600;color:rgba(255,255,255,.85);}
-.audit-meta{font-size:.58rem;color:rgba(255,255,255,.4);}
-
-/* ── NARRATION ── */
-.narration{position:absolute;bottom:0;left:0;right:0;padding:.55rem 1rem .8rem;background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.65) 70%,transparent 100%);}
-.nar-inner{max-width:720px;margin:0 auto;display:flex;align-items:flex-start;gap:.55rem;}
-.nar-icon{width:26px;height:26px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.nar-icon svg{width:13px;height:13px;color:#fff;}
-.nar-text{font-size:clamp(.73rem,2.3vw,.87rem);line-height:1.52;color:rgba(255,255,255,.9);}
+/* ─── NARRATION ─── */
+.narration{position:absolute;bottom:0;left:0;right:0;padding:.5rem 1rem .75rem;background:linear-gradient(to top,rgba(0,0,0,.93) 0%,rgba(0,0,0,.65) 70%,transparent 100%);}
+.nar-inner{max-width:740px;margin:0 auto;display:flex;align-items:flex-start;gap:.5rem;}
+.nar-icon{width:24px;height:24px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nar-icon svg{width:12px;height:12px;color:#fff;}
+.nar-text{font-size:clamp(.72rem,2.2vw,.86rem);line-height:1.5;color:rgba(255,255,255,.9);}
 .nar-text strong{color:#fff;}
 
-/* ── OVERLAY BADGES ── */
-.step-badge{position:absolute;top:.55rem;right:.7rem;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);padding:.15rem .6rem;border-radius:100px;font-size:.6rem;color:rgba(255,255,255,.45);}
-.chapter-flash{position:absolute;top:.55rem;left:50%;transform:translateX(-50%);background:rgba(10,35,66,.92);border:1px solid rgba(37,99,235,.35);border-radius:7px;padding:.22rem .85rem;font-size:.68rem;font-weight:600;color:#60a5fa;white-space:nowrap;backdrop-filter:blur(8px);opacity:0;transition:opacity .4s;pointer-events:none;}
-.chapter-flash.show{opacity:1;}
-.audio-badge{position:absolute;top:.55rem;left:.7rem;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.1);padding:.18rem .55rem;border-radius:100px;font-size:.6rem;color:rgba(255,255,255,.5);pointer-events:none;opacity:0;transition:opacity .3s;}
+/* ─── HUD ─── */
+.step-badge{position:absolute;top:.5rem;right:.65rem;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.1);padding:.13rem .55rem;border-radius:100px;font-size:.58rem;color:rgba(255,255,255,.4);}
+.chap-flash{position:absolute;top:.5rem;left:50%;transform:translateX(-50%);background:rgba(6,15,30,.92);border:1px solid rgba(37,99,235,.35);border-radius:7px;padding:.2rem .8rem;font-size:.65rem;font-weight:600;color:#60a5fa;white-space:nowrap;backdrop-filter:blur(8px);opacity:0;transition:opacity .4s;pointer-events:none;}
+.chap-flash.show{opacity:1;}
+.audio-badge{position:absolute;top:.5rem;left:.65rem;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);padding:.16rem .5rem;border-radius:100px;font-size:.58rem;color:rgba(255,255,255,.5);pointer-events:none;opacity:0;transition:opacity .3s;}
 .audio-badge.show{opacity:1;}
-.audio-wave{display:flex;align-items:center;gap:2px;height:10px;}
-.audio-wave span{display:block;width:2px;border-radius:1px;background:#60a5fa;animation:wave 1s ease-in-out infinite;}
-.audio-wave span:nth-child(2){animation-delay:.1s;height:60%;}
-.audio-wave span:nth-child(3){animation-delay:.2s;height:100%;}
-.audio-wave span:nth-child(4){animation-delay:.15s;height:70%;}
-.audio-wave span:nth-child(5){animation-delay:.05s;height:40%;}
-@keyframes wave{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+.aw{display:flex;align-items:center;gap:2px;height:10px;}
+.aw span{display:block;width:2px;border-radius:1px;background:#60a5fa;animation:wave 1s ease-in-out infinite;}
+.aw span:nth-child(2){animation-delay:.1s;height:60%;}
+.aw span:nth-child(3){animation-delay:.2s;height:100%;}
+.aw span:nth-child(4){animation-delay:.15s;height:70%;}
+.aw span:nth-child(5){animation-delay:.05s;height:40%;}
+@keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
 
-/* ── CONTROLS ── */
-.controls{height:52px;background:#050d1a;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:.5rem;padding:0 .85rem;flex-shrink:0;}
-.cbtn{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;}
+/* ─── MUSIC ICON ─── */
+.music-badge{position:absolute;top:.5rem;left:.65rem;display:flex;align-items:center;gap:4px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);padding:.16rem .5rem;border-radius:100px;font-size:.58rem;color:#34d399;pointer-events:none;opacity:0;transition:opacity .5s;}
+.music-badge.show{opacity:1;}
+
+/* ─── CONTROLS ─── */
+.controls{height:50px;background:#030a15;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:.45rem;padding:0 .75rem;flex-shrink:0;}
+.cbtn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;}
 .cbtn:hover{background:rgba(255,255,255,.12);}
-.cbtn svg{width:13px;height:13px;color:rgba(255,255,255,.8);}
-.cbtn-play{width:36px;height:36px;background:var(--blue);border:none;}
+.cbtn svg{width:12px;height:12px;color:rgba(255,255,255,.8);}
+.cbtn-play{width:34px;height:34px;background:#2563eb;border:none;}
 .cbtn-play:hover{background:#1d4ed8;}
-.cbtn-play svg{width:15px;height:15px;color:#fff;}
-.prog-wrap{flex:1;display:flex;align-items:center;gap:.5rem;}
-.time-lbl{font-size:.62rem;color:rgba(255,255,255,.4);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.cbtn-play svg{width:14px;height:14px;color:#fff;}
+.prog-wrap{flex:1;display:flex;align-items:center;gap:.45rem;}
+.tlbl{font-size:.6rem;color:rgba(255,255,255,.4);white-space:nowrap;font-variant-numeric:tabular-nums;}
 .prog-rail{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;position:relative;}
-.prog-thumb{height:100%;background:var(--blue);border-radius:2px;transition:width .25s linear;position:relative;}
-.prog-thumb::after{content:'';position:absolute;right:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--blue-light);border:2px solid #fff;}
-.ch-dots{display:flex;gap:4px;margin-left:.35rem;}
+.prog-thumb{height:100%;background:linear-gradient(90deg,#2563eb,#06b6d4);border-radius:2px;transition:width .25s linear;position:relative;}
+.prog-thumb::after{content:'';position:absolute;right:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:#3b82f6;border:2px solid #fff;}
+.ch-dots{display:flex;gap:4px;margin-left:.3rem;}
 .ch-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .2s;}
-.ch-dot.done{background:var(--blue);}
-.ch-dot.on{background:var(--cyan);transform:scale(1.5);}
-.slide-lbl{font-size:.62rem;color:rgba(255,255,255,.3);white-space:nowrap;margin-left:.25rem;max-width:90px;overflow:hidden;text-overflow:ellipsis;}
-@media(max-width:480px){.ch-dots{display:none;}.time-lbl{display:none;}.slide-lbl{display:none;}}
-
-/* ── OUTRO BUTTONS ── */
-.outro-btns{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.4rem;}
-.obtn{padding:.65rem 1.4rem;border-radius:8px;font-weight:700;font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;}
-.obtn-primary{background:var(--blue);color:#fff;}
-.obtn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.3);}
+.ch-dot.done{background:#2563eb;}
+.ch-dot.on{background:#06b6d4;transform:scale(1.5);}
+.slbl{font-size:.6rem;color:rgba(255,255,255,.3);white-space:nowrap;margin-left:.2rem;max-width:88px;overflow:hidden;text-overflow:ellipsis;}
+@media(max-width:460px){.ch-dots{display:none;}.tlbl{display:none;}.slbl{display:none;}}
 </style>
 </head>
 <body>
 <div class="player">
   <div class="screen" id="screen">
-    <div class="audio-badge" id="audioBadge"><div class="audio-wave"><span style="height:50%"></span><span></span><span></span><span></span><span></span></div><span>Narrating…</span></div>
-    <div class="chapter-flash" id="chFlash"></div>
-    <div class="step-badge" id="stepBadge">1 / 14</div>
+    <div class="audio-badge" id="audioBadge"><div class="aw"><span style="height:50%"></span><span></span><span></span><span></span><span></span></div><span>Narrating…</span></div>
+    <div class="music-badge" id="musicBadge">♪ Playing</div>
+    <div class="chap-flash" id="chFlash"></div>
+    <div class="step-badge" id="stepBadge">1 / 9</div>
 
-    <!-- ══ SLIDE 0 · CINEMATIC INTRO ══ -->
-    <div class="slide slide-intro active" id="s0">
-      <div class="grid-bg"></div><div class="glow-blue"></div><div class="glow-cyan"></div>
-      <div class="intro-body">
-        <div class="badge"><span class="bdot"></span>Enterprise Platform · 2026</div>
-        <h1 class="intro-title">AI Governance<br/><span class="grad">Control Tower</span></h1>
-        <p class="intro-sub">The only platform that gives your organization complete visibility, control, and compliance over every AI system — from model registration to audit-ready reporting.</p>
-        <div class="intro-tags">
-          <span class="tag">▶ Press Play to watch</span>
-          <span class="tag">13 chapters</span>
-          <span class="tag">🔊 Audio narration</span>
-          <span class="tag">DPDP · ISO 42001 · EU AI Act</span>
-        </div>
+    <!-- ══ S0 · HOOK ══ -->
+    <div class="slide bg-crisis active" id="s0">
+      <div class="grid-red"></div><div class="glow-r"></div>
+      <div class="hook-wrap">
+        <div class="badge badge-red"><span class="dot dot-r"></span>The AI Governance Crisis · 2026</div>
+        <div class="hook-stat">73%</div>
+        <div class="hook-label">of AI deployments have zero governance</div>
+        <div class="hook-sub">Your organization could be <span class="grad">next.</span></div>
       </div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div class="nar-text">Press <strong>Play</strong> to start the video.</div></div></div>
     </div>
 
-    <!-- ══ SLIDE 1 · THE PROBLEM ══ -->
-    <div class="slide slide-problem" id="s1">
-      <div class="grid-bg-red"></div><div class="glow-red"></div><div class="glow-amber"></div>
-      <div class="intro-body" style="max-width:650px;">
-        <div class="badge-red"><span class="rdot"></span>The Reality Today</div>
-        <h2 class="intro-title" style="font-size:clamp(1.3rem,4vw,2.2rem);margin-bottom:.65rem;">AI is Everywhere.<br/><span style="color:#f87171;">Governance is Nowhere.</span></h2>
-        <p class="intro-sub" style="margin-bottom:1rem;">Organizations are deploying AI models faster than ever — but without visibility, controls, or compliance. The result: regulatory fines, reputational damage, and catastrophic AI failures.</p>
-        <div class="feat-grid">
-          <div class="feat-card"><div class="feat-card-icon">🕳️</div><div class="feat-card-title">Zero Model Visibility</div><div class="feat-card-desc">No central registry. Teams don't know which models are in production or who owns them.</div></div>
-          <div class="feat-card"><div class="feat-card-icon">⚖️</div><div class="feat-card-title">Regulatory Exposure</div><div class="feat-card-desc">DPDP, GDPR, EU AI Act in force. Most organizations are non-compliant and don't know it.</div></div>
-          <div class="feat-card"><div class="feat-card-icon">🎯</div><div class="feat-card-title">Undetected Bias & Drift</div><div class="feat-card-desc">Models silently degrade or produce biased outputs. No monitoring means no warnings.</div></div>
-          <div class="feat-card"><div class="feat-card-icon">📂</div><div class="feat-card-title">Audit Chaos</div><div class="feat-card-desc">Auditors demand evidence. Teams scramble through emails and spreadsheets for weeks.</div></div>
+    <!-- ══ S1 · WORLD IS WATCHING ══ -->
+    <div class="slide bg-news" id="s1">
+      <div class="grid-red"></div><div class="glow-r"></div>
+      <div class="news-wrap">
+        <div class="news-ticker">
+          <span class="ticker-live">LIVE</span>
+          AI GOVERNANCE · REGULATORY NEWS · GLOBAL COMPLIANCE ALERTS
         </div>
-      </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="nar-text"><strong>The Problem.</strong> Artificial intelligence is transforming every industry — but most organizations are deploying A-I systems with zero governance. No model registry, no risk controls, no compliance framework, and no audit trail. When regulators come knocking, or when a model fails catastrophically, there is no safety net. That changes today.</div></div></div>
-    </div>
-
-    <!-- ══ SLIDE 2 · THE STAKES ══ -->
-    <div class="slide slide-problem" id="s2">
-      <div class="grid-bg-red"></div><div class="glow-red"></div>
-      <div class="intro-body" style="max-width:620px;">
-        <div class="badge-red"><span class="rdot"></span>The Cost of Inaction</div>
-        <h2 class="intro-title" style="font-size:clamp(1.2rem,3.5vw,2rem);margin-bottom:.9rem;">The Numbers Don't Lie</h2>
-        <div class="impact-grid" style="margin-bottom:.85rem;">
-          <div class="impact-card"><div class="impact-val" style="color:#f87171;">€20M+</div><div class="impact-lbl">Max GDPR fine per violation</div></div>
-          <div class="impact-card"><div class="impact-val" style="color:#fbbf24;">73%</div><div class="impact-lbl">of AI deployments have no governance framework</div></div>
-          <div class="impact-card"><div class="impact-val" style="color:#f87171;">6 wks</div><div class="impact-lbl">Average audit preparation time without tooling</div></div>
-          <div class="impact-card"><div class="impact-val" style="color:#fbbf24;">340%</div><div class="impact-lbl">Increase in AI regulatory actions 2023–2025</div></div>
-          <div class="impact-card"><div class="impact-val" style="color:#f87171;">1 in 3</div><div class="impact-lbl">AI projects fail due to governance failures</div></div>
-          <div class="impact-card"><div class="impact-val" style="color:#fbbf24;">$4.5M</div><div class="impact-lbl">Average cost of an AI-related data breach</div></div>
-        </div>
-        <p style="font-size:.72rem;color:rgba(255,255,255,.5);text-align:center;">Governance is no longer optional. It is a business-critical imperative.</p>
-      </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><div class="nar-text"><strong>The Stakes.</strong> The numbers are sobering. GDPR fines reach twenty million euros per violation. Three in four A-I deployments have no governance at all. Audit preparation takes six weeks on average. And regulatory enforcement actions have increased three-hundred-and-forty percent in just two years. Organizations that ignore A-I governance are not just taking a legal risk — they are taking an existential one.</div></div></div>
-    </div>
-
-    <!-- ══ SLIDE 3 · BEFORE vs AFTER ══ -->
-    <div class="slide" id="s3" style="background:#060f1e;">
-      <div class="split-wrap">
-        <div class="split-left">
-          <div class="split-label split-label-red">❌ Without Governance</div>
-          <div style="width:100%;max-width:200px;">
-            <div class="split-item split-item-bad"><span class="si-icon">🕳️</span><span class="si-text">No idea which AI models exist in production</span></div>
-            <div class="split-item split-item-bad"><span class="si-icon">🔥</span><span class="si-text">Model bias discovered by journalists, not you</span></div>
-            <div class="split-item split-item-bad"><span class="si-icon">📋</span><span class="si-text">6 weeks to prepare a compliance report</span></div>
-            <div class="split-item split-item-bad"><span class="si-icon">🤖</span><span class="si-text">AI agents acting without oversight or logs</span></div>
-            <div class="split-item split-item-bad"><span class="si-icon">💸</span><span class="si-text">Regulatory fines and reputational damage</span></div>
+        <div class="news-headline-row">
+          <div class="news-card">
+            <div class="news-source"><div class="news-source-logo" style="background:#e11d48;color:#fff;">EU</div><span class="news-date">Jan 2026 · Regulatory</span></div>
+            <div class="news-title">EU AI Act enforced: €35M fines for high-risk AI systems without conformity assessments</div>
+            <div class="news-desc">Article 51 penalties now active. Financial institutions and healthcare providers face immediate compliance deadline.</div>
+            <span class="news-tag">EU AI Act</span>
           </div>
-        </div>
-        <div class="split-right">
-          <div class="split-label split-label-blue">✅ With Control Tower</div>
-          <div style="width:100%;max-width:200px;">
-            <div class="split-item split-item-good"><span class="si-icon">🗂️</span><span class="si-text">Every model registered, versioned, and tracked</span></div>
-            <div class="split-item split-item-good"><span class="si-icon">📡</span><span class="si-text">Bias and drift alerts fire in real time</span></div>
-            <div class="split-item split-item-good"><span class="si-icon">⚡</span><span class="si-text">Compliance report generated in 30 seconds</span></div>
-            <div class="split-item split-item-good"><span class="si-icon">🛡️</span><span class="si-text">All agent actions logged with human approval</span></div>
-            <div class="split-item split-item-good"><span class="si-icon">✅</span><span class="si-text">Audit-ready, regulator-ready, board-ready</span></div>
+          <div class="news-card">
+            <div class="news-source"><div class="news-source-logo" style="background:#1e40af;color:#fff;">MCA</div><span class="news-date">Dec 2025 · India</span></div>
+            <div class="news-title">MEITY DPDP rules: AI systems processing personal data must maintain consent audit trails</div>
+            <div class="news-desc">The Digital Personal Data Protection Act 2023 mandates documented AI governance. Non-compliance: ₹250 crore penalty.</div>
+            <span class="news-tag">DPDP Act</span>
+          </div>
+          <div class="news-card">
+            <div class="news-source"><div class="news-source-logo" style="background:#0369a1;color:#fff;">ISO</div><span class="news-date">Nov 2025 · Standards</span></div>
+            <div class="news-title">ISO 42001 becomes mandatory for enterprise AI procurement — vendors must demonstrate certification</div>
+            <div class="news-desc">Enterprise buyers now requiring ISO 42001 compliance as a vendor qualification criterion.</div>
+            <span class="news-tag">ISO 42001</span>
+          </div>
+          <div class="linkedin-card">
+            <div class="li-avatar">AK</div>
+            <div>
+              <div class="li-name">Ananya K. · Chief Risk Officer, HDFC AI Labs</div>
+              <div class="li-title">Mumbai · 2nd connection</div>
+              <div class="li-text">Our auditors just asked for a full AI model inventory and consent trail for every model in production. We had 47 models tracked in a spreadsheet. It took us 3 weeks to pull the data. Never again. 😤</div>
+              <div class="li-react">❤️ 847 · 💬 134 comments · 🔁 Repost</div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div><div class="nar-text"><strong>The Difference.</strong> Without governance: invisible models, silent failures, weeks of audit scrambling, and fines you never saw coming. With the A-I Governance Control Tower: every model visible and tracked, bias alerts in real time, a compliance report in thirty seconds, and full agent oversight. This is the transformation we deliver.</div></div></div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg></div><div class="nar-text"><strong>Regulators worldwide are moving fast!</strong> The EU AI Act is enforcing €35M fines. India's DPDP Act mandates consent trails. ISO 42001 is now a procurement requirement. And enterprises are getting caught completely off guard — scrambling for weeks when auditors arrive.</div></div></div>
     </div>
 
-    <!-- ══ SLIDE 4 · PRODUCT REVEAL ══ -->
-    <div class="slide" id="s4" style="background:linear-gradient(135deg,#060f1e,#0a2342);">
-      <div class="grid-bg"></div><div class="glow-blue"></div><div class="glow-cyan"></div>
-      <div class="reveal-wrap" style="background:transparent;">
-        <div class="reveal-card">
-          <div class="reveal-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-          <div class="reveal-title">AI Governance <span style="background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Control Tower</span></div>
-          <div class="reveal-sub">The enterprise platform purpose-built for AI governance — giving Risk Officers, Compliance teams, and CIOs complete control over every AI system in their organization.</div>
-          <div class="reveal-modules">
-            <span class="rm">🗂️ AI Model Inventory</span>
-            <span class="rm">⚠️ Risk Engine</span>
-            <span class="rm">✅ Compliance Controls</span>
-            <span class="rm">🔒 Data Governance</span>
-            <span class="rm">🤖 Agent Oversight</span>
-            <span class="rm">📊 Monitoring</span>
-            <span class="rm">📋 Audit & Reports</span>
-            <span class="rm">📁 AI Projects</span>
-          </div>
+    <!-- ══ S2 · THE CHAOS ══ -->
+    <div class="slide bg-crisis" id="s2">
+      <div class="grid-red"></div><div class="glow-r"></div>
+      <div class="chaos-wrap">
+        <div class="badge badge-red"><span class="dot dot-r"></span>What Most Organizations Look Like Today</div>
+        <div class="chaos-title">AI Model Tracker — <span style="color:#fbbf24;">v47_FINAL_v3.xlsx</span></div>
+        <div class="spreadsheet">
+          <div class="ss-toolbar">📊 <span class="ss-filename">AI_Model_Tracker_v47_FINAL_v3_USE_THIS.xlsx</span> <span style="margin-left:auto;">Last saved by: priya.s@corp.com · 3 weeks ago</span></div>
+          <div class="ss-head"><div class="ss-col">Model Name</div><div class="ss-col">Owner</div><div class="ss-col">Compliance</div><div class="ss-col">Risk</div><div class="ss-col">Status</div></div>
+          <div class="ss-row"><div class="ss-cell">Credit Risk v2</div><div class="ss-cell">Rahul?</div><div class="ss-cell ss-miss">—</div><div class="ss-cell ss-red">HIGH ⚠️</div><div class="ss-cell ss-amber">unclear</div></div>
+          <div class="ss-row"><div class="ss-cell">Fraud Detector</div><div class="ss-cell ss-miss">unknown</div><div class="ss-cell ss-red">MISSING</div><div class="ss-cell ss-red">CRITICAL</div><div class="ss-cell ss-miss">???</div></div>
+          <div class="ss-row"><div class="ss-cell">Churn Model v4</div><div class="ss-cell">IT Team</div><div class="ss-cell ss-amber">partial</div><div class="ss-cell ss-amber">MEDIUM</div><div class="ss-cell">prod?</div></div>
+          <div class="ss-row"><div class="ss-cell">NLP Agent (new)</div><div class="ss-cell ss-miss">—</div><div class="ss-cell ss-miss">not done</div><div class="ss-cell ss-miss">—</div><div class="ss-cell ss-red">LIVE ⚠️</div></div>
+          <div class="ss-row" style="background:rgba(239,68,68,.08);"><div class="ss-cell" style="color:#f87171;">⚠ 23 more rows…</div><div class="ss-cell ss-miss">—</div><div class="ss-cell ss-miss">—</div><div class="ss-cell ss-red">AUDIT DUE</div><div class="ss-cell ss-miss">???</div></div>
+        </div>
+        <div class="chaos-callout">
+          <div class="cc-title">🔥 Auditors arrive in 3 days. 47 models. Zero documentation. Zero compliance trail.</div>
+          <div class="cc-sub">This is the reality for 7 in 10 enterprises deploying AI today.</div>
         </div>
       </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="nar-text"><strong>Introducing the A-I Governance Control Tower.</strong> A single, unified enterprise platform with eight integrated modules — covering the complete A-I governance lifecycle from model registration to audit reporting, from data lineage to autonomous agent oversight, and from project delivery to regulatory compliance. Built for DPDP, ISO 42001, GDPR, and the EU AI Act.</div></div></div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div class="nar-text"><strong>Sound familiar?</strong> Most enterprises are running AI governance on spreadsheets — missing owners, unknown risk levels, zero compliance evidence. Auditors arrive and the panic begins. Models running in production with no oversight, no consent trail, and no accountability. This has to stop!</div></div></div>
     </div>
 
-    <!-- ══ SLIDE 5 · COMMAND CENTER DASHBOARD ══ -->
-    <div class="slide" id="s5">
+    <!-- ══ S3 · REVEAL ══ -->
+    <div class="slide bg-reveal" id="s3">
+      <div class="grid-blue"></div><div class="glow-b"></div><div class="glow-c"></div>
+      <div class="reveal-wrap">
+        <div class="badge badge-blue"><span class="dot dot-b"></span>Introducing · The Solution</div>
+        <div class="reveal-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="reveal-title">AI Governance<br/><span class="grad">Control Tower</span></div>
+        <div class="reveal-sub">The enterprise platform that gives your entire organization complete visibility, automated risk scoring, and audit-ready compliance — over every AI system you own.</div>
+        <div class="module-pills">
+          <span class="mpill">🗂️ Model Inventory</span><span class="mpill">⚠️ Risk Engine</span><span class="mpill">✅ Compliance</span>
+          <span class="mpill">🔒 Data Lineage</span><span class="mpill">🤖 Agent Oversight</span><span class="mpill">📁 AI Projects</span>
+          <span class="mpill">📊 Monitoring</span><span class="mpill">📋 Audit Reports</span>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="nar-text"><strong>Introducing the AI Governance Control Tower!</strong> Eight powerful modules. One unified platform. Built specifically for DPDP, ISO 42001, GDPR, and the EU AI Act. This is the command center your organization needs — and it's incredible!</div></div></div>
+    </div>
+
+    <!-- ══ S4 · DASHBOARD + INVENTORY ══ -->
+    <div class="slide bg-app" id="s4">
       <div class="app-header">
         <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
-        <div class="app-nav"><span class="on">Dashboard</span><span>Models</span><span>Risk</span><span>Data</span><span>Agents</span><span>Audit</span></div>
+        <div class="app-nav"><span class="on">Dashboard</span><span>Models</span><span>Risk</span><span>Data</span><span>Agents</span></div>
         <div class="app-avatar">A</div>
       </div>
       <div class="slide-content">
-        <div style="font-size:.7rem;color:rgba(255,255,255,.5);">Good morning, Admin — your complete AI portfolio at a glance</div>
+        <div style="font-size:.67rem;color:rgba(255,255,255,.5);">Good morning — your complete AI portfolio, live</div>
         <div class="stat-row">
-          <div class="stat-card"><div class="sc-lbl">AI Models</div><div class="sc-val c-blue">12</div><div class="sc-sub c-green">7 in Production</div></div>
-          <div class="stat-card"><div class="sc-lbl">Compliance Score</div><div class="sc-val c-green">78%</div><div class="sc-sub c-amber">↑ +12% this month</div></div>
-          <div class="stat-card"><div class="sc-lbl">Open Risks</div><div class="sc-val c-amber">5</div><div class="sc-sub" style="color:rgba(255,255,255,.35)">3 need action</div></div>
-          <div class="stat-card"><div class="sc-lbl">Active Alerts</div><div class="sc-val c-red">4</div><div class="sc-sub" style="color:rgba(255,255,255,.35)">1 critical</div></div>
+          <div class="stat-card"><div class="sc-lbl">AI Models</div><div class="sc-val c-blue">12</div><div class="sc-sub c-green">7 in production</div></div>
+          <div class="stat-card"><div class="sc-lbl">Compliance</div><div class="sc-val c-green">78%</div><div class="sc-sub c-green">↑ +12% this month</div></div>
+          <div class="stat-card"><div class="sc-lbl">Open Risks</div><div class="sc-val c-amber">5</div><div class="sc-sub c-amber">3 need action</div></div>
+          <div class="stat-card"><div class="sc-lbl">Alerts</div><div class="sc-val c-red">4</div><div class="sc-sub" style="color:rgba(255,255,255,.35);">1 critical</div></div>
         </div>
         <div class="two-col">
           <div class="panel">
-            <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>Live Alerts</div>
-            <div class="alert-item" style="border-color:#ef4444"><div style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:3px;"></div><div><div class="a-title">Bias Score Exceeded Threshold</div><div class="a-sub">Credit Risk Scorer · 0.07 > 0.05 limit · CRITICAL</div></div></div>
-            <div class="alert-item" style="border-color:#f59e0b"><div style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:3px;"></div><div><div class="a-title">Fraud Model Accuracy Drop</div><div class="a-sub">97% → 91% in last 24h · HIGH</div></div></div>
-            <div class="alert-item" style="border-color:#60a5fa"><div style="width:6px;height:6px;border-radius:50%;background:#60a5fa;flex-shrink:0;margin-top:3px;"></div><div><div class="a-title">Missing Consent Records</div><div class="a-sub">Churn Predictor · 42 records · MEDIUM</div></div></div>
-          </div>
-          <div class="panel">
-            <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Framework Coverage</div>
-            <div class="pb-wrap"><div class="pb-lbl"><span>DPDP Act (India)</span><span class="c-amber">72%</span></div><div class="pb-track"><div class="pb-fill pb-amber" style="width:72%"></div></div></div>
-            <div style="height:.4rem"></div>
-            <div class="pb-wrap"><div class="pb-lbl"><span>ISO 42001</span><span class="c-green">80%</span></div><div class="pb-track"><div class="pb-fill pb-green" style="width:80%"></div></div></div>
-            <div style="height:.4rem"></div>
-            <div class="pb-wrap"><div class="pb-lbl"><span>EU AI Act</span><span class="c-amber">55%</span></div><div class="pb-track"><div class="pb-fill pb-amber" style="width:55%"></div></div></div>
-            <div style="height:.4rem"></div>
-            <div class="pb-wrap"><div class="pb-lbl"><span>GDPR</span><span class="c-green">85%</span></div><div class="pb-track"><div class="pb-fill pb-green" style="width:85%"></div></div></div>
-          </div>
-        </div>
-      </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><div class="nar-text"><strong>Module 1 — Command Center Dashboard.</strong> The moment you log in, your entire A-I portfolio is visible in one screen. Model count, compliance score, open risks, and live alerts — all updating in real time. Framework coverage bars show your progress against D-P-D-P, ISO 42001, the EU AI Act, and GDPR side by side, so you always know where you stand.</div></div></div>
-    </div>
-
-    <!-- ══ SLIDE 6 · AI MODEL INVENTORY + RISK ══ -->
-    <div class="slide" id="s6">
-      <div class="app-header">
-        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
-        <div class="app-nav"><span>Dashboard</span><span class="on">AI Inventory</span><span>Risk</span><span>Audit</span></div>
-        <div class="app-avatar">A</div>
-      </div>
-      <div class="slide-content">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:.76rem;font-weight:700;">AI Model Inventory <span style="color:rgba(255,255,255,.35);font-weight:400;font-size:.65rem;">12 models · 3 environments</span></div>
-          <div style="background:var(--blue);padding:.25rem .65rem;border-radius:5px;font-size:.65rem;font-weight:600;">+ Register Model</div>
-        </div>
-        <div class="tbl">
-          <div class="tbl-head cols-5"><div class="tbl-lbl">Model</div><div class="tbl-lbl">Type</div><div class="tbl-lbl">Status</div><div class="tbl-lbl h-mob">Risk</div><div class="tbl-lbl h-mob">Framework</div></div>
-          <div class="tbl-row cols-5"><div><div class="tbl-val">Credit Risk Scorer</div><div class="tbl-sub">v2.1 · XGBoost · Production</div></div><div class="tbl-val">ML</div><div><span class="pill p-green">Active</span></div><div class="d-mob"><span class="pill p-red">CRITICAL</span></div><div class="tbl-sub d-mob">DPDP · ISO 42001</div></div>
-          <div class="tbl-row cols-5"><div><div class="tbl-val">Fraud Detection Engine</div><div class="tbl-sub">v3.0 · TensorFlow · Production</div></div><div class="tbl-val">ML</div><div><span class="pill p-green">Active</span></div><div class="d-mob"><span class="pill p-red">HIGH</span></div><div class="tbl-sub d-mob">EU AI Act</div></div>
-          <div class="tbl-row cols-5"><div><div class="tbl-val">Customer Servicing LLM</div><div class="tbl-sub">v1.0 · GPT-4 · Staging</div></div><div class="tbl-val">LLM</div><div><span class="pill p-amber">Review</span></div><div class="d-mob"><span class="pill p-amber">MEDIUM</span></div><div class="tbl-sub d-mob">ISO 42001</div></div>
-          <div class="tbl-row cols-5"><div><div class="tbl-val">Churn Predictor</div><div class="tbl-sub">v1.4 · scikit-learn · Production</div></div><div class="tbl-val">ML</div><div><span class="pill p-green">Active</span></div><div class="d-mob"><span class="pill p-amber">MEDIUM</span></div><div class="tbl-sub d-mob">GDPR</div></div>
-          <div class="tbl-row cols-5"><div><div class="tbl-val">NLP Document Classifier</div><div class="tbl-sub">v1.1 · HuggingFace · Dev</div></div><div class="tbl-val">NLP</div><div><span class="pill p-gray">Dev</span></div><div class="d-mob"><span class="pill p-green">LOW</span></div><div class="tbl-sub d-mob">ISO 42001</div></div>
-        </div>
-      </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div class="nar-text"><strong>Module 2 — AI Model Inventory.</strong> Every A-I model in your organization lives in one central registry. Each entry captures the version, framework, deployment environment, risk level, owning team, and the regulatory frameworks it falls under. No more shadow A-I — every model is visible, accountable, and tracked from the moment it is registered to the day it is retired.</div></div></div>
-    </div>
-
-    <!-- ══ SLIDE 7 · RISK & COMPLIANCE ENGINE ══ -->
-    <div class="slide" id="s7">
-      <div class="app-header">
-        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
-        <div class="app-nav"><span>Dashboard</span><span>Models</span><span class="on">Risk & Compliance</span><span>Audit</span></div>
-        <div class="app-avatar">R</div>
-      </div>
-      <div class="slide-content">
-        <div class="two-col">
-          <div style="display:flex;flex-direction:column;gap:.55rem;">
-            <div style="font-size:.74rem;font-weight:700;">Automated Risk Scoring</div>
-            <div class="tbl" style="flex:1;">
-              <div class="tbl-head cols-3"><div class="tbl-lbl">Model</div><div class="tbl-lbl">Level</div><div class="tbl-lbl">Score</div></div>
-              <div class="tbl-row cols-3"><div class="tbl-val">Credit Risk</div><div><span class="pill p-red">CRITICAL</span></div><div class="tbl-val c-red">92</div></div>
-              <div class="tbl-row cols-3"><div class="tbl-val">Fraud Detection</div><div><span class="pill p-red">HIGH</span></div><div class="tbl-val c-red">78</div></div>
-              <div class="tbl-row cols-3"><div class="tbl-val">Churn Predictor</div><div><span class="pill p-amber">MEDIUM</span></div><div class="tbl-val c-amber">45</div></div>
-              <div class="tbl-row cols-3"><div class="tbl-val">NLP Classifier</div><div><span class="pill p-green">LOW</span></div><div class="tbl-val c-green">22</div></div>
+            <div class="panel-title">🤖 AI Model Inventory — Central Registry</div>
+            <div class="tbl">
+              <div class="tbl-head c4"><div class="tbl-lbl">Model</div><div class="tbl-lbl">Type</div><div class="tbl-lbl">Risk</div><div class="tbl-lbl">Status</div></div>
+              <div class="tbl-row c4"><div><div class="tbl-val">Credit Risk Scorer</div><div class="tbl-sub">v2.1 · XGBoost · DPDP</div></div><div class="tbl-val">ML</div><div><span class="pill p-red">CRITICAL</span></div><div><span class="pill p-green">Active</span></div></div>
+              <div class="tbl-row c4"><div><div class="tbl-val">Fraud Detection LLM</div><div class="tbl-sub">v3.0 · GPT-4 · EU AI Act</div></div><div class="tbl-val">LLM</div><div><span class="pill p-red">HIGH</span></div><div><span class="pill p-amber">Review</span></div></div>
+              <div class="tbl-row c4"><div><div class="tbl-val">Churn Predictor</div><div class="tbl-sub">v1.4 · scikit · GDPR</div></div><div class="tbl-val">ML</div><div><span class="pill p-amber">MEDIUM</span></div><div><span class="pill p-green">Active</span></div></div>
+              <div class="tbl-row c4"><div><div class="tbl-val">NLP Classifier</div><div class="tbl-sub">v1.1 · HuggingFace</div></div><div class="tbl-val">NLP</div><div><span class="pill p-green">LOW</span></div><div><span class="pill p-green">Active</span></div></div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:.55rem;">
-            <div style="font-size:.74rem;font-weight:700;">Credit Risk — Risk Breakdown</div>
-            <div class="panel" style="flex:1;">
-              <div class="pb-wrap"><div class="pb-lbl"><span>Data Sensitivity</span><span class="c-red">95</span></div><div class="pb-track"><div class="pb-fill pb-red" style="width:95%"></div></div></div>
-              <div style="height:.38rem"></div>
-              <div class="pb-wrap"><div class="pb-lbl"><span>Regulatory Exposure</span><span class="c-red">88</span></div><div class="pb-track"><div class="pb-fill pb-red" style="width:88%"></div></div></div>
-              <div style="height:.38rem"></div>
-              <div class="pb-wrap"><div class="pb-lbl"><span>Explainability</span><span class="c-amber">60</span></div><div class="pb-track"><div class="pb-fill pb-amber" style="width:60%"></div></div></div>
-              <div style="height:.38rem"></div>
-              <div class="pb-wrap"><div class="pb-lbl"><span>Model Complexity</span><span class="c-amber">70</span></div><div class="pb-track"><div class="pb-fill pb-amber" style="width:70%"></div></div></div>
-              <div style="height:.38rem"></div>
-              <div class="pb-wrap"><div class="pb-lbl"><span>Human Oversight</span><span class="c-green">75</span></div><div class="pb-track"><div class="pb-fill pb-green" style="width:75%"></div></div></div>
-              <div style="margin-top:.55rem;padding:.45rem;background:rgba(37,99,235,.07);border-radius:6px;border-left:3px solid #2563eb;">
-                <div style="font-size:.62rem;font-weight:700;color:#60a5fa;margin-bottom:.12rem;">Compliance Controls · DPDP-1.1, ISO-4.1, EU-AIA-2.1</div>
-                <div style="font-size:.6rem;color:rgba(255,255,255,.5);">8 controls mapped · 5 PASS · 2 PARTIAL · 1 FAIL</div>
-              </div>
+          <div class="panel">
+            <div class="panel-title">📋 Framework Compliance — Live</div>
+            <div class="pb-lbl"><span>DPDP Act (India)</span><span class="c-amber">72%</span></div><div class="pb-track"><div class="pb-fill pb-amber" style="width:72%"></div></div>
+            <div class="pb-lbl"><span>ISO 42001</span><span class="c-green">80%</span></div><div class="pb-track"><div class="pb-fill pb-green" style="width:80%"></div></div>
+            <div class="pb-lbl"><span>EU AI Act</span><span class="c-amber">55%</span></div><div class="pb-track"><div class="pb-fill pb-amber" style="width:55%"></div></div>
+            <div class="pb-lbl"><span>GDPR</span><span class="c-green">86%</span></div><div class="pb-track"><div class="pb-fill pb-green" style="width:86%"></div></div>
+            <div style="margin-top:.45rem;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:6px;padding:.4rem .5rem;">
+              <div style="font-size:.62rem;font-weight:700;color:#60a5fa;">🚨 Bias alert: Credit Risk Scorer · 0.07 > 0.05 threshold</div>
+              <div style="font-size:.58rem;color:rgba(255,255,255,.45);margin-top:.15rem;">Auto-escalated to Risk Officer · 2 min ago</div>
             </div>
           </div>
         </div>
       </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><div class="nar-text"><strong>Module 3 — Risk and Compliance Engine.</strong> Every model is automatically scored across five risk dimensions: data sensitivity, regulatory exposure, explainability, model complexity, and degree of human oversight. The weighted formula produces a risk score from zero to one hundred. Each model is then mapped to specific compliance controls across D-P-D-P, ISO 42001, and the EU AI Act — with pass, fail, or partial status and evidence attachments.</div></div></div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><div class="nar-text"><strong>One dashboard — total command!</strong> Every AI model registered, risk-scored, and compliance-mapped in real time. Framework coverage bars for DPDP, ISO 42001, EU AI Act, and GDPR — live, always up to date. Bias alerts fire the instant a threshold is crossed. No spreadsheets. No surprises. Ever again!</div></div></div>
     </div>
 
-    <!-- ══ SLIDE 8 · DATA GOVERNANCE + AGENT OVERSIGHT ══ -->
-    <div class="slide" id="s8">
+    <!-- ══ S5 · RISK ENGINE + AGENT GOVERNANCE ══ -->
+    <div class="slide bg-app" id="s5">
       <div class="app-header">
         <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
-        <div class="app-nav"><span>Dashboard</span><span class="on">Data Governance</span><span>Agents</span></div>
+        <div class="app-nav"><span>Dashboard</span><span class="on">Risk Engine</span><span>Agents</span><span>Audit</span></div>
         <div class="app-avatar">R</div>
       </div>
       <div class="slide-content">
         <div class="two-col">
           <div style="display:flex;flex-direction:column;gap:.5rem;">
-            <div style="font-size:.72rem;font-weight:700;">Data Assets & PII Lineage</div>
+            <div style="font-size:.7rem;font-weight:700;">⚡ Automated 5-Dimension Risk Scoring</div>
             <div class="tbl">
-              <div class="tbl-head cols-3"><div class="tbl-lbl">Asset</div><div class="tbl-lbl">PII</div><div class="tbl-lbl">Consent</div></div>
-              <div class="tbl-row cols-3"><div><div class="tbl-val">Customer DB</div><div class="tbl-sub">PostgreSQL · Encrypted</div></div><div><span class="pill p-red">YES</span></div><div><span class="pill p-green">Active</span></div></div>
-              <div class="tbl-row cols-3"><div><div class="tbl-val">Transaction Log</div><div class="tbl-sub">S3 · Encrypted</div></div><div><span class="pill p-red">YES</span></div><div><span class="pill p-amber">Partial</span></div></div>
-              <div class="tbl-row cols-3"><div><div class="tbl-val">Behaviour Events</div><div class="tbl-sub">Kafka · In-transit</div></div><div><span class="pill p-amber">IND</span></div><div><span class="pill p-green">Active</span></div></div>
-              <div class="tbl-row cols-3"><div><div class="tbl-val">Model Features</div><div class="tbl-sub">Feature Store</div></div><div><span class="pill p-gray">NO</span></div><div><span class="pill p-gray">N/A</span></div></div>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:.5rem;">
-            <div style="font-size:.72rem;font-weight:700;">Agent Governance Registry</div>
-            <div class="tbl">
-              <div class="tbl-head" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;"><div class="tbl-lbl">Agent</div><div class="tbl-lbl">Mode</div><div class="tbl-lbl">Status</div></div>
-              <div class="tbl-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;"><div><div class="tbl-val">CS Agent v2</div><div class="tbl-sub">GPT-4 · 8k tokens</div></div><div><span class="pill p-amber">Supervised</span></div><div><span class="pill p-green">Active</span></div></div>
-              <div class="tbl-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;"><div><div class="tbl-val">Doc Processor</div><div class="tbl-sub">Claude 3 · 4k tokens</div></div><div><span class="pill p-green">Auto</span></div><div><span class="pill p-green">Active</span></div></div>
-              <div class="tbl-row" style="display:grid;grid-template-columns:1.5fr 1fr 1fr;"><div><div class="tbl-val">Risk Analyst</div><div class="tbl-sub">GPT-4o · 16k tokens</div></div><div><span class="pill p-red">Blocked</span></div><div><span class="pill p-amber">Review</span></div></div>
-            </div>
-            <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;padding:.5rem .6rem;">
-              <div style="font-size:.65rem;font-weight:700;color:#fbbf24;margin-bottom:.2rem;">⚠ Human Approval Required</div>
-              <div style="font-size:.6rem;color:rgba(255,255,255,.5);">Risk Analyst attempted tool: delete_record. Awaiting approval from Risk Officer.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><div class="nar-text"><strong>Modules 4 and 5 — Data Governance and Agent Oversight.</strong> Every data asset feeding your A-I models is tracked — P-I-I classification, encryption status, consent records, and retention periods. On the agent side, every autonomous A-I agent is registered with defined tool permissions and token budgets. Supervised agents must receive explicit human approval before taking sensitive actions. All prompts and responses are permanently logged.</div></div></div>
-    </div>
-
-    <!-- ══ SLIDE 9 · AI PROJECT MANAGEMENT ══ -->
-    <div class="slide" id="s9">
-      <div class="app-header">
-        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
-        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
-        <div class="app-nav"><span>Dashboard</span><span>Models</span><span class="on">AI Projects</span><span>Audit</span></div>
-        <div class="app-avatar">A</div>
-      </div>
-      <div class="slide-content">
-        <div class="stat-row">
-          <div class="stat-card"><div class="sc-lbl">Total Projects</div><div class="sc-val c-blue">7</div><div class="sc-sub c-green">↑ 2 new</div></div>
-          <div class="stat-card"><div class="sc-lbl">Avg Health</div><div class="sc-val c-green">82</div><div class="sc-sub" style="color:rgba(255,255,255,.4)">out of 100</div></div>
-          <div class="stat-card"><div class="sc-lbl">At Risk</div><div class="sc-val c-amber">2</div><div class="sc-sub c-amber">needs attention</div></div>
-          <div class="stat-card"><div class="sc-lbl">Active</div><div class="sc-val c-cyan">4</div><div class="sc-sub" style="color:rgba(255,255,255,.4)">in progress</div></div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;min-height:0;">
-          <!-- Phase timeline bar -->
-          <div style="display:flex;gap:.25rem;">
-            <div style="flex:1;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);border-radius:5px;padding:.3rem .4rem;text-align:center;"><div style="font-size:.52rem;font-weight:700;color:#34d399;">Business Case</div><div style="font-size:.65rem;font-weight:800;color:#34d399;">100%</div></div>
-            <div style="flex:1;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);border-radius:5px;padding:.3rem .4rem;text-align:center;"><div style="font-size:.52rem;font-weight:700;color:#34d399;">Data Discovery</div><div style="font-size:.65rem;font-weight:800;color:#34d399;">100%</div></div>
-            <div style="flex:1;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);border-radius:5px;padding:.3rem .4rem;text-align:center;"><div style="font-size:.52rem;font-weight:700;color:#60a5fa;">Model Dev</div><div style="font-size:.65rem;font-weight:800;color:#60a5fa;">65%</div></div>
-            <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:.3rem .4rem;text-align:center;"><div style="font-size:.52rem;font-weight:700;color:rgba(255,255,255,.35);">Testing</div><div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.3);">0%</div></div>
-            <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:.3rem .4rem;text-align:center;"><div style="font-size:.52rem;font-weight:700;color:rgba(255,255,255,.35);">Deployment</div><div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.3);">0%</div></div>
-            <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:.3rem .4rem;text-align:center;"><div style="font-size:.52rem;font-weight:700;color:rgba(255,255,255,.35);">Monitoring</div><div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.3);">0%</div></div>
-          </div>
-          <!-- Project cards -->
-          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;"><div style="font-size:.75rem;font-weight:700;">Customer Servicing Agent</div><span class="pill p-green" style="font-size:.55rem;">HEALTHY 88</span></div>
-            <div style="font-size:.6rem;color:rgba(255,255,255,.4);margin-bottom:.3rem;">Phase: Model Development · 3 blockers resolved · Next milestone: Model Sign-off Gate</div>
-            <div style="height:4px;background:rgba(255,255,255,.07);border-radius:2px;"><div style="width:55%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:2px;"></div></div>
-          </div>
-          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;"><div style="font-size:.75rem;font-weight:700;">Credit Risk Scoring v3</div><span class="pill p-amber" style="font-size:.55rem;">AT RISK 64</span></div>
-            <div style="font-size:.6rem;color:rgba(255,255,255,.4);margin-bottom:.3rem;">Phase: Testing &amp; Validation · 2 overdue milestones · n8n alert sent to Risk Officer</div>
-            <div style="height:4px;background:rgba(255,255,255,.07);border-radius:2px;"><div style="width:38%;height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:2px;"></div></div>
-          </div>
-        </div>
-      </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="nar-text"><strong>Module 6 — AI Project Management.</strong> Govern your A-I projects from idea to production with the built-in Project Management module. A six-phase lifecycle — Business Case, Data Discovery, Model Development, Testing, Deployment, and Monitoring — keeps every project on track. Health scores, phase-gate milestones, and automated n-8-n alerts ensure no project falls through the cracks.</div></div></div>
-    </div>
-
-    <!-- ══ SLIDE 10 · GANTT + KANBAN ══ -->
-    <div class="slide" id="s10">
-      <div class="app-header">
-        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
-        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
-        <div class="app-nav"><span>Dashboard</span><span class="on">AI Projects · Gantt &amp; Kanban</span></div>
-        <div class="app-avatar">A</div>
-      </div>
-      <div class="slide-content">
-        <div class="two-col">
-          <div style="display:flex;flex-direction:column;gap:.45rem;">
-            <div style="font-size:.7rem;font-weight:700;">Gantt Chart <span style="color:rgba(255,255,255,.35);font-size:.6rem;">Month view · Today ▲</span></div>
-            <div class="gantt-wrap" style="flex:1;">
-              <div class="gantt-row"><div class="gantt-lbl">Business Case</div><div class="gantt-area"><div class="gantt-bar" style="left:0%;width:18%;background:rgba(16,185,129,.5);"></div><div style="position:absolute;left:18%;top:50%;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;background:#f59e0b;"></div></div></div>
-              <div class="gantt-row"><div class="gantt-lbl">Data Discovery</div><div class="gantt-area"><div class="gantt-bar" style="left:18%;width:20%;background:rgba(16,185,129,.5);"></div></div></div>
-              <div class="gantt-row"><div class="gantt-lbl">Feature Engineering</div><div class="gantt-area"><div class="gantt-bar" style="left:36%;width:22%;background:rgba(37,99,235,.5);"></div></div></div>
-              <div class="gantt-row"><div class="gantt-lbl">Model Training</div><div class="gantt-area"><div class="gantt-bar" style="left:52%;width:18%;background:rgba(37,99,235,.5);border:1px dashed rgba(96,165,250,.5);"></div></div></div>
-              <div class="gantt-row"><div class="gantt-lbl">Bias Testing</div><div class="gantt-area"><div class="gantt-bar" style="left:68%;width:15%;background:rgba(139,92,246,.4);border:1px dashed rgba(167,139,250,.5);"></div></div></div>
-              <div class="gantt-row"><div class="gantt-lbl">Deployment</div><div class="gantt-area"><div class="gantt-bar" style="left:82%;width:12%;background:rgba(245,158,11,.3);border:1px dashed rgba(251,191,36,.4);"></div></div></div>
-              <!-- Today line -->
-              <div style="position:absolute;left:58%;top:0;bottom:0;width:1.5px;background:rgba(96,165,250,.6);pointer-events:none;"></div>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:.45rem;">
-            <div style="font-size:.7rem;font-weight:700;">Kanban Board <span style="color:rgba(255,255,255,.35);font-size:.6rem;">6 columns</span></div>
-            <div class="kb-wrap">
-              <div class="kb-col">
-                <div class="kb-col-head" style="background:rgba(148,163,184,.1);color:#94a3b8;">Backlog</div>
-                <div class="kb-card"><div class="kb-card-stripe" style="background:#94a3b8;"></div><div class="kb-card-title">Define bias thresholds</div><div class="kb-card-meta">Phase 3 · LOW</div></div>
-              </div>
-              <div class="kb-col">
-                <div class="kb-col-head" style="background:rgba(37,99,235,.12);color:#60a5fa;">To Do</div>
-                <div class="kb-card"><div class="kb-card-stripe" style="background:#2563eb;"></div><div class="kb-card-title">Set up training pipeline</div><div class="kb-card-meta">Phase 3 · HIGH</div></div>
-                <div class="kb-card"><div class="kb-card-stripe" style="background:#2563eb;"></div><div class="kb-card-title">Data schema review</div><div class="kb-card-meta">Phase 2 · MED</div></div>
-              </div>
-              <div class="kb-col">
-                <div class="kb-col-head" style="background:rgba(6,182,212,.12);color:#67e8f9;">In Progress</div>
-                <div class="kb-card"><div class="kb-card-stripe" style="background:#06b6d4;"></div><div class="kb-card-title">Feature engineering</div><div class="kb-card-meta">Phase 3 · CRIT</div></div>
-                <div class="kb-card"><div class="kb-card-stripe" style="background:#06b6d4;"></div><div class="kb-card-title">EDA notebook</div><div class="kb-card-meta">Phase 2 · MED</div></div>
-              </div>
-              <div class="kb-col">
-                <div class="kb-col-head" style="background:rgba(16,185,129,.12);color:#34d399;">Done</div>
-                <div class="kb-card"><div class="kb-card-stripe" style="background:#10b981;"></div><div class="kb-card-title">Business case sign-off</div><div class="kb-card-meta">Phase 1 ✓</div></div>
-                <div class="kb-card"><div class="kb-card-stripe" style="background:#10b981;"></div><div class="kb-card-title">Data sources mapped</div><div class="kb-card-meta">Phase 2 ✓</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="nar-text"><strong>Planning Tools — Gantt and Kanban.</strong> Visualize delivery timelines with the S-V-G Gantt chart — phase-coloured bars, day-week-month zoom, today marker, and diamond milestone gates. Switch to Kanban view for task-level workflow management across six columns. Drag cards to update status. Click any column header to add a new task with phase, priority, due date, and estimated hours.</div></div></div>
-    </div>
-
-    <!-- ══ SLIDE 11 · MONITORING + AUDIT ══ -->
-    <div class="slide" id="s11">
-      <div class="app-header">
-        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
-        <div class="app-nav"><span>Dashboard</span><span>Models</span><span class="on">Monitoring</span><span class="on" style="color:#a78bfa;">Audit</span></div>
-        <div class="app-avatar">U</div>
-      </div>
-      <div class="slide-content">
-        <div class="two-col">
-          <div style="display:flex;flex-direction:column;gap:.5rem;">
-            <div style="font-size:.72rem;font-weight:700;">LLM Monitoring — Live Metrics</div>
-            <div class="stat-row" style="grid-template-columns:1fr 1fr;gap:.4rem;">
-              <div class="stat-card"><div class="sc-lbl">Avg Latency</div><div class="sc-val c-green">1.2s</div><div class="sc-sub c-green">↓ p95 1.8s</div></div>
-              <div class="stat-card"><div class="sc-lbl">Toxicity Rate</div><div class="sc-val c-green">0.3%</div><div class="sc-sub c-green">Below threshold</div></div>
+              <div class="tbl-head c3"><div class="tbl-lbl">Model</div><div class="tbl-lbl">Level</div><div class="tbl-lbl">Score</div></div>
+              <div class="tbl-row c3"><div class="tbl-val">Credit Risk</div><div><span class="pill p-red">CRITICAL</span></div><div class="tbl-val c-red">92</div></div>
+              <div class="tbl-row c3"><div class="tbl-val">Fraud LLM</div><div><span class="pill p-red">HIGH</span></div><div class="tbl-val c-red">78</div></div>
+              <div class="tbl-row c3"><div class="tbl-val">Churn Predictor</div><div><span class="pill p-amber">MEDIUM</span></div><div class="tbl-val c-amber">45</div></div>
+              <div class="tbl-row c3"><div class="tbl-val">NLP Classifier</div><div><span class="pill p-green">LOW</span></div><div class="tbl-val c-green">22</div></div>
             </div>
             <div class="panel" style="flex:1;">
-              <div class="panel-title">Active Model Alerts</div>
-              <div class="alert-item" style="border-color:#ef4444;"><div style="font-size:.75rem;margin-right:.3rem;">🔴</div><div><div class="a-title">Bias drift detected · Credit Risk Scorer</div><div class="a-sub">Demographic parity score dropped 12% · Auto-escalated</div></div></div>
-              <div class="alert-item" style="border-color:#f59e0b;"><div style="font-size:.75rem;margin-right:.3rem;">🟡</div><div><div class="a-title">Accuracy degradation · Fraud Engine</div><div class="a-sub">F1 score: 0.94 → 0.87 over 7 days</div></div></div>
-              <div class="alert-item" style="border-color:#10b981;"><div style="font-size:.75rem;margin-right:.3rem;">🟢</div><div><div class="a-title">NLP Classifier · All metrics normal</div><div class="a-sub">Last checked 3 min ago · No anomalies</div></div></div>
+              <div class="panel-title">Compliance Controls — DPDP · ISO · EU AI Act</div>
+              <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.25rem;"><span class="pill p-green">PASS</span><span style="font-size:.62rem;color:rgba(255,255,255,.7);">DPDP-1.1 · Lawful basis for processing</span></div>
+              <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.25rem;"><span class="pill p-green">PASS</span><span style="font-size:.62rem;color:rgba(255,255,255,.7);">ISO-4.1 · AI risk assessment complete</span></div>
+              <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.25rem;"><span class="pill p-amber">PARTIAL</span><span style="font-size:.62rem;color:rgba(255,255,255,.7);">DPDP-3.1 · Data subject rights</span></div>
+              <div style="display:flex;align-items:center;gap:.4rem;"><span class="pill p-red">FAIL</span><span style="font-size:.62rem;color:rgba(255,255,255,.7);">EU-AIA-2.1 · Conformity assessment</span></div>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:.5rem;">
-            <div style="font-size:.72rem;font-weight:700;">Immutable Audit Trail</div>
-            <div class="audit-row"><div class="audit-icon" style="background:rgba(16,185,129,.15);"><svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div><div><div class="audit-action">Compliance Report Exported</div><div class="audit-meta">admin@governance.ai · 2 min ago · PDF</div></div></div>
-            <div class="audit-row"><div class="audit-icon" style="background:rgba(245,158,11,.15);"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div><div><div class="audit-action">Risk Assessment Updated</div><div class="audit-meta">risk.officer@corp.ai · 8 min ago · Credit Risk v2.1</div></div></div>
-            <div class="audit-row"><div class="audit-icon" style="background:rgba(37,99,235,.15);"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div><div><div class="audit-action">Model Registered</div><div class="audit-meta">admin@governance.ai · 1h ago · Customer Servicing LLM</div></div></div>
-            <div class="audit-row"><div class="audit-icon" style="background:rgba(139,92,246,.15);"><svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="audit-action">Agent Action Approved</div><div class="audit-meta">risk.officer@corp.ai · 2h ago · CS Agent v2 · tool: send_email</div></div></div>
-            <div style="background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.2);border-radius:7px;padding:.45rem .55rem;display:flex;align-items:center;gap:.5rem;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              <div style="font-size:.65rem;color:#60a5fa;font-weight:600;">Export Compliance Report — DPDP · ISO 42001 · EU AI Act</div>
+            <div style="font-size:.7rem;font-weight:700;">🤖 Agent Governance — Full Oversight</div>
+            <div class="tbl">
+              <div class="tbl-head" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;"><div class="tbl-lbl">Agent</div><div class="tbl-lbl">Mode</div><div class="tbl-lbl">Status</div></div>
+              <div class="tbl-row" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;"><div><div class="tbl-val">CS Agent v2</div><div class="tbl-sub">GPT-4 · 8k tkns</div></div><div><span class="pill p-amber">Supervised</span></div><div><span class="pill p-green">Active</span></div></div>
+              <div class="tbl-row" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;"><div><div class="tbl-val">Doc Processor</div><div class="tbl-sub">Claude 3 · 4k</div></div><div><span class="pill p-green">Auto</span></div><div><span class="pill p-green">Active</span></div></div>
+              <div class="tbl-row" style="display:grid;grid-template-columns:1.4fr 1fr 1fr;"><div><div class="tbl-val">Risk Analyst</div><div class="tbl-sub">GPT-4o · 16k</div></div><div><span class="pill p-red">Blocked</span></div><div><span class="pill p-amber">Review</span></div></div>
+            </div>
+            <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:7px;padding:.45rem .55rem;">
+              <div style="font-size:.63rem;font-weight:700;color:#fbbf24;">⚠ Human Approval Required</div>
+              <div style="font-size:.58rem;color:rgba(255,255,255,.5);margin-top:.2rem;">Risk Analyst Agent attempted: delete_record. Awaiting Risk Officer approval.</div>
+            </div>
+            <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:7px;padding:.4rem .55rem;">
+              <div style="font-size:.62rem;font-weight:700;color:#34d399;">✅ All agent prompts &amp; responses permanently logged</div>
+              <div style="font-size:.58rem;color:rgba(255,255,255,.45);margin-top:.15rem;">2,341 interactions logged · Zero unmonitored actions</div>
             </div>
           </div>
         </div>
       </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><div class="nar-text"><strong>Modules 7 and 8 — Monitoring and Audit.</strong> The monitoring module tracks live L-L-M metrics — latency, toxicity, bias, and accuracy — and fires alerts the moment a threshold is breached. Every single action on the platform is recorded in a tamper-proof audit log: who did what, on which model, at exactly what time. One click exports a regulator-ready compliance report for any framework.</div></div></div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><div class="nar-text"><strong>Automated risk scoring across five dimensions!</strong> Data sensitivity, regulatory exposure, explainability, complexity, human oversight — scored instantly. Compliance controls mapped to DPDP, ISO 42001, and the EU AI Act. And every AI agent? Registered, supervised, and logged. Not one unmonitored action. This is the power of real governance!</div></div></div>
     </div>
 
-    <!-- ══ SLIDE 12 · THE IMPACT (RESULTS) ══ -->
-    <div class="slide slide-intro" id="s12">
-      <div class="grid-bg"></div><div class="glow-blue"></div><div class="glow-cyan"></div>
-      <div class="intro-body" style="max-width:680px;">
-        <div class="badge"><span class="bdot"></span>Proven Results</div>
-        <h2 class="intro-title" style="font-size:clamp(1.3rem,4vw,2.2rem);margin-bottom:.85rem;">The Impact in Numbers</h2>
-        <div class="impact-grid" style="margin-bottom:.9rem;">
-          <div class="impact-card"><div class="impact-val c-green">95%</div><div class="impact-lbl">Reduction in audit preparation time</div></div>
-          <div class="impact-card"><div class="impact-val c-cyan">30s</div><div class="impact-lbl">To generate a regulator-ready compliance report</div></div>
-          <div class="impact-card"><div class="impact-val c-blue">100%</div><div class="impact-lbl">Model visibility — zero shadow AI</div></div>
-          <div class="impact-card"><div class="impact-val c-green">4×</div><div class="impact-lbl">Faster AI project delivery with phase-gate governance</div></div>
-          <div class="impact-card"><div class="impact-val c-amber">0</div><div class="impact-lbl">Unmonitored autonomous agent actions</div></div>
-          <div class="impact-card"><div class="impact-val c-blue">4</div><div class="impact-lbl">Regulatory frameworks covered in one platform</div></div>
-        </div>
-        <p style="font-size:.75rem;color:rgba(255,255,255,.5);text-align:center;line-height:1.6;">Organizations using the AI Governance Control Tower report dramatically faster compliance readiness, complete AI portfolio visibility, and zero surprise regulatory findings.</p>
+    <!-- ══ S6 · AI PROJECTS ══ -->
+    <div class="slide bg-app" id="s6">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-nav"><span>Dashboard</span><span class="on">AI Projects</span><span>Gantt</span><span>Kanban</span></div>
+        <div class="app-avatar">A</div>
       </div>
-      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="nar-text"><strong>The Impact.</strong> Organizations using the A-I Governance Control Tower see transformative results. Audit preparation time drops by ninety-five percent. Compliance reports are generated in thirty seconds. Every A-I model is visible — zero shadow A-I. Projects are delivered four times faster with phase-gate governance. And every autonomous agent action is logged, approved, and accountable. This is what governed A-I looks like.</div></div></div>
+      <div class="slide-content">
+        <div style="display:flex;gap:.35rem;flex-shrink:0;">
+          <div style="flex:1;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:5px;padding:.28rem .35rem;text-align:center;"><div style="font-size:.5rem;font-weight:700;color:#34d399;white-space:nowrap;">Business Case</div><div style="font-size:.62rem;font-weight:800;color:#34d399;">100%</div></div>
+          <div style="flex:1;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:5px;padding:.28rem .35rem;text-align:center;"><div style="font-size:.5rem;font-weight:700;color:#34d399;white-space:nowrap;">Data Discovery</div><div style="font-size:.62rem;font-weight:800;color:#34d399;">100%</div></div>
+          <div style="flex:1;background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.4);border-radius:5px;padding:.28rem .35rem;text-align:center;"><div style="font-size:.5rem;font-weight:700;color:#60a5fa;white-space:nowrap;">Model Dev</div><div style="font-size:.62rem;font-weight:800;color:#60a5fa;">65%</div></div>
+          <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:.28rem .35rem;text-align:center;"><div style="font-size:.5rem;font-weight:700;color:rgba(255,255,255,.3);white-space:nowrap;">Testing</div><div style="font-size:.62rem;font-weight:800;color:rgba(255,255,255,.25);">0%</div></div>
+          <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:.28rem .35rem;text-align:center;"><div style="font-size:.5rem;font-weight:700;color:rgba(255,255,255,.3);white-space:nowrap;">Deploy</div><div style="font-size:.62rem;font-weight:800;color:rgba(255,255,255,.25);">0%</div></div>
+          <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:.28rem .35rem;text-align:center;"><div style="font-size:.5rem;font-weight:700;color:rgba(255,255,255,.3);white-space:nowrap;">Monitor</div><div style="font-size:.62rem;font-weight:800;color:rgba(255,255,255,.25);">0%</div></div>
+        </div>
+        <div class="two-col">
+          <div style="display:flex;flex-direction:column;gap:.42rem;">
+            <div style="font-size:.68rem;font-weight:700;">📅 Gantt Chart · Phase Timeline</div>
+            <div style="flex:1;position:relative;">
+              <div class="gantt-row"><div class="gantt-lbl">Business Case</div><div class="gantt-area"><div class="gbar" style="left:0%;width:16%;background:rgba(16,185,129,.6);"></div><div style="position:absolute;left:16%;top:50%;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;background:#f59e0b;border:1.5px solid #fbbf24;"></div></div></div>
+              <div class="gantt-row"><div class="gantt-lbl">Data Discovery</div><div class="gantt-area"><div class="gbar" style="left:16%;width:18%;background:rgba(16,185,129,.6);"></div></div></div>
+              <div class="gantt-row"><div class="gantt-lbl">Feature Eng.</div><div class="gantt-area"><div class="gbar" style="left:34%;width:20%;background:rgba(37,99,235,.55);"></div></div></div>
+              <div class="gantt-row"><div class="gantt-lbl">Model Training</div><div class="gantt-area"><div class="gbar" style="left:52%;width:18%;background:rgba(37,99,235,.4);border:1px dashed rgba(96,165,250,.5);"></div></div></div>
+              <div class="gantt-row"><div class="gantt-lbl">Bias Testing</div><div class="gantt-area"><div class="gbar" style="left:68%;width:16%;background:rgba(139,92,246,.4);border:1px dashed rgba(167,139,250,.5);"></div></div></div>
+              <div class="gantt-row"><div class="gantt-lbl">Deployment</div><div class="gantt-area"><div class="gbar" style="left:83%;width:12%;background:rgba(245,158,11,.35);border:1px dashed rgba(251,191,36,.4);"></div></div></div>
+              <div style="position:absolute;left:57%;top:0;bottom:0;width:1.5px;background:rgba(96,165,250,.7);pointer-events:none;z-index:5;"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.42rem;">
+            <div style="font-size:.68rem;font-weight:700;">📌 Kanban · Task Flow</div>
+            <div class="kb">
+              <div class="kb-col">
+                <div class="kb-head" style="background:rgba(148,163,184,.1);color:#94a3b8;">Backlog</div>
+                <div class="kb-card"><div class="kb-stripe" style="background:#64748b;"></div><div class="kb-title">Define bias thresholds</div></div>
+              </div>
+              <div class="kb-col">
+                <div class="kb-head" style="background:rgba(37,99,235,.12);color:#60a5fa;">To Do</div>
+                <div class="kb-card"><div class="kb-stripe" style="background:#2563eb;"></div><div class="kb-title">Training pipeline setup</div></div>
+                <div class="kb-card"><div class="kb-stripe" style="background:#2563eb;"></div><div class="kb-title">Schema review</div></div>
+              </div>
+              <div class="kb-col">
+                <div class="kb-head" style="background:rgba(6,182,212,.12);color:#67e8f9;">In Progress</div>
+                <div class="kb-card"><div class="kb-stripe" style="background:#06b6d4;"></div><div class="kb-title">Feature engineering</div></div>
+              </div>
+              <div class="kb-col">
+                <div class="kb-head" style="background:rgba(16,185,129,.12);color:#34d399;">Done ✓</div>
+                <div class="kb-card"><div class="kb-stripe" style="background:#10b981;"></div><div class="kb-title">Business case sign-off</div></div>
+                <div class="kb-card"><div class="kb-stripe" style="background:#10b981;"></div><div class="kb-title">Data sources mapped</div></div>
+              </div>
+            </div>
+            <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:6px;padding:.4rem .5rem;">
+              <div style="font-size:.62rem;font-weight:700;color:#a78bfa;">⚡ n8n Webhook fired → Slack alert sent to Risk Officer</div>
+              <div style="font-size:.57rem;color:rgba(255,255,255,.45);margin-top:.12rem;">Trigger: Model Dev phase >60% · Auto-escalation active</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="nar-text"><strong>AI Project Management that's absolutely brilliant!</strong> Six-phase governed lifecycle — Business Case to Production Monitoring. SVG Gantt charts, drag-and-drop Kanban, phase-gate milestones, and n8n webhook automation that fires Slack alerts the instant something needs attention. Deliver AI projects faster, with full governance built in!</div></div></div>
     </div>
 
-    <!-- ══ SLIDE 13 · OUTRO CTA ══ -->
-    <div class="slide slide-intro" id="s13">
-      <div class="grid-bg"></div><div class="glow-blue"></div><div class="glow-cyan"></div>
-      <div class="intro-body" style="max-width:580px;">
-        <div class="badge"><span class="bdot"></span>Get Started Today</div>
-        <h2 class="intro-title">Take Control of<br/><span class="grad">Your AI Future</span></h2>
-        <p class="intro-sub">The AI Governance Control Tower is your organization's single source of truth for every AI system — governed, compliant, and audit-ready from day one.</p>
-        <div class="sol-grid" style="margin-bottom:1.1rem;">
-          <div class="sol-card"><div class="sol-card-icon">🗂️</div><div class="sol-card-title">Complete AI Inventory</div><div class="sol-card-desc">Every model registered and tracked across all environments</div></div>
-          <div class="sol-card"><div class="sol-card-icon">⚖️</div><div class="sol-card-title">Multi-Framework Compliance</div><div class="sol-card-desc">DPDP, ISO 42001, EU AI Act, GDPR — in one platform</div></div>
-          <div class="sol-card"><div class="sol-card-icon">📁</div><div class="sol-card-title">AI Project Delivery</div><div class="sol-card-desc">6-phase lifecycle, Gantt, Kanban, n8n automation</div></div>
-          <div class="sol-card"><div class="sol-card-icon">📋</div><div class="sol-card-title">Audit-Ready in 30 Seconds</div><div class="sol-card-desc">Immutable logs and one-click compliance reports</div></div>
+    <!-- ══ S7 · IMPACT NUMBERS ══ -->
+    <div class="slide bg-impact" id="s7">
+      <div class="grid-blue"></div><div class="glow-b"></div><div class="glow-c"></div>
+      <div class="impact-wrap">
+        <div class="badge badge-green"><span class="dot dot-g"></span>Proven Enterprise Results</div>
+        <div style="font-size:clamp(1.1rem,3.5vw,1.8rem);font-weight:900;letter-spacing:-.02em;text-align:center;">The numbers speak for themselves.</div>
+        <div class="impact-grid">
+          <div class="ic"><div class="ic-val c-green">95%</div><div class="ic-lbl">Reduction in audit prep time</div></div>
+          <div class="ic"><div class="ic-val c-cyan">30s</div><div class="ic-lbl">To generate a compliance report</div></div>
+          <div class="ic"><div class="ic-val c-blue">100%</div><div class="ic-lbl">AI model visibility — zero shadow AI</div></div>
+          <div class="ic"><div class="ic-val c-green">4×</div><div class="ic-lbl">Faster AI project delivery</div></div>
+          <div class="ic"><div class="ic-val c-amber">0</div><div class="ic-lbl">Unmonitored agent actions</div></div>
+          <div class="ic"><div class="ic-val c-blue">4</div><div class="ic-lbl">Regulatory frameworks in one platform</div></div>
         </div>
-        <div class="outro-btns">
-          <a href="/login" class="obtn obtn-primary">🚀 Launch Platform →</a>
-          <a href="/demo.html" target="_blank" class="obtn obtn-ghost">▶ Watch Full Demo</a>
-        </div>
-        <div style="margin-top:1rem;font-size:.68rem;color:rgba(255,255,255,.3);">Built for Enterprise · DPDP · ISO 42001 · EU AI Act · GDPR</div>
+        <div style="font-size:.7rem;color:rgba(255,255,255,.45);text-align:center;max-width:480px;">From 6-week audit scrambles to 30-second reports. From invisible models to total portfolio control. This is what the AI Governance Control Tower delivers.</div>
       </div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="nar-text"><strong>The results are extraordinary!</strong> Ninety-five percent reduction in audit time. Compliance reports in thirty seconds — not six weeks. One hundred percent model visibility. Four times faster project delivery. Zero unmonitored agent actions. Four regulatory frameworks in one platform. This is what governed AI looks like — and it's magnificent!</div></div></div>
+    </div>
+
+    <!-- ══ S8 · CTA ══ -->
+    <div class="slide bg-reveal" id="s8">
+      <div class="grid-blue"></div><div class="glow-b"></div><div class="glow-c"></div>
+      <div class="cta-wrap">
+        <div class="badge badge-blue"><span class="dot dot-b"></span>Your AI Governance Journey Starts Now</div>
+        <div class="cta-title">The Future of<br/><span class="g1">Governed AI is Here.</span></div>
+        <div class="cta-sub">Stop flying blind. Stop scrambling for audits. Stop running ungoverned AI. The AI Governance Control Tower gives your organization the command, control, and confidence it needs — from day one.</div>
+        <div class="cta-btns">
+          <a href="/login" class="cta-btn-primary">🚀 Launch Control Tower →</a>
+          <a href="/demo.html" target="_blank" class="cta-btn-ghost">▶ Full Module Demo</a>
+        </div>
+        <div class="cta-tags">
+          <span class="ctag">DPDP Act</span><span class="ctag">ISO 42001</span><span class="ctag">EU AI Act</span><span class="ctag">GDPR</span>
+          <span class="ctag">AI Model Inventory</span><span class="ctag">Risk Engine</span><span class="ctag">AI Projects</span>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner"><div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="nar-text"><strong>The AI Governance Control Tower.</strong> Your organization's single source of truth for every AI system — governed, compliant, and audit-ready from day one. Don't wait for the regulators. Don't wait for the next audit. Launch today, and take proud control of your entire AI future!</div></div></div>
     </div>
 
   </div><!-- /screen -->
 
-  <!-- ══ CONTROLS ══ -->
   <div class="controls">
-    <button class="cbtn" onclick="prev()" title="Previous (←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
-    <button class="cbtn cbtn-play" id="playBtn" onclick="togglePlay()" title="Play / Pause (Space)"><svg id="playIco" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
-    <button class="cbtn" onclick="next()" title="Next (→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="cbtn" onclick="prev()" title="← Prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="cbtn cbtn-play" id="playBtn" onclick="togglePlay()" title="Space"><svg id="playIco" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+    <button class="cbtn" onclick="next()" title="→ Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
     <div class="prog-wrap">
-      <span class="time-lbl" id="timeLbl">0:00</span>
+      <span class="tlbl" id="timeLbl">0:00</span>
       <div class="prog-rail" id="rail" onclick="seek(event)"><div class="prog-thumb" id="thumb" style="width:0%"></div></div>
-      <span class="time-lbl" id="totalLbl">4:00</span>
+      <span class="tlbl" id="totalLbl">1:30</span>
     </div>
     <div class="ch-dots" id="dots"></div>
-    <button class="cbtn" id="audioBtn" onclick="toggleAudio()" title="Toggle Audio (M)" style="font-size:.88rem;">🔊</button>
-    <span class="slide-lbl" id="slideLbl">Intro</span>
+    <button class="cbtn" id="audioBtn" onclick="toggleAudio()" title="M — Mute" style="font-size:.85rem;">🔊</button>
+    <button class="cbtn" id="musicBtn" onclick="toggleMusic()" title="Toggle Music" style="font-size:.85rem;">🎵</button>
+    <span class="slbl" id="slideLbl">Intro</span>
   </div>
 </div>
 
 <script>
 function fmt(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 
+// ═══ SLIDE DATA ═══════════════════════════════════════════════════
 const SLIDES=[
-  {label:"Intro",       narration:"Welcome to the A-I Governance Control Tower — the enterprise platform that gives your organization complete visibility, control, and compliance over every A-I system. This marketing walkthrough tells the full story: the governance crisis facing organizations today, and how the Control Tower solves it across eight powerful modules. Press play to begin."},
-  {label:"The Problem", narration:"The Problem. Artificial intelligence is transforming every industry — but most organizations are deploying A-I systems with zero governance. No central model registry. No risk controls. No compliance framework. No audit trail. Risk Officers don't know which models are in production. Bias goes undetected. Regulatory exposure grows silently. And when auditors arrive, teams scramble through emails and spreadsheets for weeks. This is the reality for seventy-three percent of organizations deploying A-I today."},
-  {label:"The Stakes",  narration:"The Stakes. The cost of inaction is not theoretical — it is financial. GDPR fines reach twenty million euros per single violation. Regulatory enforcement actions on A-I have increased three-hundred-and-forty percent in just two years. The average cost of an A-I-related data breach is four-point-five million dollars. And one in three A-I projects fails directly due to governance failures. These are not distant risks. They are happening right now, to organizations just like yours."},
-  {label:"Before vs After", narration:"The Transformation. Without governance: invisible models, silent bias, six weeks of audit scrambling, autonomous agents acting without oversight, and fines you never saw coming. With the A-I Governance Control Tower: every model visible and tracked, real-time bias alerts, a compliance report generated in thirty seconds, all agent actions logged and approved, and a platform that keeps you audit-ready, regulator-ready, and board-ready at all times."},
-  {label:"The Platform", narration:"Introducing the A-I Governance Control Tower. A single, unified enterprise platform with eight integrated modules — A-I Model Inventory, Risk Engine, Compliance Controls, Data Governance, Agent Oversight, Monitoring, Audit and Reports, and A-I Project Management. Built for India's D-P-D-P Act, ISO 42001, GDPR, and the EU AI Act. One platform to govern your entire A-I portfolio."},
-  {label:"Dashboard",   narration:"Module 1 — Command Center Dashboard. The moment you log in, your entire A-I portfolio is visible in one screen. Twelve models registered. Compliance score at seventy-eight percent and climbing. Five open risks with three needing immediate action. Framework coverage bars show real-time progress across all four regulatory frameworks. Your Risk Officers and CIO can see the full governance picture in under ten seconds."},
-  {label:"AI Inventory", narration:"Module 2 — A-I Model Inventory. Every A-I model in your organization lives in one central registry. Version, framework, deployment environment, risk level, owning team, and which regulatory frameworks it falls under — all in one row. No more shadow A-I. No more models that nobody owns. The moment a model is registered, governance begins. The moment it is retired, governance continues through the audit log."},
-  {label:"Risk & Compliance", narration:"Module 3 — Risk and Compliance Engine. Every model is automatically scored across five dimensions: data sensitivity, regulatory exposure, explainability, model complexity, and degree of human oversight. The weighted formula produces a risk score from zero to one hundred. Each model is then mapped to specific compliance controls across D-P-D-P, ISO 42001, and the EU AI Act — with pass, fail, or partial status, evidence attachments, and reviewer sign-offs."},
-  {label:"Data & Agents", narration:"Modules 4 and 5 — Data Governance and Agent Oversight. Every data asset feeding your A-I models is tracked — P-I-I classification, encryption, consent records, and retention periods. This end-to-end lineage is critical for D-P-D-P and GDPR compliance. On the agent side, every autonomous A-I agent is registered with defined tool permissions and token budgets. Supervised agents must receive explicit human approval before taking sensitive actions. All prompts and responses are permanently logged."},
-  {label:"AI Projects",  narration:"Module 6 — A-I Project Management. Govern your A-I projects from idea to production with a built-in six-phase lifecycle: Business Case, Data Discovery, Model Development, Testing and Validation, Deployment, and Monitoring. Health scores, phase-gate milestones, and automated n-8-n alerts ensure no project falls behind without notice. Project templates for Credit Scoring, Fraud Detection, and LLM Applications accelerate every new initiative."},
-  {label:"Gantt & Kanban", narration:"Planning Tools — Gantt and Kanban. Visualize delivery timelines with the S-V-G Gantt chart — phase-coloured task bars, day-week-month zoom, a today marker, and diamond milestone gates that must be passed before the next phase begins. Switch to Kanban view for task-level workflow management across six columns — Backlog, To Do, In Progress, Review, Done, and Blocked. Drag cards to update status instantly."},
-  {label:"Monitoring & Audit", narration:"Modules 7 and 8 — Monitoring and Audit. The monitoring module tracks live L-L-M metrics — latency, toxicity, bias scores, and model accuracy — firing alerts the moment a threshold is breached. Bias drift on your Credit Risk Scorer? You know in real time, not six months later. Every action on the platform is recorded in a tamper-proof audit log. One click exports a regulator-ready compliance report for any framework, in thirty seconds."},
-  {label:"The Impact",   narration:"The Results. Organizations using the A-I Governance Control Tower report transformative outcomes. Audit preparation time drops by ninety-five percent. Compliance reports are generated in thirty seconds — not six weeks. Every A-I model is visible — zero shadow A-I in the organization. Projects are delivered four times faster with phase-gate governance. And every autonomous agent action is logged, approved, and fully accountable. This is what governed A-I delivers."},
-  {label:"Get Started",  narration:"Take control of your A-I future today. The A-I Governance Control Tower is your organization's single source of truth for every A-I system — governed, compliant, and audit-ready from day one. Click Launch Platform to access the application with your enterprise credentials, or watch the full interactive module demo to explore each feature in detail. The age of ungoverned A-I is over. Your governance journey starts here."},
+  {label:"Hook",       narration:""},// s0 has no auto-narration — play button triggers from here
+  {label:"Regulators", narration:"Regulators worldwide are moving fast! The EU AI Act is enforcing thirty-five million euro fines. India's D-P-D-P Act mandates consent trails and governance documentation. ISO 42001 is now a mandatory procurement requirement. And enterprises are getting caught completely off guard — scrambling for weeks when auditors arrive. The question is: are you ready?"},
+  {label:"The Chaos",  narration:"Sound familiar? Most enterprises are running A-I governance on spreadsheets — missing owners, unknown risk levels, zero compliance evidence! Auditors arrive and panic begins. Models running live in production with no oversight, no consent trail, and zero accountability. This spreadsheet nightmare is the reality for seven in ten enterprises. This has to stop!"},
+  {label:"Reveal",     narration:"Introducing the A-I Governance Control Tower! Eight powerful modules. One unified platform. Built specifically for D-P-D-P, ISO 42001, GDPR, and the EU AI Act. This is the enterprise command center your organization needs — and it is absolutely incredible!"},
+  {label:"Dashboard",  narration:"One dashboard — total command! Every A-I model registered, risk-scored, and compliance-mapped in real time. Framework coverage bars for D-P-D-P, ISO 42001, EU AI Act, and GDPR — live, always updating. Bias alerts fire the instant a threshold is crossed. No spreadsheets. No surprises. No more audit scrambles. Ever again!"},
+  {label:"Risk & Agents", narration:"Automated risk scoring across five dimensions — data sensitivity, regulatory exposure, explainability, model complexity, and human oversight — scored instantly! Compliance controls mapped to every regulation. And every A-I agent? Registered, supervised, and permanently logged. Not one unmonitored action. Two thousand three hundred logged interactions and counting. This is the power of real governance!"},
+  {label:"AI Projects",narration:"A-I Project Management that is absolutely brilliant! Six-phase governed lifecycle from Business Case to Production Monitoring. Beautiful S-V-G Gantt charts, drag-and-drop Kanban boards, phase-gate milestones, and n-8-n webhook automation that fires Slack alerts the instant something needs attention. Deliver your A-I projects faster — with complete governance built right in!"},
+  {label:"Impact",     narration:"The results are extraordinary and we are incredibly proud of them! Ninety-five percent reduction in audit preparation time. Compliance reports generated in thirty seconds — not six weeks! One hundred percent model visibility — zero shadow A-I. Four times faster A-I project delivery. Zero unmonitored agent actions. Four major regulatory frameworks in one unified platform. This is what governed A-I looks like — and it is magnificent!"},
+  {label:"Launch",     narration:"The A-I Governance Control Tower. Your organization's single source of truth for every A-I system — governed, compliant, and audit-ready from day one. Don't wait for regulators. Don't wait for the next audit. Launch today, and take proud, confident control of your entire A-I future. The future of governed A-I is here — and it starts with you!"},
 ];
 
-const totalChars=SLIDES.reduce((a,s)=>a+s.narration.length,0);
-const EST_TOTAL_S=Math.round(totalChars/5/130*60/0.9);
+const totalChars=SLIDES.slice(1).reduce((a,s)=>a+s.narration.length,0);
+const EST_TOTAL_S=Math.round(totalChars/5/130*60/1.05)+5;// ~90s
 
-let cur=0,playing=false,audioEnabled=true;
-let playId=0,slideStartTime=performance.now();
-let rafId=null;
+let cur=0,playing=false,audioEnabled=true,musicEnabled=true;
+let playId=0,slideStartTime=performance.now(),rafId=null;
 
+// ═══ DOTS ═══
 const dotsEl=document.getElementById('dots');
 SLIDES.forEach((_,i)=>{
-  const d=document.createElement('div');
-  d.className='ch-dot';
-  d.title=SLIDES[i].label;
-  d.onclick=()=>go(i);
-  dotsEl.appendChild(d);
+  const d=document.createElement('div');d.className='ch-dot';
+  d.title=SLIDES[i].label;d.onclick=()=>go(i);dotsEl.appendChild(d);
 });
 document.getElementById('totalLbl').textContent=fmt(EST_TOTAL_S);
 
+// ═══ VOICE ════════════════════════════════════════════════════════
 function getVoice(){
-  if(!window.speechSynthesis) return null;
-  const voices=window.speechSynthesis.getVoices();
-  return voices.find(v=>v.lang.startsWith('en')&&(
-    v.name.includes('Samantha')||v.name.includes('Google US English')||
-    v.name.includes('Daniel')||v.name.includes('Karen')||v.name.includes('Zira')
-  ))||voices.find(v=>v.lang.startsWith('en'))||null;
+  if(!window.speechSynthesis)return null;
+  const v=window.speechSynthesis.getVoices();
+  return v.find(x=>x.lang.startsWith('en')&&(
+    x.name.includes('Samantha')||x.name.includes('Google US English')||
+    x.name.includes('Daniel')||x.name.includes('Karen')||x.name.includes('Zira')
+  ))||v.find(x=>x.lang.startsWith('en'))||null;
 }
 
 function speak(text,id,onDone){
   if(!window.speechSynthesis){if(onDone)setTimeout(()=>{if(playId===id)onDone();},2000);return;}
   window.speechSynthesis.cancel();
-  if(!audioEnabled){if(onDone)setTimeout(()=>{if(playId===id)onDone();},400);return;}
+  if(!audioEnabled||!text){if(onDone)setTimeout(()=>{if(playId===id)onDone();},400);return;}
   const u=new SpeechSynthesisUtterance(text);
-  u.rate=0.9;u.pitch=1.0;u.volume=1;
+  u.rate=1.08; // excited, punchy
+  u.pitch=1.12; // proud, upbeat
+  u.volume=1.0;
   const v=getVoice();if(v)u.voice=v;
   u.onstart=()=>{slideStartTime=performance.now();document.getElementById('audioBadge').classList.add('show');};
   u.onend=()=>{document.getElementById('audioBadge').classList.remove('show');if(playId===id&&onDone)onDone();};
@@ -741,45 +604,216 @@ function speak(text,id,onDone){
   window.speechSynthesis.speak(u);
 }
 
-function stopAudio(){
-  if(window.speechSynthesis)window.speechSynthesis.cancel();
-  document.getElementById('audioBadge').classList.remove('show');
+function stopAudio(){if(window.speechSynthesis)window.speechSynthesis.cancel();document.getElementById('audioBadge').classList.remove('show');}
+function toggleAudio(){audioEnabled=!audioEnabled;document.getElementById('audioBtn').textContent=audioEnabled?'🔊':'🔇';if(!audioEnabled)stopAudio();}
+
+// ═══ BACKGROUND MUSIC (Web Audio API) ══════════════════════════════
+let audioCtx=null,masterGain=null,musicPlaying=false,musicLoopTimer=null;
+
+// Musical constants — D minor → D major arc
+const BPM=120,BEAT=60/BPM,BAR=BEAT*4;
+const F={
+  D2:73.42,A2:110,F2:87.31,C2:65.41,Bb1:58.27,G2:98,E2:82.41,
+  D3:146.83,F3:174.61,A3:220,C3:130.81,E3:164.81,G3:196,Bb2:116.54,
+  D4:293.66,F4:349.23,A4:440,C4:261.63,E4:329.63
+};
+
+// Chord progressions per measure (Dm - Bb - F - C / Dm - Bb - F - A resolved)
+const PROG=[
+  [F.D3,F.F3,F.A3],[F.Bb2,F.D3,F.F3],[F.F2,F.A3,F.C3],[F.C3,F.E3,F.G3],
+];
+const BASS_PROG=[F.D2,F.Bb1,F.F2,F.C2];
+
+function getCtx(){
+  if(!audioCtx){
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain();
+    masterGain.gain.setValueAtTime(0,audioCtx.currentTime);
+    masterGain.connect(audioCtx.destination);
+  }
+  return audioCtx;
 }
 
-function toggleAudio(){
-  audioEnabled=!audioEnabled;
-  document.getElementById('audioBtn').textContent=audioEnabled?'🔊':'🔇';
-  if(!audioEnabled)stopAudio();
+function schedPad(ctx,dest,freqs,t,dur,vol=0.055){
+  freqs.forEach(f=>{
+    [0,7,-5,12].forEach(det=>{
+      const osc=ctx.createOscillator(),g=ctx.createGain(),flt=ctx.createBiquadFilter();
+      osc.type='sawtooth';osc.frequency.value=f;osc.detune.value=det;
+      flt.type='lowpass';flt.frequency.value=900;flt.Q.value=0.8;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vol,t+0.15);
+      g.gain.linearRampToValueAtTime(vol*0.75,t+dur-0.25);
+      g.gain.linearRampToValueAtTime(0,t+dur);
+      osc.connect(flt);flt.connect(g);g.connect(dest);
+      osc.start(t);osc.stop(t+dur+0.1);
+    });
+  });
 }
 
+function schedBass(ctx,dest,freq,t,dur,vol=0.12){
+  const osc=ctx.createOscillator(),g=ctx.createGain(),flt=ctx.createBiquadFilter();
+  osc.type='triangle';osc.frequency.value=freq;
+  flt.type='lowpass';flt.frequency.value=320;flt.Q.value=1.2;
+  g.gain.setValueAtTime(vol,t);
+  g.gain.exponentialRampToValueAtTime(vol*0.5,t+dur*0.7);
+  g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  osc.connect(flt);flt.connect(g);g.connect(dest);
+  osc.start(t);osc.stop(t+dur+0.05);
+}
+
+function schedKick(ctx,dest,t,vol=0.35){
+  const osc=ctx.createOscillator(),g=ctx.createGain();
+  osc.type='sine';
+  osc.frequency.setValueAtTime(160,t);
+  osc.frequency.exponentialRampToValueAtTime(28,t+0.28);
+  g.gain.setValueAtTime(vol,t);
+  g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+  osc.connect(g);g.connect(dest);
+  osc.start(t);osc.stop(t+0.35);
+}
+
+function schedHat(ctx,dest,t,vol=0.035){
+  const buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.04),ctx.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const src=ctx.createBufferSource(),g=ctx.createGain(),flt=ctx.createBiquadFilter();
+  src.buffer=buf;flt.type='highpass';flt.frequency.value=8000;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+  src.connect(flt);flt.connect(g);g.connect(dest);
+  src.start(t);
+}
+
+function schedSnare(ctx,dest,t,vol=0.06){
+  const buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const src=ctx.createBufferSource(),g=ctx.createGain(),flt=ctx.createBiquadFilter();
+  src.buffer=buf;flt.type='bandpass';flt.frequency.value=3500;flt.Q.value=0.5;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+  src.connect(flt);flt.connect(g);g.connect(dest);
+  src.start(t);
+}
+
+function schedArp(ctx,dest,notes,t,vol=0.04){
+  const step=BEAT/2;
+  notes.forEach((freq,i)=>{
+    const osc=ctx.createOscillator(),g=ctx.createGain();
+    osc.type='sine';osc.frequency.value=freq*2;
+    g.gain.setValueAtTime(0,t+i*step);
+    g.gain.linearRampToValueAtTime(vol,t+i*step+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001,t+i*step+step*0.8);
+    osc.connect(g);g.connect(dest);
+    osc.start(t+i*step);osc.stop(t+i*step+step);
+  });
+}
+
+let barCount=0;
+function scheduleBar(ctx,dest,startT){
+  const mi=barCount%PROG.length;
+  const chords=PROG[mi];
+  const bassF=BASS_PROG[mi];
+
+  // Pad — full bar
+  schedPad(ctx,dest,chords,startT,BAR);
+  // Bass — 2 notes per bar (half-bar each)
+  schedBass(ctx,dest,bassF,startT,BAR*0.5);
+  schedBass(ctx,dest,bassF,startT+BAR*0.5,BAR*0.5);
+  // Kick — beats 1 & 3
+  schedKick(ctx,dest,startT);
+  schedKick(ctx,dest,startT+BEAT*2);
+  // Snare — beats 2 & 4
+  schedSnare(ctx,dest,startT+BEAT);
+  schedSnare(ctx,dest,startT+BEAT*3);
+  // Hi-hats — 8th notes
+  for(let i=0;i<8;i++) schedHat(ctx,dest,startT+i*BEAT*0.5);
+  // Arpeggio on bars 3+ (builds excitement)
+  if(barCount>=3) schedArp(ctx,dest,chords,startT);
+
+  barCount++;
+}
+
+let nextBarTime=0;
+function scheduleMusicLoop(){
+  if(!musicPlaying||!audioCtx)return;
+  const lookAhead=0.1,schedAhead=0.3;
+  const now=audioCtx.currentTime;
+  while(nextBarTime<now+schedAhead){
+    scheduleBar(audioCtx,masterGain,nextBarTime);
+    nextBarTime+=BAR;
+  }
+  musicLoopTimer=setTimeout(scheduleMusicLoop,lookAhead*1000);
+}
+
+function startMusic(){
+  const ctx=getCtx();
+  if(ctx.state==='suspended')ctx.resume();
+  masterGain.gain.cancelScheduledValues(ctx.currentTime);
+  masterGain.gain.setValueAtTime(0,ctx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(0.18,ctx.currentTime+1.5);
+  nextBarTime=ctx.currentTime+0.05;
+  barCount=0;
+  musicPlaying=true;
+  scheduleMusicLoop();
+  document.getElementById('musicBadge').classList.add('show');
+  document.getElementById('musicBtn').textContent='🎵';
+}
+
+function stopMusic(){
+  musicPlaying=false;
+  if(musicLoopTimer){clearTimeout(musicLoopTimer);musicLoopTimer=null;}
+  if(masterGain&&audioCtx){
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.8);
+  }
+  document.getElementById('musicBadge').classList.remove('show');
+  document.getElementById('musicBtn').textContent='🎵';
+}
+
+function toggleMusic(){
+  musicEnabled=!musicEnabled;
+  if(musicEnabled&&playing)startMusic();
+  else stopMusic();
+}
+
+// Adjust music volume by slide intensity
+function setMusicSlide(idx){
+  if(!masterGain||!audioCtx)return;
+  // Problem slides: quieter; reveal/impact: louder
+  const vols=[0.10,0.12,0.12,0.22,0.18,0.18,0.18,0.22,0.20];
+  const v=vols[idx]||0.17;
+  masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(v,audioCtx.currentTime+0.7);
+}
+
+// ═══ PLAYBACK ══════════════════════════════════════════════════════
 function playFromCurrent(id){
   if(!playing||playId!==id||cur>=SLIDES.length){if(cur>=SLIDES.length){playing=false;updatePlayBtn();}return;}
   slideStartTime=performance.now();
   render();
-  speak(SLIDES[cur].narration,id,()=>{
+  const text=SLIDES[cur].narration;
+  speak(text,id,()=>{
     if(!playing||playId!==id)return;
     if(cur<SLIDES.length-1){cur++;playFromCurrent(id);}
-    else{playing=false;updatePlayBtn();}
+    else{playing=false;updatePlayBtn();if(musicEnabled)stopMusic();}
   });
 }
 
 function ensureVoices(cb){
   if(!window.speechSynthesis){cb();return;}
   if(window.speechSynthesis.getVoices().length>0){cb();return;}
-  let done=false;
-  const finish=()=>{if(!done){done=true;cb();}};
-  window.speechSynthesis.onvoiceschanged=finish;
-  setTimeout(finish,1200);
+  let done=false;const fin=()=>{if(!done){done=true;cb();}};
+  window.speechSynthesis.onvoiceschanged=fin;setTimeout(fin,1200);
 }
 
 function togglePlay(){
   playing=!playing;playId++;updatePlayBtn();
   if(playing){
+    if(cur===0&&SLIDES[0].narration===''){cur=1;} // skip silent hook
     const id=playId;
     ensureVoices(()=>playFromCurrent(id));
     if(!rafId)rafId=requestAnimationFrame(progressLoop);
+    if(musicEnabled)startMusic();
   } else {
     stopAudio();cancelAnimationFrame(rafId);rafId=null;
+    stopMusic();
   }
 }
 
@@ -794,23 +828,24 @@ function render(){
   document.getElementById('stepBadge').textContent=`${cur+1} / ${SLIDES.length}`;
   document.getElementById('slideLbl').textContent=SLIDES[cur].label;
   document.querySelectorAll('.ch-dot').forEach((d,i)=>{
-    d.classList.toggle('done',i<cur);
-    d.classList.toggle('on',i===cur);
+    d.classList.toggle('done',i<cur);d.classList.toggle('on',i===cur);
   });
+  setMusicSlide(cur);
 }
 
+// ─── Progress ─────────────────────────────────────────
 const charsUpTo=SLIDES.map((_,i)=>SLIDES.slice(0,i).reduce((a,s)=>a+s.narration.length,0));
 function progressLoop(){
   if(!playing){rafId=null;return;}
   const elapsed=(performance.now()-slideStartTime)/1000;
-  const charsThisSlide=SLIDES[cur].narration.length;
-  const estThisSlide=charsThisSlide/5/130*60/0.9;
-  const prog=Math.min(elapsed/Math.max(estThisSlide,1),1);
-  const charsDone=charsUpTo[cur]+prog*charsThisSlide;
-  const pct=charsDone/totalChars*100;
-  document.getElementById('thumb').style.width=pct+'%';
-  const estElapsed=charsUpTo[cur]/totalChars*EST_TOTAL_S+prog*charsThisSlide/totalChars*EST_TOTAL_S;
-  document.getElementById('timeLbl').textContent=fmt(estElapsed);
+  const cs=SLIDES[cur].narration.length||1;
+  const est=cs/5/130*60/1.05;
+  const prog=Math.min(elapsed/Math.max(est,1),1);
+  const done=charsUpTo[cur]+prog*cs;
+  const pct=done/totalChars*100;
+  document.getElementById('thumb').style.width=Math.min(pct,100)+'%';
+  const estEl=charsUpTo[cur]/totalChars*EST_TOTAL_S+prog*cs/totalChars*EST_TOTAL_S;
+  document.getElementById('timeLbl').textContent=fmt(estEl);
   rafId=requestAnimationFrame(progressLoop);
 }
 
@@ -823,25 +858,30 @@ function next(){go(cur+1);}
 function seek(e){
   const r=document.getElementById('rail').getBoundingClientRect();
   const pct=(e.clientX-r.left)/r.width;
-  const targetChar=pct*totalChars;
-  let s=0;
-  while(s<SLIDES.length-1&&charsUpTo[s+1]<targetChar)s++;
+  const tc=pct*totalChars;let s=0;
+  while(s<SLIDES.length-1&&charsUpTo[s+1]<tc)s++;
   go(s);
 }
 
+// ─── Keyboard ─────────────────────────────────────────
 document.addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();togglePlay();}
   if(e.code==='ArrowRight')next();
   if(e.code==='ArrowLeft')prev();
   if(e.code==='KeyM')toggleAudio();
+  if(e.code==='KeyB')toggleMusic();
 });
 
-if(window.speechSynthesis){
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
-}
-render();
+// ─── Touch swipe ──────────────────────────────────────
+let tx=null;
+document.getElementById('screen').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+document.getElementById('screen').addEventListener('touchend',e=>{
+  if(tx===null)return;
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>45){dx<0?next():prev();}tx=null;
+},{passive:true});
 
+// ─── Chapter flash ────────────────────────────────────
 let lastSlide=-1;
 setInterval(()=>{
   if(cur!==lastSlide){
@@ -854,6 +894,13 @@ setInterval(()=>{
     }
   }
 },200);
+
+// ─── Init ─────────────────────────────────────────────
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+}
+render();
 </script>
 </body>
 </html>
