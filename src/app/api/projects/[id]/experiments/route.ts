@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, badRequest, serverError } from "@/lib/api-response";
@@ -44,8 +45,8 @@ export const POST = withAuth(async (req: NextRequest, { user, params }) => {
           projectId: params!.id,
           name: parsed.data.name,
           description: parsed.data.description,
-          hyperparams: parsed.data.hyperparams ?? {},
-          metrics: parsed.data.metrics ?? {},
+          hyperparams: (parsed.data.hyperparams ?? {}) as Prisma.InputJsonValue,
+          metrics: (parsed.data.metrics ?? {}) as Prisma.InputJsonValue,
           datasetRef: parsed.data.datasetRef,
           modelRef: parsed.data.modelRef,
           notes: parsed.data.notes,

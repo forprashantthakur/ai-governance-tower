@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, badRequest, serverError } from "@/lib/api-response";
@@ -44,7 +45,7 @@ export const POST = withAuth(async (req: NextRequest, { params }) => {
           triggerEvent: parsed.data.triggerEvent as never,
           milestoneId: parsed.data.milestoneId,
           isActive: parsed.data.isActive ?? true,
-          payloadTemplate: parsed.data.payloadTemplate ?? {},
+          payloadTemplate: (parsed.data.payloadTemplate ?? {}) as Prisma.InputJsonValue,
         },
       })
     );

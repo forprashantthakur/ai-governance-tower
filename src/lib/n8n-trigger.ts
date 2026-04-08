@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { N8nTriggerEvent } from "@/types";
 
@@ -45,7 +46,7 @@ export async function fireWebhooks(
 
         await prisma.n8nWebhook.update({
           where: { id: wh.id },
-          data: { lastTriggeredAt: new Date(), lastStatus, lastResponse },
+          data: { lastTriggeredAt: new Date(), lastStatus, lastResponse: lastResponse as Prisma.InputJsonValue },
         });
       })
     );
@@ -92,7 +93,7 @@ export async function fireWebhookById(
 
   await prisma.n8nWebhook.update({
     where: { id: webhookId },
-    data: { lastTriggeredAt: new Date(), lastStatus, lastResponse },
+    data: { lastTriggeredAt: new Date(), lastStatus, lastResponse: lastResponse as Prisma.InputJsonValue },
   });
 
   return { lastStatus, lastResponse };

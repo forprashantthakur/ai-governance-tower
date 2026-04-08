@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, badRequest, serverError } from "@/lib/api-response";
@@ -46,7 +47,7 @@ export const POST = withAuth(async (req: NextRequest, { user, params }) => {
             nodes: parsed.data.canvasData.nodes,
             edges: parsed.data.canvasData.edges,
             viewport: parsed.data.canvasData.viewport ?? { x: 0, y: 0, scale: 1 },
-          },
+          } as Prisma.InputJsonValue,
           createdBy: user.userId,
         },
       })

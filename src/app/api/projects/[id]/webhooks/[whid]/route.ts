@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, badRequest, serverError } from "@/lib/api-response";
@@ -20,7 +21,15 @@ export const PATCH = withAuth(async (req: NextRequest, { params }) => {
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const webhook = await withRetry(() =>
-      prisma.n8nWebhook.update({ where: { id: params!.whid }, data: parsed.data })
+      prisma.n8nWebhook.update({
+        where: { id: params!.whid },
+        data: {
+          ...parsed.data,
+          payloadTemplate: parsed.data.payloadTemplate
+            ? (parsed.data.payloadTemplate as Prisma.InputJsonValue)
+            : undefined,
+        },
+      })
     );
     return ok(webhook);
   } catch (err) {

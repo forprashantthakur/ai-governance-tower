@@ -193,5 +193,5 @@ export const POST = withAuth(
       return serverError(err);
     }
   },
-  ["ADMIN", "RISK_OFFICER"]
+  "RISK_OFFICER"
 );

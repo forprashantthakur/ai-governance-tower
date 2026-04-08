@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, badRequest, serverError } from "@/lib/api-response";
@@ -32,9 +33,9 @@ export const POST = withAuth(async (req: NextRequest, { params }) => {
         data: {
           experimentId: params!.eid,
           runNumber: (maxRun._max.runNumber ?? 0) + 1,
-          hyperparams: parsed.data.hyperparams ?? {},
-          metrics: parsed.data.metrics ?? {},
-          artifacts: parsed.data.artifacts ?? [],
+          hyperparams: (parsed.data.hyperparams ?? {}) as Prisma.InputJsonValue,
+          metrics: (parsed.data.metrics ?? {}) as Prisma.InputJsonValue,
+          artifacts: (parsed.data.artifacts ?? []) as Prisma.InputJsonValue,
           status: parsed.data.status ?? "completed",
           duration: parsed.data.duration,
           notes: parsed.data.notes,
