@@ -30,18 +30,19 @@ export default function NewProjectPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   useEffect(() => {
+    const token = localStorage.getItem("auth_token");
     fetch("/api/projects/templates", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setTemplates(d.data ?? []));
-  }, [token]);
+  }, []);
 
   async function createProject() {
     setSaving(true);
     setError(null);
     try {
+      const token = localStorage.getItem("auth_token");
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
