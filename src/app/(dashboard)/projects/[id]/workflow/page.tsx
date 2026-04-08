@@ -394,7 +394,7 @@ export default function WorkflowPage() {
                     className="w-6 h-6 rounded flex items-center justify-center shrink-0"
                     style={{ background: def.bg }}
                   >
-                    <Icon className="h-3.5 w-3.5" style={{ color: def.color }} />
+                    <span style={{ color: def.color }}><Icon className="h-3.5 w-3.5" /></span>
                   </div>
                   <span className="truncate">{def.label}</span>
                 </button>
