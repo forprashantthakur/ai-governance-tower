@@ -56,9 +56,8 @@ export default function ProjectOverviewPage() {
     _count?: { tasks: number; experiments: number; milestones: number; workflows: number };
   } | null>(null);
   const [tasks, setTasks] = useState<{ status: string }[]>([]);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-
   useEffect(() => {
+    const token = localStorage.getItem("auth_token");
     const h = { Authorization: `Bearer ${token}` };
     Promise.all([
       fetch(`/api/projects/${params.id}`, { headers: h }),
@@ -69,7 +68,7 @@ export default function ProjectOverviewPage() {
         setProject(p.data);
         setTasks(t.data ?? []);
       });
-  }, [params.id, token]);
+  }, [params.id]);
 
   if (!project) {
     return (

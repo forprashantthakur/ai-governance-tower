@@ -37,9 +37,9 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const { setActiveProject } = useProjectStore();
   const [project, setProject] = useState<Project | null>(null);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   useEffect(() => {
+    const token = localStorage.getItem("auth_token");
     fetch(`/api/projects/${params.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -50,7 +50,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           setActiveProject(d.data);
         }
       });
-  }, [params.id, token]);
+  }, [params.id]);
 
   const baseHref = `/projects/${params.id}`;
 

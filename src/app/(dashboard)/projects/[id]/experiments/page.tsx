@@ -24,11 +24,10 @@ export default function ExperimentsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", notes: "" });
   const [saving, setSaving] = useState(false);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  const h = { Authorization: `Bearer ${token}` };
+  const getH = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
   useEffect(() => {
-    fetch(`/api/projects/${params.id}/experiments`, { headers: h })
+    fetch(`/api/projects/${params.id}/experiments`, { headers: getH() })
       .then((r) => r.json())
       .then((d) => {
         setExperiments(d.data ?? []);
@@ -42,7 +41,7 @@ export default function ExperimentsPage() {
     try {
       const res = await fetch(`/api/projects/${params.id}/experiments`, {
         method: "POST",
-        headers: { ...h, "Content-Type": "application/json" },
+        headers: { ...getH(), "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -61,11 +60,11 @@ export default function ExperimentsPage() {
     const loss = parseFloat(prompt("Loss:") ?? "0");
     await fetch(`/api/projects/${params.id}/experiments/${expId}/runs`, {
       method: "POST",
-      headers: { ...h, "Content-Type": "application/json" },
+      headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({ metrics: { accuracy, loss }, status: "completed" }),
     });
     // Refresh
-    fetch(`/api/projects/${params.id}/experiments`, { headers: h })
+    fetch(`/api/projects/${params.id}/experiments`, { headers: getH() })
       .then((r) => r.json())
       .then((d) => setExperiments(d.data ?? []));
   }

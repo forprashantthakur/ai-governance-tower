@@ -48,11 +48,10 @@ export default function GanttPage() {
   const [viewStart, setViewStart] = useState<Date>(new Date());
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-
   const zoom = ZOOM_LEVELS[zoomIdx];
 
   useEffect(() => {
+    const token = localStorage.getItem("auth_token");
     const h = { Authorization: `Bearer ${token}` };
     Promise.all([
       fetch(`/api/projects/${params.id}/tasks`, { headers: h }),
@@ -80,7 +79,7 @@ export default function GanttPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [params.id, token]);
+  }, [params.id]);
 
   const viewEnd = addDays(viewStart, zoom.daysVisible);
   const totalW = zoom.daysVisible * zoom.dayPx;

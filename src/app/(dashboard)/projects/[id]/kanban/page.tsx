@@ -107,9 +107,8 @@ export default function KanbanPage() {
   const [addingTo, setAddingTo] = useState<TaskStatus | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [saving, setSaving] = useState(false);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-
   useEffect(() => {
+    const token = localStorage.getItem("auth_token");
     fetch(`/api/projects/${params.id}/tasks`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -118,7 +117,7 @@ export default function KanbanPage() {
         setKanbanTasks(d.data ?? []);
         setLoading(false);
       });
-  }, [params.id, token]);
+  }, [params.id]);
 
   function onDragStart(e: React.DragEvent, id: string) {
     setDraggingId(id);
@@ -136,7 +135,7 @@ export default function KanbanPage() {
 
     fetch(`/api/projects/${params.id}/tasks/${draggingId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
       body: JSON.stringify({ status }),
     }).catch(() => {
       if (prev) updateTaskStatus(draggingId!, prev); // revert on error
@@ -149,7 +148,7 @@ export default function KanbanPage() {
     try {
       const res = await fetch(`/api/projects/${params.id}/tasks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
         body: JSON.stringify({
           title: newTaskTitle.trim(),
           status,

@@ -138,12 +138,11 @@ export default function WorkflowPage() {
   const panStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
   const dragNode = useRef<{ id: string; ox: number; oy: number; mx: number; my: number } | null>(null);
   const saveTimer = useRef<NodeJS.Timeout>();
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  const h = { Authorization: `Bearer ${token}` };
+  const getH = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
   // Load canvas list
   useEffect(() => {
-    fetch(`/api/projects/${params.id}/workflows`, { headers: h })
+    fetch(`/api/projects/${params.id}/workflows`, { headers: getH() })
       .then(r => r.json())
       .then(d => {
         const list = d.data ?? [];
@@ -155,7 +154,7 @@ export default function WorkflowPage() {
 
   function loadCanvas(id: string) {
     setLoading(true);
-    fetch(`/api/projects/${params.id}/workflows/${id}`, { headers: h })
+    fetch(`/api/projects/${params.id}/workflows/${id}`, { headers: getH() })
       .then(r => r.json())
       .then(d => {
         if (d.data) {
@@ -174,7 +173,7 @@ export default function WorkflowPage() {
     setCreatingCanvas(true);
     const res = await fetch(`/api/projects/${params.id}/workflows`, {
       method: "POST",
-      headers: { ...h, "Content-Type": "application/json" },
+      headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({
         name: newCanvasName.trim(),
         canvasData: { nodes: [], edges: [], viewport: { x: 0, y: 0, scale: 1 } },
@@ -198,7 +197,7 @@ export default function WorkflowPage() {
       setSaving(true);
       fetch(`/api/projects/${params.id}/workflows/${activeId}`, {
         method: "PATCH",
-        headers: { ...h, "Content-Type": "application/json" },
+        headers: { ...getH(), "Content-Type": "application/json" },
         body: JSON.stringify({ canvasData: { nodes: n, edges: e, viewport: vp } }),
       }).finally(() => setSaving(false));
     }, 1500);

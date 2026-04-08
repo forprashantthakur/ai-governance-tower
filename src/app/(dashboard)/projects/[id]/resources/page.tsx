@@ -24,13 +24,12 @@ export default function ResourcesPage() {
   const [users, setUsers] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
   const [form, setForm] = useState({ userId: "", role: "CONTRIBUTOR" as ResourceRole, allocationPct: 50 });
   const [saving, setSaving] = useState(false);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  const h = { Authorization: `Bearer ${token}` };
+  const getH = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/projects/${params.id}/resources`, { headers: h }),
-      fetch("/api/auth/me", { headers: h }),
+      fetch(`/api/projects/${params.id}/resources`, { headers: getH() }),
+      fetch("/api/auth/me", { headers: getH() }),
     ])
       .then(([r1, r2]) => Promise.all([r1.json(), r2.json()]))
       .then(([res, me]) => {
@@ -48,7 +47,7 @@ export default function ResourcesPage() {
     try {
       const res = await fetch(`/api/projects/${params.id}/resources`, {
         method: "POST",
-        headers: { ...h, "Content-Type": "application/json" },
+        headers: { ...getH(), "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -60,14 +59,14 @@ export default function ResourcesPage() {
   }
 
   async function removeResource(rid: string) {
-    await fetch(`/api/projects/${params.id}/resources/${rid}`, { method: "DELETE", headers: h });
+    await fetch(`/api/projects/${params.id}/resources/${rid}`, { method: "DELETE", headers: getH() });
     setResources((r) => r.filter((x) => x.id !== rid));
   }
 
   async function updateAllocation(rid: string, allocationPct: number) {
     await fetch(`/api/projects/${params.id}/resources/${rid}`, {
       method: "PATCH",
-      headers: { ...h, "Content-Type": "application/json" },
+      headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({ allocationPct }),
     });
     setResources((r) => r.map((x) => (x.id === rid ? { ...x, allocationPct } : x)));

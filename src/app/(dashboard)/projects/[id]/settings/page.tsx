@@ -38,15 +38,14 @@ export default function ProjectSettingsPage() {
     name: "", webhookUrl: "", triggerEvent: "PHASE_COMPLETE" as N8nTriggerEvent,
   });
   const [saving, setSaving] = useState(false);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  const h = { Authorization: `Bearer ${token}` };
+  const getH = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
   useEffect(() => {
     const loadAll = async () => {
       const [w, lm, am] = await Promise.all([
-        fetch(`/api/projects/${params.id}/webhooks`, { headers: h }).then(r => r.json()),
-        fetch(`/api/projects/${params.id}/models`, { headers: h }).then(r => r.json()),
-        fetch("/api/models?limit=50", { headers: h }).then(r => r.json()),
+        fetch(`/api/projects/${params.id}/webhooks`, { headers: getH() }).then(r => r.json()),
+        fetch(`/api/projects/${params.id}/models`, { headers: getH() }).then(r => r.json()),
+        fetch("/api/models?limit=50", { headers: getH() }).then(r => r.json()),
       ]);
       setWebhooks(w.data ?? []);
       setLinkedModels(lm.data ?? []);
@@ -62,7 +61,7 @@ export default function ProjectSettingsPage() {
     try {
       const res = await fetch(`/api/projects/${params.id}/webhooks`, {
         method: "POST",
-        headers: { ...h, "Content-Type": "application/json" },
+        headers: { ...getH(), "Content-Type": "application/json" },
         body: JSON.stringify(webhookForm),
       });
       const data = await res.json();
@@ -71,14 +70,14 @@ export default function ProjectSettingsPage() {
   }
 
   async function deleteWebhook(wid: string) {
-    await fetch(`/api/projects/${params.id}/webhooks/${wid}`, { method: "DELETE", headers: h });
+    await fetch(`/api/projects/${params.id}/webhooks/${wid}`, { method: "DELETE", headers: getH() });
     setWebhooks(w => w.filter(x => x.id !== wid));
   }
 
   async function toggleWebhook(wid: string, isActive: boolean) {
     await fetch(`/api/projects/${params.id}/webhooks/${wid}`, {
       method: "PATCH",
-      headers: { ...h, "Content-Type": "application/json" },
+      headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({ isActive }),
     });
     setWebhooks(w => w.map(x => x.id === wid ? { ...x, isActive } : x));
@@ -87,7 +86,7 @@ export default function ProjectSettingsPage() {
   async function testWebhook(wid: string) {
     setTestResult(r => ({ ...r, [wid]: { status: "", loading: true } }));
     const res = await fetch(`/api/projects/${params.id}/webhooks/${wid}/trigger`, {
-      method: "POST", headers: h,
+      method: "POST", headers: getH(),
     });
     const data = await res.json();
     setTestResult(r => ({ ...r, [wid]: { status: data.data?.lastStatus ?? "error", loading: false } }));
@@ -96,7 +95,7 @@ export default function ProjectSettingsPage() {
   async function linkModel(modelId: string) {
     const res = await fetch(`/api/projects/${params.id}/models`, {
       method: "POST",
-      headers: { ...h, "Content-Type": "application/json" },
+      headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({ modelId, role: "output" }),
     });
     const data = await res.json();
@@ -107,7 +106,7 @@ export default function ProjectSettingsPage() {
   }
 
   async function unlinkModel(modelId: string) {
-    await fetch(`/api/projects/${params.id}/models/${modelId}`, { method: "DELETE", headers: h });
+    await fetch(`/api/projects/${params.id}/models/${modelId}`, { method: "DELETE", headers: getH() });
     setLinkedModels(l => l.filter(x => x.modelId !== modelId));
   }
 
@@ -302,7 +301,7 @@ export default function ProjectSettingsPage() {
                 if (!confirm("Mark this project as cancelled?")) return;
                 await fetch(`/api/projects/${params.id}`, {
                   method: "PATCH",
-                  headers: { ...h, "Content-Type": "application/json" },
+                  headers: { ...getH(), "Content-Type": "application/json" },
                   body: JSON.stringify({ status: "CANCELLED" }),
                 });
                 router.push("/projects");

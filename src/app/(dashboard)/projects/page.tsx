@@ -112,9 +112,8 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-
   useEffect(() => {
+    const token = localStorage.getItem("auth_token");
     const headers = { Authorization: `Bearer ${token}` };
     Promise.all([
       fetch(`/api/projects?limit=50${statusFilter ? `&status=${statusFilter}` : ""}`, { headers }),
@@ -126,7 +125,7 @@ export default function ProjectsPage() {
         setPortfolio(port.data);
       })
       .finally(() => setLoading(false));
-  }, [token, statusFilter]);
+  }, [statusFilter]);
 
   const stats = [
     { label: "Total Projects", value: portfolio?.totalProjects ?? 0, icon: FolderKanban, color: "text-blue-400" },
