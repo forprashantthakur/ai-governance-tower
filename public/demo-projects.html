@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>AI Project Management — Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0a2342;--blue:#2563eb;--blue-light:#3b82f6;--cyan:#06b6d4;
+  --green:#10b981;--amber:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--dark:#060f1e;
+}
+html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:#000;color:#fff;-webkit-font-smoothing:antialiased;touch-action:none;}
+.player{width:100%;height:100%;display:flex;flex-direction:column;}
+.screen{flex:1;position:relative;overflow:hidden;background:var(--navy);}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .5s ease;display:flex;flex-direction:column;pointer-events:none;}
+.slide.active{opacity:1;pointer-events:all;}
+
+/* INTRO / OUTRO */
+.slide-bg{background:linear-gradient(135deg,#0a2342 0%,#0d2952 50%,#0a1628 100%);align-items:center;justify-content:center;text-align:center;padding:1.5rem;}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.07) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,black 30%,transparent 100%);}
+.glow{position:absolute;top:-20%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(37,99,235,.18) 0%,transparent 65%);pointer-events:none;}
+.glow2{position:absolute;bottom:-20%;left:-5%;width:400px;height:400px;background:radial-gradient(circle,rgba(139,92,246,.12) 0%,transparent 65%);pointer-events:none;}
+.intro-body{position:relative;z-index:1;max-width:620px;padding:0 1rem;}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);color:#60a5fa;padding:.3rem 1rem;border-radius:100px;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.25rem;}
+.bdot{width:6px;height:6px;border-radius:50%;background:#60a5fa;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+.intro-title{font-size:clamp(1.6rem,5vw,2.8rem);font-weight:800;line-height:1.15;letter-spacing:-.03em;margin-bottom:.75rem;}
+.intro-title span{background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.intro-sub{color:rgba(255,255,255,.6);font-size:clamp(.8rem,2.5vw,.95rem);line-height:1.65;margin-bottom:1.5rem;}
+.intro-tags{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;}
+.tag{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);padding:.25rem .7rem;border-radius:5px;font-size:.7rem;color:rgba(255,255,255,.65);}
+.outro-btns{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;}
+.obtn{padding:.7rem 1.5rem;border-radius:8px;font-weight:700;font-size:.85rem;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;}
+.obtn-primary{background:var(--blue);color:#fff;}
+.obtn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.3);}
+.credit{margin-top:1.5rem;color:rgba(255,255,255,.3);font-size:.72rem;}
+.credit strong{color:rgba(255,255,255,.5);}
+
+/* APP CHROME */
+.app-header{background:rgba(10,35,66,.97);border-bottom:1px solid rgba(255,255,255,.08);padding:.55rem 1rem;display:flex;align-items:center;gap:.6rem;flex-shrink:0;}
+.logo-icon{width:24px;height:24px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon svg{width:13px;height:13px;color:#fff;}
+.logo-text{font-size:.75rem;font-weight:700;color:#fff;line-height:1.15;}
+.logo-sub{font-size:.56rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;}
+.app-nav{display:flex;gap:.85rem;margin-left:.85rem;overflow:hidden;}
+.app-nav span{font-size:.68rem;color:rgba(255,255,255,.4);white-space:nowrap;}
+.app-nav span.on{color:#60a5fa;font-weight:600;}
+.app-avatar{margin-left:auto;width:24px;height:24px;border-radius:50%;background:rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#60a5fa;flex-shrink:0;}
+
+/* PROJECT SUB-HEADER */
+.proj-subnav{background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.07);padding:.4rem 1rem;display:flex;align-items:center;gap:.5rem;overflow-x:auto;flex-shrink:0;}
+.proj-tab{font-size:.68rem;padding:.3rem .7rem;border-radius:5px;white-space:nowrap;color:rgba(255,255,255,.4);}
+.proj-tab.on{background:rgba(37,99,235,.15);color:#60a5fa;font-weight:600;}
+
+/* SLIDE CONTENT */
+.slide-content{flex:1;padding:.75rem;overflow:hidden;display:flex;flex-direction:column;gap:.65rem;}
+
+/* STAT ROW */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;flex-shrink:0;}
+@media(max-width:600px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.65rem;}
+.sc-lbl{font-size:.6rem;color:rgba(255,255,255,.45);margin-bottom:.2rem;}
+.sc-val{font-size:clamp(1.1rem,3vw,1.5rem);font-weight:800;line-height:1;}
+.sc-sub{font-size:.58rem;margin-top:.15rem;}
+.c-green{color:var(--green)}.c-amber{color:var(--amber)}.c-red{color:var(--red)}.c-blue{color:#60a5fa}.c-purple{color:#a78bfa}
+
+/* PILLS */
+.pill{padding:2px 7px;border-radius:4px;font-size:.58rem;font-weight:700;text-transform:uppercase;}
+.p-green{background:rgba(16,185,129,.15);color:#34d399;}
+.p-amber{background:rgba(245,158,11,.15);color:#fbbf24;}
+.p-red{background:rgba(239,68,68,.15);color:#f87171;}
+.p-blue{background:rgba(37,99,235,.15);color:#60a5fa;}
+.p-purple{background:rgba(139,92,246,.15);color:#a78bfa;}
+.p-cyan{background:rgba(6,182,212,.15);color:#67e8f9;}
+.p-gray{background:rgba(148,163,184,.1);color:#94a3b8;}
+
+/* PANEL */
+.panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.75rem;overflow:hidden;}
+.panel-title{font-size:.7rem;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:.55rem;display:flex;align-items:center;gap:.35rem;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;flex:1;min-height:0;}
+@media(max-width:580px){.two-col{grid-template-columns:1fr;}}
+
+/* PROJECT CARDS */
+.proj-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.7rem;margin-bottom:.45rem;}
+.proj-card:last-child{margin-bottom:0;}
+.proj-name{font-size:.78rem;font-weight:700;color:#fff;margin-bottom:.25rem;}
+.proj-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.proj-phase{font-size:.6rem;color:rgba(255,255,255,.45);}
+.health-bar{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:.4rem;}
+.health-fill{height:100%;border-radius:2px;}
+
+/* PHASE TIMELINE */
+.phase-row{display:flex;gap:.3rem;margin-bottom:.5rem;}
+.phase-box{flex:1;border-radius:5px;padding:.35rem .4rem;text-align:center;}
+.phase-box .ph-name{font-size:.55rem;font-weight:600;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.phase-box .ph-pct{font-size:.62rem;font-weight:800;margin-top:.1rem;}
+
+/* GANTT */
+.gantt-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:.3rem;}
+.gantt-header{display:flex;font-size:.58rem;color:rgba(255,255,255,.35);font-weight:600;padding:0 0 .2rem;}
+.gantt-label{width:110px;flex-shrink:0;}
+.gantt-months{flex:1;display:flex;gap:0;}
+.gantt-month{flex:1;text-align:center;border-left:1px solid rgba(255,255,255,.06);}
+.gantt-row{display:flex;align-items:center;margin-bottom:.3rem;}
+.gantt-task-label{width:110px;flex-shrink:0;font-size:.65rem;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:.4rem;}
+.gantt-bar-area{flex:1;position:relative;height:18px;}
+.gantt-bar{position:absolute;height:14px;top:2px;border-radius:4px;display:flex;align-items:center;padding:0 .35rem;}
+.gantt-bar-txt{font-size:.55rem;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;}
+.gantt-milestone{position:absolute;top:50%;transform:translate(-50%,-50%) rotate(45deg);width:9px;height:9px;background:#f59e0b;border:1.5px solid #fbbf24;}
+.today-line{position:absolute;top:0;bottom:0;width:1.5px;background:rgba(96,165,250,.6);z-index:5;}
+
+/* KANBAN */
+.kb-wrap{display:flex;gap:.4rem;flex:1;min-height:0;overflow-x:auto;}
+.kb-col{flex-shrink:0;width:100px;display:flex;flex-direction:column;gap:.3rem;}
+@media(min-width:500px){.kb-col{width:120px;}}
+.kb-col-head{font-size:.6rem;font-weight:700;padding:.25rem .4rem;border-radius:4px;}
+.kb-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:.4rem .45rem;}
+.kb-card-title{font-size:.62rem;font-weight:600;color:rgba(255,255,255,.85);line-height:1.3;margin-bottom:.2rem;}
+.kb-card-meta{display:flex;gap:.3rem;align-items:center;flex-wrap:wrap;}
+.kb-stripe{height:2px;border-radius:1px;margin-bottom:.3rem;}
+
+/* WORKFLOW CANVAS */
+.canvas-wrap{flex:1;position:relative;background:rgba(0,0,0,.3);border-radius:8px;overflow:hidden;}
+.canvas-grid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:18px 18px;}
+.wf-node{position:absolute;width:80px;border-radius:7px;padding:.45rem .5rem;border:1px solid;}
+.wf-node-icon{font-size:.9rem;margin-bottom:.2rem;}
+.wf-node-label{font-size:.58rem;font-weight:700;line-height:1.2;}
+.wf-node-type{font-size:.52rem;opacity:.6;margin-top:.1rem;}
+.wf-edge{position:absolute;pointer-events:none;}
+
+/* EXPERIMENT */
+.exp-list{display:flex;flex-direction:column;gap:.35rem;}
+.exp-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:.5rem .6rem;display:flex;align-items:center;gap:.6rem;}
+.exp-name{font-size:.7rem;font-weight:600;color:#fff;flex:1;}
+.exp-metric{font-size:.62rem;color:rgba(255,255,255,.5);}
+.exp-metric span{color:#34d399;font-weight:700;}
+.mini-chart{height:50px;display:flex;align-items:flex-end;gap:2px;padding-top:.25rem;}
+.mini-bar{flex:1;border-radius:2px 2px 0 0;min-width:5px;}
+
+/* WEBHOOKS */
+.wh-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:.55rem .65rem;margin-bottom:.35rem;}
+.wh-name{font-size:.7rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;}
+.wh-url{font-size:.58rem;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wh-footer{display:flex;align-items:center;gap:.5rem;margin-top:.3rem;}
+
+/* MILESTONES */
+.ms-row{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.ms-row:last-child{border:none;}
+.ms-dot{width:8px;height:8px;transform:rotate(45deg);flex-shrink:0;}
+.ms-name{font-size:.68rem;font-weight:600;flex:1;color:rgba(255,255,255,.8);}
+.ms-date{font-size:.6rem;color:rgba(255,255,255,.35);}
+
+/* NARRATION */
+.narration{position:absolute;bottom:0;left:0;right:0;padding:.55rem 1rem .8rem;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.6) 70%,transparent 100%);}
+.nar-inner{max-width:700px;margin:0 auto;display:flex;align-items:flex-start;gap:.6rem;}
+.nar-icon{width:26px;height:26px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nar-icon svg{width:13px;height:13px;color:#fff;}
+.nar-text{font-size:clamp(.72rem,2.2vw,.85rem);line-height:1.5;color:rgba(255,255,255,.9);}
+.nar-text strong{color:#fff;}
+
+/* STEP / AUDIO / CHAPTER */
+.step-badge{position:absolute;top:.55rem;right:.7rem;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);padding:.15rem .6rem;border-radius:100px;font-size:.6rem;color:rgba(255,255,255,.45);}
+.chapter-flash{position:absolute;top:.55rem;left:50%;transform:translateX(-50%);background:rgba(10,35,66,.92);border:1px solid rgba(37,99,235,.35);border-radius:7px;padding:.22rem .85rem;font-size:.68rem;font-weight:600;color:#60a5fa;white-space:nowrap;backdrop-filter:blur(8px);opacity:0;transition:opacity .4s;pointer-events:none;}
+.chapter-flash.show{opacity:1;}
+.audio-badge{position:absolute;top:.55rem;left:.7rem;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.1);padding:.18rem .55rem;border-radius:100px;font-size:.6rem;color:rgba(255,255,255,.5);pointer-events:none;opacity:0;transition:opacity .3s;}
+.audio-badge.show{opacity:1;}
+.audio-wave{display:flex;align-items:center;gap:2px;height:10px;}
+.audio-wave span{display:block;width:2px;border-radius:1px;background:#60a5fa;animation:wave 1s ease-in-out infinite;}
+.audio-wave span:nth-child(2){animation-delay:.1s;height:60%;}
+.audio-wave span:nth-child(3){animation-delay:.2s;height:100%;}
+.audio-wave span:nth-child(4){animation-delay:.15s;height:70%;}
+.audio-wave span:nth-child(5){animation-delay:.05s;height:40%;}
+@keyframes wave{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+
+/* CONTROLS */
+.controls{height:52px;background:#050d1a;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:.5rem;padding:0 .85rem;flex-shrink:0;}
+.cbtn{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.cbtn:hover{background:rgba(255,255,255,.12);}
+.cbtn svg{width:13px;height:13px;color:rgba(255,255,255,.8);}
+.cbtn-play{width:36px;height:36px;background:var(--blue);border:none;}
+.cbtn-play:hover{background:#1d4ed8;}
+.cbtn-play svg{width:15px;height:15px;color:#fff;}
+.cbtn-audio{font-size:.88rem;}
+.prog-wrap{flex:1;display:flex;align-items:center;gap:.5rem;}
+.time-lbl{font-size:.62rem;color:rgba(255,255,255,.4);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.prog-rail{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;position:relative;}
+.prog-thumb{height:100%;background:var(--blue);border-radius:2px;transition:width .25s linear;position:relative;}
+.prog-thumb::after{content:'';position:absolute;right:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--blue-light);border:2px solid #fff;}
+.ch-dots{display:flex;gap:4px;margin-left:.35rem;}
+.ch-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .2s;}
+.ch-dot.done{background:var(--blue);}
+.ch-dot.on{background:var(--cyan);transform:scale(1.5);}
+.slide-lbl{font-size:.62rem;color:rgba(255,255,255,.3);white-space:nowrap;margin-left:.25rem;max-width:85px;overflow:hidden;text-overflow:ellipsis;}
+@media(max-width:480px){.ch-dots{display:none;}.time-lbl{display:none;}.slide-lbl{display:none;}}
+
+/* SVG PROGRESS */
+.pb-track{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-top:.2rem;}
+.pb-fill{height:100%;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="player">
+  <div class="screen" id="screen">
+    <div class="audio-badge" id="audioBadge">
+      <div class="audio-wave"><span style="height:50%"></span><span></span><span></span><span></span><span></span></div>
+      <span>Narrating…</span>
+    </div>
+    <div class="chapter-flash" id="chFlash"></div>
+    <div class="step-badge" id="stepBadge">1 / 10</div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 0 · INTRO -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide slide-bg active" id="s0">
+      <div class="grid-bg"></div><div class="glow"></div><div class="glow2"></div>
+      <div class="intro-body">
+        <div class="badge"><div class="bdot"></div>New Module · AI Governance Control Tower</div>
+        <div class="intro-title">AI Project<br/><span>Lifecycle Management</span></div>
+        <div class="intro-sub">Plan, execute, and deliver AI initiatives end-to-end — from business case to production monitoring — with Gantt charts, Kanban boards, experiment tracking, workflow canvas, and n8n automation.</div>
+        <div class="intro-tags">
+          <span class="tag">6-Phase Lifecycle</span><span class="tag">Kanban Board</span><span class="tag">Gantt Chart</span>
+          <span class="tag">Experiment Tracking</span><span class="tag">n8n Webhooks</span><span class="tag">Workflow Canvas</span>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        <div class="nar-text">Press <strong>Play</strong> to begin the walkthrough.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 1 · PROJECT PORTFOLIO -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s1">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-nav">
+          <span>Dashboard</span><span>AI Inventory</span><span>Risk &amp; Compliance</span><span class="on">AI Projects</span><span>Monitoring</span>
+        </div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="slide-content">
+        <!-- KPIs -->
+        <div class="stat-row">
+          <div class="stat-card"><div class="sc-lbl">Total Projects</div><div class="sc-val c-blue">7</div><div class="sc-sub c-green">↑ 2 this month</div></div>
+          <div class="stat-card"><div class="sc-lbl">Avg Health Score</div><div class="sc-val c-green">82</div><div class="sc-sub" style="color:rgba(255,255,255,.4)">out of 100</div></div>
+          <div class="stat-card"><div class="sc-lbl">At Risk</div><div class="sc-val c-amber">2</div><div class="sc-sub c-amber">needs attention</div></div>
+          <div class="stat-card"><div class="sc-lbl">Active</div><div class="sc-val c-cyan" style="color:#67e8f9">4</div><div class="sc-sub" style="color:rgba(255,255,255,.4)">in progress</div></div>
+        </div>
+        <!-- Project list -->
+        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:.4rem;">
+          <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:.1rem;">Recent Projects</div>
+          <div class="proj-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;">
+              <div class="proj-name">Customer Servicing Agent</div>
+              <span class="pill p-blue">ACTIVE</span>
+            </div>
+            <div class="proj-meta"><span class="proj-phase">Phase: Model Development</span><span class="pill p-green" style="font-size:.55rem;">HEALTHY 88</span></div>
+            <div class="health-bar"><div class="health-fill" style="width:88%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+          </div>
+          <div class="proj-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;">
+              <div class="proj-name">Credit Risk Scoring v3</div>
+              <span class="pill p-blue">ACTIVE</span>
+            </div>
+            <div class="proj-meta"><span class="proj-phase">Phase: Testing &amp; Validation</span><span class="pill p-amber" style="font-size:.55rem;">AT RISK 64</span></div>
+            <div class="health-bar"><div class="health-fill" style="width:64%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>
+          </div>
+          <div class="proj-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;">
+              <div class="proj-name">Fraud Detection LLM</div>
+              <span class="pill p-purple">DRAFT</span>
+            </div>
+            <div class="proj-meta"><span class="proj-phase">Phase: Business Case</span><span class="pill p-green" style="font-size:.55rem;">HEALTHY 95</span></div>
+            <div class="health-bar"><div class="health-fill" style="width:95%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+        <div class="nar-text"><strong>Step 1 — Project Portfolio.</strong> The AI Projects dashboard shows your entire portfolio at a glance — total projects, average health score, at-risk count, and active initiatives. Each project card shows its current phase, health score, and a colour-coded progress bar.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 2 · NEW PROJECT WIZARD -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s2">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-nav"><span>Dashboard</span><span class="on">AI Projects</span></div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="slide-content">
+        <div style="font-size:.78rem;font-weight:700;color:#fff;margin-bottom:.1rem;">New AI Project — Step 1: Choose Template</div>
+        <!-- Step indicator -->
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;">✓</div>
+          <div style="font-size:.68rem;color:#60a5fa;font-weight:600;">Choose Template</div>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,.1);"></div>
+          <div style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.62rem;color:rgba(255,255,255,.4);">2</div>
+          <div style="font-size:.68rem;color:rgba(255,255,255,.4);">Project Details</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;flex:1;align-content:start;">
+          <!-- Blank -->
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.6rem;display:flex;align-items:center;gap:.5rem;">
+            <div style="width:32px;height:32px;border-radius:7px;background:rgba(100,116,139,.2);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">✦</div>
+            <div><div style="font-size:.72rem;font-weight:700;">Blank Project</div><div style="font-size:.6rem;color:rgba(255,255,255,.4);">Start from scratch</div></div>
+          </div>
+          <!-- Credit Scoring -->
+          <div style="background:rgba(37,99,235,.08);border:1.5px solid rgba(37,99,235,.5);border-radius:8px;padding:.6rem;display:flex;align-items:center;gap:.5rem;">
+            <div style="width:32px;height:32px;border-radius:7px;background:rgba(37,99,235,.2);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">💳</div>
+            <div>
+              <div style="display:flex;gap:.3rem;margin-bottom:.15rem;"><span class="pill p-blue" style="font-size:.52rem;">BFSI</span></div>
+              <div style="font-size:.72rem;font-weight:700;">Credit Scoring</div>
+              <div style="font-size:.58rem;color:rgba(255,255,255,.4);">12 tasks · 4 milestones</div>
+            </div>
+            <div style="margin-left:auto;color:#60a5fa;font-size:.85rem;">✓</div>
+          </div>
+          <!-- Fraud Detection -->
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;display:flex;align-items:center;gap:.5rem;">
+            <div style="width:32px;height:32px;border-radius:7px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">🛡️</div>
+            <div>
+              <div style="display:flex;gap:.3rem;margin-bottom:.15rem;"><span class="pill p-red" style="font-size:.52rem;">BFSI</span></div>
+              <div style="font-size:.72rem;font-weight:700;">Fraud Detection</div>
+              <div style="font-size:.58rem;color:rgba(255,255,255,.4);">10 tasks · 3 milestones</div>
+            </div>
+          </div>
+          <!-- LLM App -->
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;display:flex;align-items:center;gap:.5rem;">
+            <div style="width:32px;height:32px;border-radius:7px;background:rgba(139,92,246,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">🤖</div>
+            <div>
+              <div style="display:flex;gap:.3rem;margin-bottom:.15rem;"><span class="pill p-purple" style="font-size:.52rem;">GenAI</span></div>
+              <div style="font-size:.72rem;font-weight:700;">LLM Application</div>
+              <div style="font-size:.58rem;color:rgba(255,255,255,.4);">14 tasks · 5 milestones</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:.3rem;">
+          <div style="background:var(--blue);border-radius:6px;padding:.4rem .9rem;font-size:.72rem;font-weight:700;display:flex;align-items:center;gap:.35rem;">Continue →</div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+        <div class="nar-text"><strong>Step 2 — Create New Project.</strong> A two-step wizard lets you choose from four built-in templates — Credit Scoring, Fraud Detection, L-L-M Application, or Computer Vision — each pre-loaded with tasks, milestones, and a workflow canvas. Or start from a blank project with all six phases ready.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 3 · PROJECT OVERVIEW -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s3">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-nav"><span>Dashboard</span><span class="on">AI Projects</span></div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="proj-subnav">
+        <span class="proj-tab on">Overview</span><span class="proj-tab">Gantt</span><span class="proj-tab">Kanban</span>
+        <span class="proj-tab">Resources</span><span class="proj-tab">Experiments</span><span class="proj-tab">Workflow</span><span class="proj-tab">Settings</span>
+      </div>
+      <div class="slide-content">
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.1rem;">
+          <div style="font-size:.82rem;font-weight:800;color:#fff;">Customer Servicing Agent</div>
+          <span class="pill p-blue">ACTIVE</span>
+          <span class="pill p-green" style="font-size:.55rem;margin-left:auto;">HEALTHY · 88</span>
+        </div>
+        <!-- Phase timeline -->
+        <div class="phase-row">
+          <div class="phase-box" style="background:rgba(99,102,241,.25);border:1px solid rgba(99,102,241,.5);">
+            <div class="ph-name" style="color:#a5b4fc;">Business Case</div>
+            <div class="ph-pct" style="color:#818cf8;">100%</div>
+          </div>
+          <div class="phase-box" style="background:rgba(14,165,233,.25);border:1px solid rgba(14,165,233,.5);">
+            <div class="ph-name" style="color:#7dd3fc;">Data Discovery</div>
+            <div class="ph-pct" style="color:#38bdf8;">100%</div>
+          </div>
+          <div class="phase-box" style="background:rgba(139,92,246,.35);border:1.5px solid rgba(139,92,246,.7);">
+            <div class="ph-name" style="color:#c4b5fd;">Model Dev</div>
+            <div class="ph-pct" style="color:#a78bfa;">65%</div>
+          </div>
+          <div class="phase-box" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);">
+            <div class="ph-name" style="color:rgba(251,191,36,.5);">Testing</div>
+            <div class="ph-pct" style="color:rgba(251,191,36,.4);">0%</div>
+          </div>
+          <div class="phase-box" style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.15);">
+            <div class="ph-name" style="color:rgba(52,211,153,.4);">Deployment</div>
+            <div class="ph-pct" style="color:rgba(52,211,153,.3);">0%</div>
+          </div>
+          <div class="phase-box" style="background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.12);">
+            <div class="ph-name" style="color:rgba(103,232,249,.35);">Monitoring</div>
+            <div class="ph-pct" style="color:rgba(103,232,249,.25);">0%</div>
+          </div>
+        </div>
+        <!-- Stats + milestones -->
+        <div class="two-col" style="flex:1;">
+          <div class="panel" style="display:flex;flex-direction:column;gap:.4rem;">
+            <div class="panel-title">Task Summary</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem;">
+              <div class="stat-card" style="padding:.45rem;"><div class="sc-lbl">Total Tasks</div><div class="sc-val c-blue" style="font-size:1.1rem;">18</div></div>
+              <div class="stat-card" style="padding:.45rem;"><div class="sc-lbl">Done</div><div class="sc-val c-green" style="font-size:1.1rem;">9</div></div>
+              <div class="stat-card" style="padding:.45rem;"><div class="sc-lbl">In Progress</div><div class="sc-val c-amber" style="font-size:1.1rem;">5</div></div>
+              <div class="stat-card" style="padding:.45rem;"><div class="sc-lbl">Blocked</div><div class="sc-val c-red" style="font-size:1.1rem;">1</div></div>
+            </div>
+            <div style="margin-top:.2rem;">
+              <div style="display:flex;justify-content:space-between;font-size:.6rem;color:rgba(255,255,255,.4);margin-bottom:.2rem;"><span>Overall Progress</span><span>50%</span></div>
+              <div class="pb-track"><div class="pb-fill" style="width:50%;background:linear-gradient(90deg,var(--blue),var(--cyan));"></div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Milestones</div>
+            <div class="ms-row"><div class="ms-dot" style="background:#10b981;"></div><div class="ms-name">Data pipeline ready</div><span class="pill p-green" style="font-size:.52rem;">Done</span></div>
+            <div class="ms-row"><div class="ms-dot" style="background:#10b981;"></div><div class="ms-name">Baseline model trained</div><span class="pill p-green" style="font-size:.52rem;">Done</span></div>
+            <div class="ms-row"><div class="ms-dot" style="background:#f59e0b;"></div><div class="ms-name">Model accuracy ≥ 90%</div><div class="ms-date">May 20</div></div>
+            <div class="ms-row"><div class="ms-dot" style="background:rgba(255,255,255,.15);"></div><div class="ms-name">UAT sign-off</div><div class="ms-date">Jun 10</div></div>
+            <div class="ms-row"><div class="ms-dot" style="background:rgba(255,255,255,.15);"></div><div class="ms-name">Production deploy ◆</div><div class="ms-date">Jun 30</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="nar-text"><strong>Step 3 — Project Overview.</strong> The overview shows a six-phase lifecycle bar — each phase colour-coded with a progress percentage. Below it, task summary counts and a milestone tracker show exactly where the project stands. Gate milestones marked with a diamond symbol must be passed before the next phase begins.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 4 · GANTT CHART -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s4">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="proj-subnav">
+        <span class="proj-tab">Overview</span><span class="proj-tab on">Gantt</span><span class="proj-tab">Kanban</span>
+        <span class="proj-tab">Resources</span><span class="proj-tab">Experiments</span><span class="proj-tab">Workflow</span><span class="proj-tab">Settings</span>
+      </div>
+      <div class="slide-content">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;">
+          <div style="font-size:.75rem;font-weight:700;color:#fff;">Gantt Chart</div>
+          <div style="margin-left:auto;display:flex;gap:.3rem;">
+            <span style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;color:rgba(255,255,255,.5);">Day</span>
+            <span style="background:rgba(37,99,235,.2);border:1px solid rgba(37,99,235,.5);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;color:#60a5fa;font-weight:600;">Week</span>
+            <span style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;color:rgba(255,255,255,.5);">Month</span>
+          </div>
+        </div>
+        <div class="gantt-wrap">
+          <div class="gantt-header">
+            <div class="gantt-label"></div>
+            <div class="gantt-months">
+              <div class="gantt-month">Mar</div><div class="gantt-month">Apr</div><div class="gantt-month">May</div><div class="gantt-month">Jun</div><div class="gantt-month">Jul</div>
+            </div>
+          </div>
+          <!-- Today line at ~55% -->
+          <div style="position:relative;flex:1;">
+            <div class="today-line" style="left:55%;"></div>
+            <!-- Tasks -->
+            <div class="gantt-row"><div class="gantt-task-label">Define requirements</div><div class="gantt-bar-area"><div class="gantt-bar" style="left:2%;width:16%;background:rgba(99,102,241,.7);"><span class="gantt-bar-txt">Done</span></div></div></div>
+            <div class="gantt-row"><div class="gantt-task-label">Data pipeline setup</div><div class="gantt-bar-area"><div class="gantt-bar" style="left:18%;width:20%;background:rgba(14,165,233,.7);"><span class="gantt-bar-txt">Done</span></div></div></div>
+            <div class="gantt-row"><div class="gantt-task-label">Feature engineering</div><div class="gantt-bar-area"><div class="gantt-bar" style="left:36%;width:18%;background:rgba(139,92,246,.75);"><span class="gantt-bar-txt">In Progress</span></div></div></div>
+            <div class="gantt-row"><div class="gantt-task-label">Model training</div><div class="gantt-bar-area"><div class="gantt-bar" style="left:50%;width:20%;background:rgba(139,92,246,.5);border:1px dashed rgba(139,92,246,.7);"><span class="gantt-bar-txt">Planned</span></div></div></div>
+            <div class="gantt-row"><div class="gantt-task-label">Model evaluation</div><div class="gantt-bar-area">
+              <div class="gantt-bar" style="left:68%;width:15%;background:rgba(245,158,11,.5);border:1px dashed rgba(245,158,11,.7);"><span class="gantt-bar-txt">Planned</span></div>
+              <div class="gantt-milestone" style="left:83%;"></div>
+            </div></div>
+            <div class="gantt-row"><div class="gantt-task-label">UAT &amp; sign-off</div><div class="gantt-bar-area"><div class="gantt-bar" style="left:82%;width:12%;background:rgba(16,185,129,.4);border:1px dashed rgba(16,185,129,.6);"><span class="gantt-bar-txt">Planned</span></div></div></div>
+          </div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;font-size:.58rem;color:rgba(255,255,255,.4);margin-top:.2rem;">
+            <span>🔵 Today</span>
+            <span>◆ Milestone</span>
+            <span style="display:flex;align-items:center;gap:.3rem;"><span style="display:inline-block;width:12px;height:4px;background:#6366f1;border-radius:2px;"></span>Business Case</span>
+            <span style="display:flex;align-items:center;gap:.3rem;"><span style="display:inline-block;width:12px;height:4px;background:#0ea5e9;border-radius:2px;"></span>Data Discovery</span>
+            <span style="display:flex;align-items:center;gap:.3rem;"><span style="display:inline-block;width:12px;height:4px;background:#8b5cf6;border-radius:2px;"></span>Model Dev</span>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="nar-text"><strong>Step 4 — Gantt Chart.</strong> The Gantt view renders a pure S-V-G timeline with phase-coloured task bars. Switch between day, week, and month zoom levels. The blue vertical line marks today's date. Diamond shapes mark key milestones. Completed tasks are solid, planned tasks are dashed — giving an instant visual read on project progress.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 5 · KANBAN BOARD -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s5">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="proj-subnav">
+        <span class="proj-tab">Overview</span><span class="proj-tab">Gantt</span><span class="proj-tab on">Kanban</span>
+        <span class="proj-tab">Resources</span><span class="proj-tab">Experiments</span><span class="proj-tab">Workflow</span><span class="proj-tab">Settings</span>
+      </div>
+      <div class="slide-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;">
+          <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.05em;">Kanban Board</div>
+          <span style="font-size:.62rem;color:rgba(255,255,255,.35);">18 tasks</span>
+        </div>
+        <div class="kb-wrap">
+          <!-- BACKLOG -->
+          <div class="kb-col">
+            <div class="kb-col-head" style="color:#94a3b8;background:rgba(148,163,184,.1);">Backlog <span style="opacity:.5">3</span></div>
+            <div class="kb-card"><div class="kb-stripe" style="background:#6366f1;"></div><div class="kb-card-title">Draft model card</div><div class="kb-card-meta"><span class="pill p-gray" style="font-size:.52rem;">LOW</span></div></div>
+            <div class="kb-card"><div class="kb-stripe" style="background:#0ea5e9;"></div><div class="kb-card-title">Review training data quality</div><div class="kb-card-meta"><span class="pill p-blue" style="font-size:.52rem;">MED</span></div></div>
+          </div>
+          <!-- TODO -->
+          <div class="kb-col">
+            <div class="kb-col-head" style="color:#60a5fa;background:rgba(37,99,235,.1);">To Do <span style="opacity:.5">4</span></div>
+            <div class="kb-card"><div class="kb-stripe" style="background:#8b5cf6;"></div><div class="kb-card-title">Hyperparameter tuning</div><div class="kb-card-meta"><span class="pill p-amber" style="font-size:.52rem;">HIGH</span></div></div>
+            <div class="kb-card"><div class="kb-stripe" style="background:#8b5cf6;"></div><div class="kb-card-title">Set up MLflow tracking</div><div class="kb-card-meta"><span class="pill p-blue" style="font-size:.52rem;">MED</span></div></div>
+          </div>
+          <!-- IN PROGRESS -->
+          <div class="kb-col">
+            <div class="kb-col-head" style="color:#fbbf24;background:rgba(245,158,11,.1);">In Progress <span style="opacity:.5">5</span></div>
+            <div class="kb-card" style="border-color:rgba(139,92,246,.4);"><div class="kb-stripe" style="background:#8b5cf6;"></div><div class="kb-card-title">Feature engineering pipeline</div><div class="kb-card-meta"><span class="pill p-purple" style="font-size:.52rem;">HIGH</span><span style="font-size:.58rem;color:rgba(255,255,255,.35);">Due May 15</span></div></div>
+            <div class="kb-card"><div class="kb-stripe" style="background:#8b5cf6;"></div><div class="kb-card-title">Baseline BERT fine-tune</div><div class="kb-card-meta"><span class="pill p-red" style="font-size:.52rem;">CRIT</span></div></div>
+          </div>
+          <!-- REVIEW -->
+          <div class="kb-col">
+            <div class="kb-col-head" style="color:#a78bfa;background:rgba(139,92,246,.1);">Review <span style="opacity:.5">2</span></div>
+            <div class="kb-card"><div class="kb-stripe" style="background:#0ea5e9;"></div><div class="kb-card-title">Data lineage docs</div><div class="kb-card-meta"><span class="pill p-blue" style="font-size:.52rem;">MED</span></div></div>
+          </div>
+          <!-- DONE -->
+          <div class="kb-col">
+            <div class="kb-col-head" style="color:#34d399;background:rgba(16,185,129,.1);">Done <span style="opacity:.5">4</span></div>
+            <div class="kb-card" style="opacity:.65;"><div class="kb-stripe" style="background:#6366f1;"></div><div class="kb-card-title">Project charter approved</div></div>
+            <div class="kb-card" style="opacity:.65;"><div class="kb-stripe" style="background:#0ea5e9;"></div><div class="kb-card-title">Data sources identified</div></div>
+          </div>
+          <!-- BLOCKED -->
+          <div class="kb-col">
+            <div class="kb-col-head" style="color:#f87171;background:rgba(239,68,68,.1);">Blocked <span style="opacity:.5">1</span></div>
+            <div class="kb-card" style="border-color:rgba(239,68,68,.4);"><div class="kb-stripe" style="background:#ef4444;"></div><div class="kb-card-title">GPU cluster access</div><div class="kb-card-meta"><span class="pill p-red" style="font-size:.52rem;">HIGH</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div class="nar-text"><strong>Step 5 — Kanban Board.</strong> Six columns — Backlog, To Do, In Progress, Review, Done, and Blocked — give a full task workflow. Each card shows the phase colour stripe, title, priority badge, and due date. Drag and drop any card between columns and the status updates instantly. Click the plus icon in any column header to add a new task with phase, priority, due date, and estimated hours.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 6 · WORKFLOW CANVAS -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s6">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="proj-subnav">
+        <span class="proj-tab">Overview</span><span class="proj-tab">Gantt</span><span class="proj-tab">Kanban</span>
+        <span class="proj-tab">Resources</span><span class="proj-tab">Experiments</span><span class="proj-tab on">Workflow</span><span class="proj-tab">Settings</span>
+      </div>
+      <div class="slide-content" style="padding:.5rem;">
+        <div style="display:flex;gap:.5rem;flex:1;min-height:0;">
+          <!-- Palette -->
+          <div style="width:90px;flex-shrink:0;display:flex;flex-direction:column;gap:.3rem;">
+            <div style="font-size:.6rem;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:.15rem;">NODE TYPES</div>
+            <div style="background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);border-radius:5px;padding:.3rem .4rem;font-size:.62rem;font-weight:600;color:#60a5fa;">📦 Data Source</div>
+            <div style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);border-radius:5px;padding:.3rem .4rem;font-size:.62rem;font-weight:600;color:#fb923c;">⚙️ Transform</div>
+            <div style="background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);border-radius:5px;padding:.3rem .4rem;font-size:.62rem;font-weight:600;color:#a78bfa;">🧠 Model</div>
+            <div style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:5px;padding:.3rem .4rem;font-size:.62rem;font-weight:600;color:#34d399;">📊 Evaluation</div>
+            <div style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);border-radius:5px;padding:.3rem .4rem;font-size:.62rem;font-weight:600;color:#67e8f9;">📤 Output</div>
+          </div>
+          <!-- Canvas -->
+          <div class="canvas-wrap">
+            <div class="canvas-grid"></div>
+            <svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;">
+              <!-- Edges -->
+              <path d="M 115 55 C 140 55, 155 90, 175 90" stroke="rgba(37,99,235,.6)" stroke-width="1.5" fill="none"/>
+              <path d="M 115 90 C 145 90, 155 90, 175 90" stroke="rgba(249,115,22,.6)" stroke-width="1.5" fill="none"/>
+              <path d="M 265 90 C 295 90, 310 90, 330 90" stroke="rgba(139,92,246,.6)" stroke-width="1.5" fill="none"/>
+              <path d="M 420 90 C 450 90, 465 90, 485 90" stroke="rgba(16,185,129,.6)" stroke-width="1.5" fill="none"/>
+              <path d="M 575 90 C 600 90, 615 90, 630 90" stroke="rgba(6,182,212,.6)" stroke-width="1.5" fill="none"/>
+              <path d="M 115 130 C 145 130, 310 130, 330 120" stroke="rgba(37,99,235,.3)" stroke-width="1" fill="none" stroke-dasharray="3,3"/>
+            </svg>
+            <!-- Nodes -->
+            <div class="wf-node" style="left:30px;top:30px;background:rgba(37,99,235,.18);border-color:rgba(37,99,235,.5);">
+              <div class="wf-node-icon">📦</div>
+              <div class="wf-node-label" style="color:#60a5fa;">Customer Data</div>
+              <div class="wf-node-type" style="color:#60a5fa;">Data Source</div>
+            </div>
+            <div class="wf-node" style="left:30px;top:105px;background:rgba(37,99,235,.18);border-color:rgba(37,99,235,.5);">
+              <div class="wf-node-icon">📦</div>
+              <div class="wf-node-label" style="color:#60a5fa;">Ticket History</div>
+              <div class="wf-node-type" style="color:#60a5fa;">Data Source</div>
+            </div>
+            <div class="wf-node" style="left:180px;top:65px;background:rgba(249,115,22,.15);border-color:rgba(249,115,22,.45);">
+              <div class="wf-node-icon">⚙️</div>
+              <div class="wf-node-label" style="color:#fb923c;">Preprocess</div>
+              <div class="wf-node-type" style="color:#fb923c;">Transform</div>
+            </div>
+            <div class="wf-node" style="left:335px;top:65px;background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.5);">
+              <div class="wf-node-icon">🧠</div>
+              <div class="wf-node-label" style="color:#a78bfa;">BERT Classifier</div>
+              <div class="wf-node-type" style="color:#a78bfa;">Model</div>
+            </div>
+            <div class="wf-node" style="left:490px;top:65px;background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.45);">
+              <div class="wf-node-icon">📊</div>
+              <div class="wf-node-label" style="color:#34d399;">Accuracy Check</div>
+              <div class="wf-node-type" style="color:#34d399;">Evaluation</div>
+            </div>
+            <div class="wf-node" style="left:638px;top:65px;background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.45);">
+              <div class="wf-node-icon">📤</div>
+              <div class="wf-node-label" style="color:#67e8f9;">Response API</div>
+              <div class="wf-node-type" style="color:#67e8f9;">Output</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 012 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg></div>
+        <div class="nar-text"><strong>Step 6 — Workflow Canvas.</strong> The workflow canvas lets you visually design your A-I pipeline — similar to n8n or Visio. Drag node types from the palette onto the canvas, then draw edges between output and input ports by dragging from one node to another. Pan with click-and-drag on the background, zoom with the scroll wheel, and changes auto-save every one-and-a-half seconds.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 7 · EXPERIMENT TRACKING -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s7">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="proj-subnav">
+        <span class="proj-tab">Overview</span><span class="proj-tab">Gantt</span><span class="proj-tab">Kanban</span>
+        <span class="proj-tab">Resources</span><span class="proj-tab on">Experiments</span><span class="proj-tab">Workflow</span><span class="proj-tab">Settings</span>
+      </div>
+      <div class="slide-content">
+        <div class="two-col" style="flex:1;">
+          <!-- Left: experiment list -->
+          <div style="display:flex;flex-direction:column;gap:.4rem;">
+            <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.55);">Experiments</div>
+            <div class="exp-list">
+              <div class="exp-item" style="border-color:rgba(37,99,235,.4);">
+                <div style="width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0;"></div>
+                <div class="exp-name">BERT-base fine-tune v1</div>
+                <div class="exp-metric">Acc: <span>0.884</span></div>
+                <span class="pill p-green" style="font-size:.52rem;">done</span>
+              </div>
+              <div class="exp-item">
+                <div style="width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0;"></div>
+                <div class="exp-name">RoBERTa fine-tune</div>
+                <div class="exp-metric">Acc: <span>0.912</span></div>
+                <span class="pill p-green" style="font-size:.52rem;">done</span>
+              </div>
+              <div class="exp-item">
+                <div style="width:7px;height:7px;border-radius:50%;background:#3b82f6;flex-shrink:0;animation:pulse 1.5s infinite;"></div>
+                <div class="exp-name">GPT-3.5 LoRA tune</div>
+                <div class="exp-metric" style="color:rgba(255,255,255,.35);">running…</div>
+                <span class="pill p-blue" style="font-size:.52rem;">running</span>
+              </div>
+            </div>
+          </div>
+          <!-- Right: metrics chart -->
+          <div class="panel">
+            <div class="panel-title">RoBERTa fine-tune — Run History</div>
+            <!-- Simulated line chart -->
+            <div style="position:relative;height:90px;margin-bottom:.4rem;">
+              <svg viewBox="0 0 220 90" style="width:100%;height:100%;">
+                <line x1="0" y1="80" x2="220" y2="80" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+                <line x1="0" y1="55" x2="220" y2="55" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+                <line x1="0" y1="30" x2="220" y2="30" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+                <!-- Accuracy line (green) -->
+                <polyline points="10,72 50,60 90,48 130,35 170,24 210,15" fill="none" stroke="#10b981" stroke-width="2" stroke-linejoin="round"/>
+                <circle cx="10" cy="72" r="3" fill="#10b981"/><circle cx="50" cy="60" r="3" fill="#10b981"/>
+                <circle cx="90" cy="48" r="3" fill="#10b981"/><circle cx="130" cy="35" r="3" fill="#10b981"/>
+                <circle cx="170" cy="24" r="3" fill="#10b981"/><circle cx="210" cy="15" r="3" fill="#10b981"/>
+                <!-- Loss line (red) -->
+                <polyline points="10,15 50,25 90,38 130,50 170,60 210,68" fill="none" stroke="#ef4444" stroke-width="2" stroke-linejoin="round"/>
+                <circle cx="10" cy="15" r="3" fill="#ef4444"/><circle cx="50" cy="25" r="3" fill="#ef4444"/>
+                <circle cx="90" cy="38" r="3" fill="#ef4444"/><circle cx="130" cy="50" r="3" fill="#ef4444"/>
+                <circle cx="170" cy="60" r="3" fill="#ef4444"/><circle cx="210" cy="68" r="3" fill="#ef4444"/>
+                <text x="215" y="12" font-size="7" fill="#34d399">acc</text>
+                <text x="215" y="72" font-size="7" fill="#f87171">loss</text>
+              </svg>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;">
+              <div class="stat-card" style="padding:.35rem;"><div class="sc-lbl">Best Acc</div><div class="sc-val c-green" style="font-size:.95rem;">91.2%</div></div>
+              <div class="stat-card" style="padding:.35rem;"><div class="sc-lbl">Best Loss</div><div class="sc-val c-red" style="font-size:.95rem;">0.241</div></div>
+              <div class="stat-card" style="padding:.35rem;"><div class="sc-lbl">Runs</div><div class="sc-val c-blue" style="font-size:.95rem;">6</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg></div>
+        <div class="nar-text"><strong>Step 7 — Experiment Tracking.</strong> Log every model training run with hyperparameters and metrics. The right panel shows accuracy and loss curves across all runs in a live line chart. When a run finishes, the experiment status updates automatically. This gives your data science team a built-in M-L-Flow style tracker without leaving the governance platform.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 8 · n8n WEBHOOKS -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide" id="s8">
+      <div class="app-header">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="logo-text">AI Governance</div><div class="logo-sub">Control Tower</div></div>
+        <div class="app-avatar">A</div>
+      </div>
+      <div class="proj-subnav">
+        <span class="proj-tab">Overview</span><span class="proj-tab">Gantt</span><span class="proj-tab">Kanban</span>
+        <span class="proj-tab">Resources</span><span class="proj-tab">Experiments</span><span class="proj-tab">Workflow</span><span class="proj-tab on">Settings</span>
+      </div>
+      <div class="slide-content">
+        <div style="display:flex;gap:.4rem;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.5rem;padding-bottom:.4rem;">
+          <span style="font-size:.7rem;font-weight:600;color:#60a5fa;border-bottom:2px solid #2563eb;padding-bottom:.2rem;">n8n Webhooks</span>
+          <span style="font-size:.7rem;color:rgba(255,255,255,.4);padding:.0 .4rem;">Linked AI Models</span>
+          <span style="font-size:.7rem;color:rgba(255,255,255,.4);padding:.0 .4rem;">Configuration</span>
+        </div>
+        <div style="font-size:.68rem;color:rgba(255,255,255,.4);margin-bottom:.5rem;">Connect n8n workflows to project events. Create a Webhook trigger node in n8n, copy the URL, and paste it below.</div>
+        <div class="wh-item">
+          <div class="wh-name">
+            Slack — Phase Complete Alert
+            <span class="pill p-blue" style="font-size:.55rem;">PHASE COMPLETE</span>
+            <span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0;"></span>
+          </div>
+          <div class="wh-url">https://n8n.company.io/webhook/phase-complete-abc123</div>
+          <div class="wh-footer">
+            <span style="font-size:.58rem;color:rgba(255,255,255,.35);">Last triggered: 2 hours ago</span>
+            <span class="pill p-green" style="font-size:.52rem;">success</span>
+            <div style="margin-left:auto;display:flex;gap:.3rem;">
+              <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;">▶ Test</div>
+              <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;">Disable</div>
+            </div>
+          </div>
+        </div>
+        <div class="wh-item">
+          <div class="wh-name">
+            Jira — Milestone Ticket
+            <span class="pill p-green" style="font-size:.55rem;">MILESTONE REACHED</span>
+          </div>
+          <div class="wh-url">https://n8n.company.io/webhook/milestone-jira-xyz789</div>
+          <div class="wh-footer">
+            <span style="font-size:.58rem;color:rgba(255,255,255,.35);">Last triggered: 1 day ago</span>
+            <span class="pill p-green" style="font-size:.52rem;">success</span>
+            <div style="margin-left:auto;display:flex;gap:.3rem;">
+              <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;">▶ Test</div>
+              <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;">Disable</div>
+            </div>
+          </div>
+        </div>
+        <div class="wh-item">
+          <div class="wh-name">
+            Risk Alert — Risk Threshold
+            <span class="pill p-red" style="font-size:.55rem;">RISK THRESHOLD</span>
+          </div>
+          <div class="wh-url">https://n8n.company.io/webhook/risk-threshold-alert</div>
+          <div class="wh-footer">
+            <span style="font-size:.58rem;color:rgba(255,255,255,.35);">Never triggered</span>
+            <div style="margin-left:auto;display:flex;gap:.3rem;">
+              <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:.2rem .5rem;font-size:.6rem;">▶ Test</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+        <div class="nar-text"><strong>Step 8 — n8n Webhook Automation.</strong> Connect any n8n workflow to project events — phase completions, milestone achievements, task completions, risk threshold breaches, or experiment logs. Simply paste the n8n webhook U-R-L, choose the trigger event, and hit Test to verify the connection. Automations fire silently in the background every time the event occurs.</div>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SLIDE 9 · OUTRO -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="slide slide-bg" id="s9">
+      <div class="grid-bg"></div><div class="glow"></div><div class="glow2"></div>
+      <div class="intro-body">
+        <div class="badge"><div class="bdot"></div>Module Walkthrough Complete</div>
+        <div class="intro-title">AI Project Management<br/><span>All Features Covered</span></div>
+        <div class="intro-sub">You've seen the complete AI Project Lifecycle Management module — portfolio dashboard, template-based project creation, Gantt charts, Kanban boards, workflow canvas, experiment tracking, and n8n automation — all inside the AI Governance Control Tower.</div>
+        <div class="outro-btns">
+          <a href="/login" class="obtn obtn-primary">→ Launch AI Projects</a>
+          <a href="/" class="obtn obtn-ghost">Back to Home</a>
+        </div>
+        <div class="credit">Designed by <strong>Prashant Thakur</strong> · AI Governance Control Tower</div>
+      </div>
+      <div class="narration"><div class="nar-inner">
+        <div class="nar-icon"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        <div class="nar-text">That's the complete AI Project Management module! From portfolio overview to Gantt charts, Kanban boards, workflow canvas, experiment tracking, and n8n webhook automation — every tool your AI team needs in one platform. Launch AI Projects today.</div>
+      </div></div>
+    </div>
+
+  </div><!-- /screen -->
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="cbtn" onclick="prev()" title="Previous (←)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="cbtn cbtn-play" id="playBtn" onclick="togglePlay()" title="Play / Pause (Space)">
+      <svg id="playIco" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button>
+    <button class="cbtn" onclick="next()" title="Next (→)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="prog-wrap">
+      <span class="time-lbl" id="timeLbl">0:00</span>
+      <div class="prog-rail" id="rail" onclick="seek(event)">
+        <div class="prog-thumb" id="thumb" style="width:0%"></div>
+      </div>
+      <span class="time-lbl" id="totalLbl">4:00</span>
+    </div>
+    <div class="ch-dots" id="dots"></div>
+    <button class="cbtn cbtn-audio" id="audioBtn" onclick="toggleAudio()" title="Toggle Audio">🔊</button>
+    <span class="slide-lbl" id="slideLbl">Intro</span>
+  </div>
+</div>
+
+<script>
+function fmt(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+
+const SLIDES=[
+  {label:"Intro",         narration:"Welcome to the A-I Project Management module inside the A-I Governance Control Tower. This walkthrough covers eight key capabilities: the portfolio dashboard, project creation wizard, project overview with phase tracking, Gantt chart, Kanban board, workflow canvas, experiment tracking, and n-8-n webhook automation. Let's get started."},
+  {label:"Portfolio",     narration:"Step 1 — Project Portfolio. The A-I Projects dashboard shows your entire portfolio at a glance — total projects, average health score, at-risk count, and active initiatives. Each project card shows its current phase, health score, and a colour-coded progress bar. Green means healthy, amber means at risk, and red means critical."},
+  {label:"New Project",   narration:"Step 2 — Create New Project. A two-step wizard lets you choose from four built-in templates: Credit Scoring, Fraud Detection, L-L-M Application, or Computer Vision. Each template is pre-loaded with relevant tasks, milestones, and a workflow canvas tailored for that type of A-I project. Or start from a blank project with all six phases ready."},
+  {label:"Overview",      narration:"Step 3 — Project Overview. The overview shows a six-phase lifecycle bar — Business Case, Data Discovery, Model Development, Testing and Validation, Deployment, and Monitoring — each colour-coded with a completion percentage. Below it, task summary counts and a milestone tracker show exactly where the project stands. Diamond gate milestones must be passed before the next phase can begin."},
+  {label:"Gantt Chart",   narration:"Step 4 — Gantt Chart. The Gantt view renders a pure S-V-G timeline with phase-coloured task bars. Switch between day, week, and month zoom levels to suit your planning horizon. The blue vertical line marks today's date. Diamond shapes mark key milestones. Completed tasks appear solid; planned tasks are shown with a dashed border — giving an instant visual read on delivery progress."},
+  {label:"Kanban",        narration:"Step 5 — Kanban Board. Six columns — Backlog, To Do, In Progress, Review, Done, and Blocked — give a complete task workflow. Each card shows the phase colour stripe, title, priority badge, and due date. Drag and drop any card to update its status instantly. Click the plus icon in any column header to add a new task — including phase assignment, priority, due date, and estimated hours."},
+  {label:"Workflow",      narration:"Step 6 — Workflow Canvas. The workflow canvas lets you visually design your A-I pipeline — similar to n-8-n or Visio. Drag node types from the palette onto the canvas — data sources, transforms, models, evaluations, and outputs — then draw connections between nodes by dragging from output to input ports. Pan by clicking and dragging on the background, and zoom with the scroll wheel. Changes auto-save every one-and-a-half seconds."},
+  {label:"Experiments",   narration:"Step 7 — Experiment Tracking. Log every model training run with hyperparameters and metrics directly in the platform. The right panel shows accuracy and loss curves across all runs in a live interactive line chart. When a run finishes, the experiment status updates automatically. This gives your data science team a built-in experiment tracker without leaving the governance platform."},
+  {label:"n8n Webhooks",  narration:"Step 8 — n-8-n Webhook Automation. Connect any n-8-n workflow to project events — phase completions, milestone achievements, task completions, risk threshold breaches, or experiment logs. Paste the n-8-n webhook U-R-L, choose the trigger event, and hit Test to verify the connection. Webhooks fire silently in the background every time the event occurs — enabling Slack alerts, Jira tickets, email notifications, or any custom automation."},
+  {label:"Outro",         narration:"That's the complete A-I Project Management module. You've seen portfolio management, template-based project creation, six-phase lifecycle tracking, Gantt charts, Kanban boards, a visual workflow canvas, experiment tracking, and n-8-n webhook automation — all inside one unified A-I Governance platform. Launch A-I Projects today and deliver your A-I initiatives with full visibility and control."},
+];
+
+const totalChars=SLIDES.reduce((a,s)=>a+s.narration.length,0);
+const EST_TOTAL_S=Math.round(totalChars/5/130*60/0.9);
+
+let cur=0,playing=false,audioEnabled=true;
+let playId=0,slideStartTime=performance.now();
+let rafId=null;
+
+// Build dots
+const dotsEl=document.getElementById('dots');
+SLIDES.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='ch-dot';
+  d.title=SLIDES[i].label;
+  d.onclick=()=>go(i);
+  dotsEl.appendChild(d);
+});
+document.getElementById('totalLbl').textContent=fmt(EST_TOTAL_S);
+
+function getVoice(){
+  if(!window.speechSynthesis) return null;
+  const voices=window.speechSynthesis.getVoices();
+  return voices.find(v=>v.lang.startsWith('en')&&(
+    v.name.includes('Samantha')||v.name.includes('Google US English')||
+    v.name.includes('Daniel')||v.name.includes('Karen')||v.name.includes('Zira')
+  ))||voices.find(v=>v.lang.startsWith('en'))||null;
+}
+
+function speak(text,id,onDone){
+  if(!window.speechSynthesis){if(onDone)setTimeout(()=>{if(playId===id)onDone();},2000);return;}
+  window.speechSynthesis.cancel();
+  if(!audioEnabled){if(onDone)setTimeout(()=>{if(playId===id)onDone();},400);return;}
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=0.9;u.pitch=1.0;u.volume=1;
+  const v=getVoice();if(v) u.voice=v;
+  u.onstart=()=>{slideStartTime=performance.now();document.getElementById('audioBadge').classList.add('show');};
+  u.onend=()=>{document.getElementById('audioBadge').classList.remove('show');if(playId===id&&onDone)onDone();};
+  u.onerror=()=>{document.getElementById('audioBadge').classList.remove('show');if(playId===id&&onDone)onDone();};
+  window.speechSynthesis.speak(u);
+}
+
+function stopAudio(){
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  document.getElementById('audioBadge').classList.remove('show');
+}
+
+function toggleAudio(){
+  audioEnabled=!audioEnabled;
+  document.getElementById('audioBtn').textContent=audioEnabled?'🔊':'🔇';
+  if(!audioEnabled) stopAudio();
+}
+
+function playFromCurrent(id){
+  if(!playing||playId!==id||cur>=SLIDES.length){
+    if(cur>=SLIDES.length){playing=false;updatePlayBtn();}
+    return;
+  }
+  slideStartTime=performance.now();
+  render();
+  speak(SLIDES[cur].narration,id,()=>{
+    if(!playing||playId!==id) return;
+    if(cur<SLIDES.length-1){cur++;playFromCurrent(id);}
+    else{playing=false;updatePlayBtn();}
+  });
+}
+
+function ensureVoices(cb){
+  if(!window.speechSynthesis){cb();return;}
+  if(window.speechSynthesis.getVoices().length>0){cb();return;}
+  let done=false;
+  const finish=()=>{if(!done){done=true;cb();}};
+  window.speechSynthesis.onvoiceschanged=finish;
+  setTimeout(finish,1200);
+}
+
+function togglePlay(){
+  playing=!playing;
+  playId++;
+  updatePlayBtn();
+  if(playing){
+    const id=playId;
+    ensureVoices(()=>playFromCurrent(id));
+    if(!rafId) rafId=requestAnimationFrame(progressLoop);
+  } else {
+    stopAudio();
+    cancelAnimationFrame(rafId);rafId=null;
+  }
+}
+
+function updatePlayBtn(){
+  document.getElementById('playIco').innerHTML=playing
+    ?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+    :'<polygon points="5 3 19 12 5 21 5 3"/>';
+}
+
+function render(){
+  document.querySelectorAll('.slide').forEach((s,i)=>s.classList.toggle('active',i===cur));
+  document.getElementById('stepBadge').textContent=`${cur+1} / ${SLIDES.length}`;
+  document.getElementById('slideLbl').textContent=SLIDES[cur].label;
+  document.querySelectorAll('.ch-dot').forEach((d,i)=>{
+    d.classList.toggle('done',i<cur);
+    d.classList.toggle('on',i===cur);
+  });
+}
+
+// Progress bar
+const charsUpTo=SLIDES.map((_,i)=>SLIDES.slice(0,i).reduce((a,s)=>a+s.narration.length,0));
+function progressLoop(){
+  if(!playing){rafId=null;return;}
+  const elapsed=(performance.now()-slideStartTime)/1000;
+  const charsThisSlide=SLIDES[cur].narration.length;
+  const estThisSlide=charsThisSlide/5/130*60/0.9;
+  const prog=Math.min(elapsed/Math.max(estThisSlide,1),1);
+  const charsDone=charsUpTo[cur]+prog*charsThisSlide;
+  const pct=charsDone/totalChars*100;
+  document.getElementById('thumb').style.width=pct+'%';
+  const estElapsed=charsUpTo[cur]/totalChars*EST_TOTAL_S+prog*SLIDES[cur].narration.length/totalChars*EST_TOTAL_S;
+  document.getElementById('timeLbl').textContent=fmt(estElapsed);
+  rafId=requestAnimationFrame(progressLoop);
+}
+
+function go(i){
+  stopAudio();
+  cur=Math.max(0,Math.min(i,SLIDES.length-1));
+  playId++;
+  render();
+  if(playing){const id=playId;ensureVoices(()=>playFromCurrent(id));}
+}
+function prev(){go(cur-1);}
+function next(){go(cur+1);}
+function seek(e){
+  const r=document.getElementById('rail').getBoundingClientRect();
+  const pct=(e.clientX-r.left)/r.width;
+  const targetChar=pct*totalChars;
+  let s=0;
+  while(s<SLIDES.length-1&&charsUpTo[s+1]<targetChar) s++;
+  go(s);
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='ArrowRight') next();
+  if(e.code==='ArrowLeft') prev();
+});
+
+render();
+
+// Chapter flash on slide change
+let lastSlide=-1;
+setInterval(()=>{
+  if(cur!==lastSlide){
+    lastSlide=cur;
+    if(cur>0&&cur<SLIDES.length-1){
+      const f=document.getElementById('chFlash');
+      f.textContent=SLIDES[cur].label;
+      f.classList.add('show');
+      setTimeout(()=>f.classList.remove('show'),1800);
+    }
+  }
+},200);
+</script>
+</body>
+</html>

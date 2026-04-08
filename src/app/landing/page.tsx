@@ -627,7 +627,7 @@ export default function LandingPage() {
               <div className="lp-fade lp-fade-d1">
                 <div className="lp-video-wrap">
                   <span className="lp-video-badge">● Live Module</span>
-                  <a href="/demo.html" target="_blank" rel="noopener" className="lp-video-placeholder">
+                  <a href="/demo-projects.html" target="_blank" rel="noopener" className="lp-video-placeholder">
                     {/* Mock kanban/gantt preview */}
                     <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.07}} viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
                       {[0,1,2,3,4,5].map(i=><rect key={i} x={30+i*130} y="60" width="115" height="340" rx="8" fill="white"/>)}
@@ -660,7 +660,7 @@ export default function LandingPage() {
 
                 <div style={{marginTop:"1.25rem",display:"flex",gap:"0.75rem"}}>
                   <Link href="/login" className="lp-btn lp-btn-primary" style={{flex:1,justifyContent:"center"}}>Launch AI Projects →</Link>
-                  <a href="/demo.html" target="_blank" rel="noopener" className="lp-btn" style={{background:"#f1f5f9",color:"var(--navy)",border:"1px solid #e2e8f0"}}>▶ Full Demo</a>
+                  <a href="/demo-projects.html" target="_blank" rel="noopener" className="lp-btn" style={{background:"#f1f5f9",color:"var(--navy)",border:"1px solid #e2e8f0"}}>▶ Full Demo</a>
                 </div>
               </div>
             </div>
