@@ -626,22 +626,13 @@ export default function LandingPage() {
               {/* Right: demo video */}
               <div className="lp-fade lp-fade-d1">
                 <div className="lp-video-wrap">
-                  <span className="lp-video-badge">● Live Module</span>
-                  <a href="/demo-projects.html" target="_blank" rel="noopener" className="lp-video-placeholder">
-                    {/* Mock kanban/gantt preview */}
-                    <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.07}} viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
-                      {[0,1,2,3,4,5].map(i=><rect key={i} x={30+i*130} y="60" width="115" height="340" rx="8" fill="white"/>)}
-                      {[0,1,2,3,4,5].map(i=>[0,1,2].map(j=><rect key={`${i}${j}`} x={38+i*130} y={90+j*90} width="99" height="75" rx="5" fill="rgba(255,255,255,0.3)"/>))}
-                      <rect x="30" y="30" width="740" height="22" rx="4" fill="rgba(37,99,235,0.4)"/>
-                    </svg>
-                    <div className="lp-video-play">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    </div>
-                    <span className="lp-video-label">Watch Module Demo</span>
-                    <div className="lp-video-title-overlay">
-                      <span>AI Project Management · Kanban, Gantt, Workflow Canvas & n8n Integration</span>
-                    </div>
-                  </a>
+                  <span className="lp-video-badge">● Live Demo</span>
+                  <iframe
+                    src="/demo-projects.html"
+                    title="AI Project Management Demo"
+                    allowFullScreen
+                    loading="lazy"
+                  />
                 </div>
 
                 {/* Stats row */}
