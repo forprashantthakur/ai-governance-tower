@@ -269,6 +269,33 @@ html { scroll-behavior: smooth; }
 .lp-fade.visible { opacity: 1; transform: translateY(0); }
 .lp-fade-d1 { transition-delay: 0.1s; } .lp-fade-d2 { transition-delay: 0.2s; } .lp-fade-d3 { transition-delay: 0.3s; }
 
+/* MEGA DROPDOWN NAV */
+.lp-nav-item { position: relative; list-style: none; }
+.lp-nav-trigger { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.75); font-size: 0.875rem; font-weight: 500; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; transition: color 0.2s; }
+.lp-nav-trigger:hover, .lp-nav-item.open .lp-nav-trigger { color: #fff; }
+.lp-nav-trigger svg { width: 14px; height: 14px; transition: transform 0.2s; flex-shrink: 0; }
+.lp-nav-item.open .lp-nav-trigger svg { transform: rotate(180deg); }
+.lp-mega { display: none; position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%); background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(10,35,66,0.18), 0 0 0 1px rgba(0,0,0,0.06); padding: 2rem; z-index: 200; min-width: 700px; animation: lp-mega-in 0.18s ease; }
+.lp-mega-sol { min-width: 520px; }
+@keyframes lp-mega-in { from { opacity:0; transform: translateX(-50%) translateY(-8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+.lp-nav-item.open .lp-mega { display: block; }
+.lp-mega::before { content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%); width:12px; height:12px; background:#fff; border-radius:2px; transform: translateX(-50%) rotate(45deg); box-shadow: -2px -2px 5px rgba(0,0,0,0.04); }
+.lp-mega-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 2rem; }
+.lp-mega-grid-sol { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 2rem; }
+.lp-mega-col-title { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f1f5f9; }
+.lp-mega-col { margin-bottom: 1.5rem; }
+.lp-mega-item { display: flex; align-items: flex-start; gap: 0.7rem; padding: 0.55rem 0.6rem; border-radius: 8px; text-decoration: none; transition: background 0.15s; cursor: pointer; }
+.lp-mega-item:hover { background: #f8fafc; }
+.lp-mega-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lp-mega-icon svg { width: 16px; height: 16px; }
+.lp-mega-item-title { font-size: 0.84rem; font-weight: 600; color: #0f172a; line-height: 1.2; margin-bottom: 2px; }
+.lp-mega-item-desc { font-size: 0.74rem; color: #64748b; line-height: 1.4; }
+.lp-mega-footer { border-top: 1px solid #f1f5f9; margin-top: 0.5rem; padding-top: 1rem; display: flex; align-items: center; justify-content: space-between; }
+.lp-mega-footer-link { font-size: 0.8rem; font-weight: 600; color: var(--blue); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+.lp-mega-footer-link:hover { text-decoration: underline; }
+.lp-mega-footer-link svg { width: 14px; height: 14px; }
+.lp-mega-footer-note { font-size: 0.75rem; color: #94a3b8; }
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .lp-hero-inner { grid-template-columns: 1fr; }
@@ -282,6 +309,7 @@ html { scroll-behavior: smooth; }
   .lp-stats-inner { grid-template-columns: repeat(2,1fr); }
   .lp-footer-grid { grid-template-columns: 1fr 1fr; }
   .lp-nav-links { display: none; }
+  .lp-mega { display: none !important; }
 }
 @media (max-width: 600px) {
   .lp-cap-grid,.lp-fw-grid { grid-template-columns: 1fr 1fr; }
@@ -336,6 +364,21 @@ export default function LandingPage() {
 
   const [csLoading, setCsLoading] = React.useState(false);
   const [csSubmitted, setCsSubmitted] = React.useState(false);
+  const [openMenu, setOpenMenu] = React.useState<"features" | "solutions" | null>(null);
+
+  function toggleMenu(name: "features" | "solutions") {
+    setOpenMenu((prev) => (prev === name ? null : name));
+  }
+
+  // Close on outside click
+  React.useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".lp-nav-item")) setOpenMenu(null);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   async function submitContactForm(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -396,17 +439,158 @@ export default function LandingPage() {
                 <div className="lp-logo-sub">Control Tower</div>
               </div>
             </a>
-            <ul className="lp-nav-links">
-              <li><a href="#features">Features</a></li>
-              <li><a href="#capabilities">Capabilities</a></li>
-              <li><a href="#frameworks">Frameworks</a></li>
-              <li><a href="#ai-projects">AI Projects</a></li>
-              <li><a href="#faq">FAQ</a></li>
-              <li><a href="#contact-sales">Contact Sales</a></li>
+            <ul className="lp-nav-links" style={{display:"flex",alignItems:"center",gap:"1.75rem",listStyle:"none"}}>
+
+              {/* ── FEATURES MEGA DROPDOWN ── */}
+              <li className={`lp-nav-item${openMenu === "features" ? " open" : ""}`}>
+                <button className="lp-nav-trigger" onClick={() => toggleMenu("features")}>
+                  Features
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div className="lp-mega">
+                  <div className="lp-mega-grid">
+
+                    {/* Col 1 — AI GOVERNANCE */}
+                    <div className="lp-mega-col">
+                      <div className="lp-mega-col-title">AI Governance</div>
+                      {[
+                        { icon:"#2563eb", bg:"rgba(37,99,235,0.1)", svg:<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>, title:"Model Inventory", desc:"Register & track all AI models in one place" },
+                        { icon:"#ef4444", bg:"rgba(239,68,68,0.1)", svg:<><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>, title:"Risk Assessment", desc:"Automated risk scoring, flagging & alerts" },
+                        { icon:"#8b5cf6", bg:"rgba(139,92,246,0.1)", svg:<><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></>, title:"Agent Governance", desc:"Monitor AI agents, tool usage & token spend" },
+                      ].map((item) => (
+                        <a key={item.title} href="/login" className="lp-mega-item">
+                          <div className="lp-mega-icon" style={{background:item.bg}}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke={item.icon} strokeWidth="2">{item.svg}</svg>
+                          </div>
+                          <div>
+                            <div className="lp-mega-item-title">{item.title}</div>
+                            <div className="lp-mega-item-desc">{item.desc}</div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+
+                    {/* Col 2 — COMPLIANCE */}
+                    <div className="lp-mega-col">
+                      <div className="lp-mega-col-title">Compliance</div>
+                      {[
+                        { icon:"#10b981", bg:"rgba(16,185,129,0.1)", svg:<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>, title:"Compliance Controls", desc:"Map controls to DPDP, ISO 42001, GDPR & EU AI Act" },
+                        { icon:"#f59e0b", bg:"rgba(245,158,11,0.1)", svg:<><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></>, title:"Audit & Reports", desc:"Generate regulator-ready compliance reports" },
+                        { icon:"#06b6d4", bg:"rgba(6,182,212,0.1)", svg:<><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></>, title:"Data Governance", desc:"PII tracking, consent management & data lineage" },
+                      ].map((item) => (
+                        <a key={item.title} href="/login" className="lp-mega-item">
+                          <div className="lp-mega-icon" style={{background:item.bg}}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke={item.icon} strokeWidth="2">{item.svg}</svg>
+                          </div>
+                          <div>
+                            <div className="lp-mega-item-title">{item.title}</div>
+                            <div className="lp-mega-item-desc">{item.desc}</div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+
+                    {/* Col 3 — OPERATIONS */}
+                    <div className="lp-mega-col">
+                      <div className="lp-mega-col-title">Operations</div>
+                      {[
+                        { icon:"#2563eb", bg:"rgba(37,99,235,0.1)", svg:<><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></>, title:"AI Project Management", desc:"Kanban phases, tasks & team collaboration" },
+                        { icon:"#ec4899", bg:"rgba(236,72,153,0.1)", svg:<><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></>, title:"Prompt Logs", desc:"Full prompt & response audit trail for every agent" },
+                        { icon:"#10b981", bg:"rgba(16,185,129,0.1)", svg:<><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>, title:"Monitoring", desc:"Real-time dashboards, drift detection & alerts" },
+                      ].map((item) => (
+                        <a key={item.title} href="/login" className="lp-mega-item">
+                          <div className="lp-mega-icon" style={{background:item.bg}}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke={item.icon} strokeWidth="2">{item.svg}</svg>
+                          </div>
+                          <div>
+                            <div className="lp-mega-item-title">{item.title}</div>
+                            <div className="lp-mega-item-desc">{item.desc}</div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+
+                  </div>
+                  <div className="lp-mega-footer">
+                    <a href="/login" className="lp-mega-footer-link">
+                      Explore all features
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                    <span className="lp-mega-footer-note">DPDP · ISO 42001 · GDPR · EU AI Act</span>
+                  </div>
+                </div>
+              </li>
+
+              {/* ── SOLUTIONS MEGA DROPDOWN ── */}
+              <li className={`lp-nav-item${openMenu === "solutions" ? " open" : ""}`}>
+                <button className="lp-nav-trigger" onClick={() => toggleMenu("solutions")}>
+                  Solutions
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div className="lp-mega lp-mega-sol">
+                  <div className="lp-mega-grid-sol">
+
+                    {/* Col 1 — BY FRAMEWORK */}
+                    <div className="lp-mega-col">
+                      <div className="lp-mega-col-title">By Compliance Framework</div>
+                      {[
+                        { icon:"#2563eb", bg:"rgba(37,99,235,0.1)", abbr:"DPDP", title:"DPDP Act", desc:"India's Digital Personal Data Protection Act compliance" },
+                        { icon:"#10b981", bg:"rgba(16,185,129,0.1)", abbr:"ISO", title:"ISO 42001", desc:"AI Management System certification readiness" },
+                        { icon:"#f59e0b", bg:"rgba(245,158,11,0.1)", abbr:"EU", title:"EU AI Act", desc:"High-risk AI system classification & conformity" },
+                        { icon:"#8b5cf6", bg:"rgba(139,92,246,0.1)", abbr:"GDPR", title:"GDPR", desc:"Data protection impact assessments & controls" },
+                      ].map((item) => (
+                        <a key={item.title} href="#frameworks" className="lp-mega-item" onClick={() => setOpenMenu(null)}>
+                          <div className="lp-mega-icon" style={{background:item.bg, fontSize:"0.6rem", fontWeight:800, color:item.icon, flexDirection:"column"}}>
+                            {item.abbr}
+                          </div>
+                          <div>
+                            <div className="lp-mega-item-title">{item.title}</div>
+                            <div className="lp-mega-item-desc">{item.desc}</div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+
+                    {/* Col 2 — BY INDUSTRY */}
+                    <div className="lp-mega-col">
+                      <div className="lp-mega-col-title">By Industry</div>
+                      {[
+                        { icon:"#2563eb", bg:"rgba(37,99,235,0.1)", svg:<><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></>, title:"Banking & Finance", desc:"Model risk management, fraud AI governance" },
+                        { icon:"#ef4444", bg:"rgba(239,68,68,0.1)", svg:<><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></>, title:"Healthcare & Pharma", desc:"Clinical AI oversight, patient data compliance" },
+                        { icon:"#f59e0b", bg:"rgba(245,158,11,0.1)", svg:<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>, title:"Insurance", desc:"Underwriting AI audit trails & explainability" },
+                        { icon:"#10b981", bg:"rgba(16,185,129,0.1)", svg:<><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></>, title:"Technology", desc:"LLM & agent governance for product teams" },
+                      ].map((item) => (
+                        <a key={item.title} href="#contact-sales" className="lp-mega-item" onClick={() => setOpenMenu(null)}>
+                          <div className="lp-mega-icon" style={{background:item.bg}}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke={item.icon} strokeWidth="2">{item.svg}</svg>
+                          </div>
+                          <div>
+                            <div className="lp-mega-item-title">{item.title}</div>
+                            <div className="lp-mega-item-desc">{item.desc}</div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+
+                  </div>
+                  <div className="lp-mega-footer">
+                    <a href="#contact-sales" className="lp-mega-footer-link" onClick={() => setOpenMenu(null)}>
+                      Talk to our team
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                    <span className="lp-mega-footer-note">Enterprise · On-Premise · SaaS</span>
+                  </div>
+                </div>
+              </li>
+
+              <li><a href="#frameworks" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>Frameworks</a></li>
+              <li><a href="#ai-projects" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>AI Projects</a></li>
+              <li><a href="#faq" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>FAQ</a></li>
+              <li><a href="#contact-sales" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>Contact Sales</a></li>
             </ul>
             <div className="lp-nav-cta">
               <a href="https://aigovernancetower.com/login" className="lp-btn lp-btn-outline">Sign In</a>
-              <button className="lp-btn lp-btn-primary" onClick={() => { document.getElementById("contact-sales")?.scrollIntoView({ behavior: "smooth" }); }}>Contact Sales</button>
+              <button className="lp-btn lp-btn-primary" onClick={() => { setOpenMenu(null); document.getElementById("contact-sales")?.scrollIntoView({ behavior: "smooth" }); }}>Contact Sales</button>
             </div>
           </div>
         </nav>
