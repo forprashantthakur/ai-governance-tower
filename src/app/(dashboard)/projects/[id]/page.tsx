@@ -15,10 +15,9 @@ const PHASES = [
   { key: "MONITORING", label: "Monitoring" },
 ];
 
-function PhaseBar({ phase, record }: { phase: { key: string; label: string }; record?: ProjectPhaseRecord }) {
-  const progress = record?.progress ?? 0;
+function PhaseBar({ phase, record, progress }: { phase: { key: string; label: string }; record?: ProjectPhaseRecord; progress: number }) {
   const isDone = record?.status === "DONE" || progress === 100;
-  const isActive = record?.status === "IN_PROGRESS";
+  const isActive = progress > 0 && progress < 100;
 
   return (
     <div className={`flex-1 min-w-0 rounded-lg border p-3 ${
@@ -55,7 +54,7 @@ export default function ProjectOverviewPage() {
     linkedModels?: ProjectAIModel[];
     _count?: { tasks: number; experiments: number; milestones: number; workflows: number };
   } | null>(null);
-  const [tasks, setTasks] = useState<{ status: string }[]>([]);
+  const [tasks, setTasks] = useState<{ status: string; phase: string }[]>([]);
   useEffect(() => {
     const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
     const h = { Authorization: `Bearer ${token}` };
@@ -109,13 +108,21 @@ export default function ProjectOverviewPage() {
       <div>
         <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">Phase Progress</h3>
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {PHASES.map((ph) => (
-            <PhaseBar
-              key={ph.key}
-              phase={ph}
-              record={project.phases?.find((r) => r.phase === ph.key)}
-            />
-          ))}
+          {PHASES.map((ph) => {
+            const phaseTasks = tasks.filter((t) => t.phase === ph.key);
+            const doneTasks = phaseTasks.filter((t) => t.status === "DONE").length;
+            const computedProgress = phaseTasks.length > 0
+              ? Math.round((doneTasks / phaseTasks.length) * 100)
+              : 0;
+            return (
+              <PhaseBar
+                key={ph.key}
+                phase={ph}
+                record={project.phases?.find((r) => r.phase === ph.key)}
+                progress={computedProgress}
+              />
+            );
+          })}
         </div>
       </div>
 
