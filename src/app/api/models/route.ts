@@ -70,7 +70,15 @@ export const GET = withAuth(async (req, { user }) => {
           riskAssessments: {
             orderBy: { createdAt: "desc" },
             take: 1,
-            select: { riskLevel: true, overallScore: true },
+            select: {
+              riskLevel: true,
+              overallScore: true,
+              dataSensitivityScore: true,
+              modelComplexityScore: true,
+              explainabilityScore: true,
+              humanOversightScore: true,
+              regulatoryExposureScore: true,
+            },
           },
           _count: { select: { agents: true, promptLogs: true } },
         },
