@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { UserPlus, Trash2 } from "lucide-react";
+import { UserPlus, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,43 +16,67 @@ const ROLE_COLORS: Record<ResourceRole, string> = {
   OBSERVER: "text-slate-400 bg-slate-400/10",
 };
 
+type UserOption = { id: string; name: string; email: string; role: string; department?: string };
+
 export default function ResourcesPage() {
   const params = useParams<{ id: string }>();
   const [resources, setResources] = useState<ProjectResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [users, setUsers] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
-  const [form, setForm] = useState({ userId: "", role: "CONTRIBUTOR" as ResourceRole, allocationPct: 50 });
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [form, setForm] = useState({ role: "CONTRIBUTOR" as ResourceRole, allocationPct: 50 });
   const [saving, setSaving] = useState(false);
-  const getH = () => ({ Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` });
+  const [error, setError] = useState("");
+
+  const getH = () => ({
+    Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}`,
+  });
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/projects/${params.id}/resources`, { headers: getH() }),
-      fetch("/api/auth/me", { headers: getH() }),
+      fetch("/api/users", { headers: getH() }),
     ])
       .then(([r1, r2]) => Promise.all([r1.json(), r2.json()]))
-      .then(([res, me]) => {
+      .then(([res, usersRes]) => {
         setResources(res.data ?? []);
+        setUsers(usersRes.data ?? []);
         setLoading(false);
       });
-
-    // Fetch all users for picker (use models endpoint as proxy or auth/me)
-    // For simplicity, show existing resources + manual userId input
   }, [params.id]);
 
+  const filteredUsers = users.filter(
+    (u) =>
+      !resources.some((r) => r.userId === u.id) &&
+      (u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+        u.email.toLowerCase().includes(userSearch.toLowerCase()))
+  );
+
   async function addResource() {
-    if (!form.userId.trim()) return;
+    if (!selectedUser) {
+      setError("Please select a team member");
+      return;
+    }
     setSaving(true);
+    setError("");
     try {
       const res = await fetch(`/api/projects/${params.id}/resources`, {
         method: "POST",
         headers: { ...getH(), "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ userId: selectedUser.id, role: form.role, allocationPct: form.allocationPct }),
       });
       const data = await res.json();
-      if (data.data) setResources((r) => [...r, data.data]);
-      setShowAdd(false);
+      if (data.data) {
+        setResources((r) => [...r, data.data]);
+        setShowAdd(false);
+        setSelectedUser(null);
+        setUserSearch("");
+      } else {
+        setError(data.message ?? "Failed to add member");
+      }
     } finally {
       setSaving(false);
     }
@@ -77,11 +101,13 @@ export default function ResourcesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-bold">Team Resources</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage team allocations across this project
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Manage team allocations across this project</p>
         </div>
-        <Button size="sm" className="gap-2" onClick={() => setShowAdd(true)}>
+        <Button
+          size="sm"
+          className="gap-2"
+          onClick={() => { setShowAdd(true); setError(""); setSelectedUser(null); setUserSearch(""); }}
+        >
           <UserPlus className="h-4 w-4" /> Add Member
         </Button>
       </div>
@@ -90,16 +116,71 @@ export default function ResourcesPage() {
       {showAdd && (
         <div className="bg-card border border-border rounded-xl p-4 space-y-4">
           <h3 className="text-sm font-semibold">Add Team Member</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">User ID</Label>
-              <Input
-                placeholder="Paste user ID"
-                value={form.userId}
-                onChange={(e) => setForm((f) => ({ ...f, userId: e.target.value }))}
-                className="h-8 text-xs"
-              />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {/* User search dropdown */}
+            <div className="space-y-1 sm:col-span-1 relative">
+              <Label className="text-xs">Team Member</Label>
+              {selectedUser ? (
+                <div className="flex items-center gap-2 h-8 px-2 rounded-md border border-input bg-background text-xs">
+                  <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">
+                    {selectedUser.name[0]}
+                  </div>
+                  <span className="flex-1 truncate">{selectedUser.name}</span>
+                  <button
+                    onClick={() => { setSelectedUser(null); setUserSearch(""); }}
+                    className="text-muted-foreground hover:text-foreground text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or email…"
+                    value={userSearch}
+                    onChange={(e) => { setUserSearch(e.target.value); setShowDropdown(true); }}
+                    onFocus={() => setShowDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                    className="h-8 text-xs pl-7"
+                  />
+                  {showDropdown && (
+                    <div className="absolute z-10 mt-1 w-full rounded-md border border-border bg-popover shadow-lg max-h-48 overflow-y-auto">
+                      {filteredUsers.length === 0 ? (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">
+                          {users.length === 0 ? "Loading users…" : "No matching users found"}
+                        </div>
+                      ) : (
+                        filteredUsers.map((u) => (
+                          <button
+                            key={u.id}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-accent text-left"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setSelectedUser(u);
+                              setUserSearch(u.name);
+                              setShowDropdown(false);
+                            }}
+                          >
+                            <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">
+                              {u.name[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-medium truncate">{u.name}</div>
+                              <div className="text-muted-foreground truncate">{u.email}</div>
+                            </div>
+                            <span className="ml-auto text-muted-foreground text-[10px] shrink-0">{u.role}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Role */}
             <div className="space-y-1">
               <Label className="text-xs">Role</Label>
               <select
@@ -112,6 +193,8 @@ export default function ResourcesPage() {
                 ))}
               </select>
             </div>
+
+            {/* Allocation */}
             <div className="space-y-1">
               <Label className="text-xs">Allocation %</Label>
               <Input
@@ -119,16 +202,21 @@ export default function ResourcesPage() {
                 min={0}
                 max={100}
                 value={form.allocationPct}
-                onChange={(e) => setForm((f) => ({ ...f, allocationPct: parseInt(e.target.value) }))}
+                onChange={(e) => setForm((f) => ({ ...f, allocationPct: parseInt(e.target.value) || 0 }))}
                 className="h-8 text-xs"
               />
             </div>
           </div>
+
+          {error && <p className="text-xs text-red-400">{error}</p>}
+
           <div className="flex gap-2">
-            <Button size="sm" onClick={addResource} disabled={saving}>
-              {saving ? "Adding…" : "Add"}
+            <Button size="sm" onClick={addResource} disabled={saving || !selectedUser}>
+              {saving ? "Adding…" : "Add Member"}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>Cancel</Button>
+            <Button variant="outline" size="sm" onClick={() => { setShowAdd(false); setError(""); }}>
+              Cancel
+            </Button>
           </div>
         </div>
       )}
@@ -144,6 +232,9 @@ export default function ResourcesPage() {
         <div className="text-center py-16 text-muted-foreground">
           <UserPlus className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="text-sm">No team members added yet</p>
+          <p className="text-xs mt-1">
+            Click <strong className="text-foreground">Add Member</strong> above to assign team members
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -152,12 +243,9 @@ export default function ResourcesPage() {
               key={r.id}
               className="flex items-center gap-4 bg-card border border-border rounded-xl px-4 py-3"
             >
-              {/* Avatar */}
               <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
                 {r.user?.name?.[0] ?? "?"}
               </div>
-
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{r.user?.name ?? r.userId}</span>
@@ -167,8 +255,6 @@ export default function ResourcesPage() {
                 </div>
                 <div className="text-xs text-muted-foreground">{r.user?.email}</div>
               </div>
-
-              {/* Allocation */}
               <div className="flex items-center gap-3 min-w-[160px]">
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-1">
@@ -192,7 +278,6 @@ export default function ResourcesPage() {
                   className="w-16 accent-primary"
                 />
               </div>
-
               <Button
                 variant="ghost"
                 size="icon"
