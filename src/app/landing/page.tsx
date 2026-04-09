@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 
 const css = `
@@ -334,28 +334,42 @@ export default function LandingPage() {
     if (!isOpen) item.classList.add("open");
   }
 
-  function submitContactForm(e: React.FormEvent<HTMLFormElement>) {
+  const [csLoading, setCsLoading] = React.useState(false);
+  const [csSubmitted, setCsSubmitted] = React.useState(false);
+
+  async function submitContactForm(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const get = (id: string) => (form.querySelector(`#cs-${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value ?? "";
-    const subject = `AI Governance Control Tower — Enquiry from ${get("fname")} ${get("lname")} (${get("company")})`;
-    const body = [
-      `Name: ${get("fname")} ${get("lname")}`,
-      `Work Email: ${get("email")}`,
-      `Company: ${get("company")}`,
-      `Phone: ${get("phone")}`,
-      `Organisation Size: ${get("size")}`,
-      ``,
-      `Message:`,
-      get("message"),
-    ].join("\n");
-    window.location.href = `mailto:enquiry@aigovernancetower.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setTimeout(() => {
-      const formEl = document.getElementById("contactSalesFormContent");
-      const successEl = document.getElementById("contactSalesSuccess");
-      if (formEl) formEl.style.display = "none";
-      if (successEl) { successEl.style.display = "flex"; successEl.classList.add("show"); }
-    }, 1200);
+    const get = (id: string) =>
+      (form.querySelector(`#cs-${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value ?? "";
+
+    const payload = {
+      "First Name": get("fname"),
+      "Last Name": get("lname"),
+      "Work Email": get("email"),
+      Company: get("company"),
+      Phone: get("phone"),
+      "Organisation Size": get("size"),
+      Message: get("message"),
+    };
+
+    setCsLoading(true);
+    try {
+      const res = await fetch("https://formspree.io/f/mjgpdzkk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setCsSubmitted(true);
+      } else {
+        alert("Something went wrong. Please email us directly at enquiry@aigovernancetower.com");
+      }
+    } catch {
+      alert("Network error. Please email us directly at enquiry@aigovernancetower.com");
+    } finally {
+      setCsLoading(false);
+    }
   }
 
   return (
@@ -814,60 +828,65 @@ export default function LandingPage() {
             {/* Right — Form */}
             <div className="lp-fade lp-fade-d1">
               <div className="lp-cs-form-box">
-                <div id="contactSalesFormContent">
-                  <div className="lp-cs-form-title">Get in Touch</div>
-                  <div className="lp-cs-form-sub">We typically respond within 1 business day.</div>
-                  <form onSubmit={submitContactForm}>
-                    <div className="lp-cs-grid2">
-                      <div className="lp-cs-field">
-                        <label className="lp-cs-label-f" htmlFor="cs-fname">First Name *</label>
-                        <input id="cs-fname" className="lp-cs-input" placeholder="Prashant" required />
-                      </div>
-                      <div className="lp-cs-field">
-                        <label className="lp-cs-label-f" htmlFor="cs-lname">Last Name *</label>
-                        <input id="cs-lname" className="lp-cs-input" placeholder="Thakur" required />
-                      </div>
+                {csSubmitted ? (
+                  <div className="lp-cs-success show">
+                    <div className="lp-cs-success-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
-                    <div className="lp-cs-field">
-                      <label className="lp-cs-label-f" htmlFor="cs-email">Work Email *</label>
-                      <input id="cs-email" type="email" className="lp-cs-input" placeholder="you@company.com" required />
-                    </div>
-                    <div className="lp-cs-grid2">
-                      <div className="lp-cs-field">
-                        <label className="lp-cs-label-f" htmlFor="cs-company">Company *</label>
-                        <input id="cs-company" className="lp-cs-input" placeholder="Acme Corp" required />
-                      </div>
-                      <div className="lp-cs-field">
-                        <label className="lp-cs-label-f" htmlFor="cs-phone">Phone</label>
-                        <input id="cs-phone" type="tel" className="lp-cs-input" placeholder="+91 98765 43210" />
-                      </div>
-                    </div>
-                    <div className="lp-cs-field">
-                      <label className="lp-cs-label-f" htmlFor="cs-size">Organisation Size</label>
-                      <select id="cs-size" className="lp-cs-input lp-cs-select">
-                        <option value="">Select size…</option>
-                        <option>1–50 employees</option>
-                        <option>51–200 employees</option>
-                        <option>201–1000 employees</option>
-                        <option>1001–5000 employees</option>
-                        <option>5000+ employees</option>
-                      </select>
-                    </div>
-                    <div className="lp-cs-field" style={{marginBottom:0}}>
-                      <label className="lp-cs-label-f" htmlFor="cs-message">Message</label>
-                      <textarea id="cs-message" className="lp-cs-input lp-cs-textarea" placeholder="Tell us about your AI governance needs, current challenges, or the frameworks you need to comply with…" />
-                    </div>
-                    <button type="submit" className="lp-cs-submit">Send Message →</button>
-                    <p className="lp-cs-privacy">By submitting, you agree to our Privacy Policy. We never share your data.</p>
-                  </form>
-                </div>
-                <div id="contactSalesSuccess" className="lp-cs-success">
-                  <div className="lp-cs-success-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <h3>Message Sent!</h3>
+                    <p>Thank you for reaching out. Our team will get back to you within 1 business day.</p>
                   </div>
-                  <h3>Message Sent!</h3>
-                  <p>Thank you for reaching out. Our team will get back to you within 1 business day.</p>
-                </div>
+                ) : (
+                  <>
+                    <div className="lp-cs-form-title">Get in Touch</div>
+                    <div className="lp-cs-form-sub">We typically respond within 1 business day.</div>
+                    <form onSubmit={submitContactForm}>
+                      <div className="lp-cs-grid2">
+                        <div className="lp-cs-field">
+                          <label className="lp-cs-label-f" htmlFor="cs-fname">First Name *</label>
+                          <input id="cs-fname" className="lp-cs-input" placeholder="Prashant" required />
+                        </div>
+                        <div className="lp-cs-field">
+                          <label className="lp-cs-label-f" htmlFor="cs-lname">Last Name *</label>
+                          <input id="cs-lname" className="lp-cs-input" placeholder="Thakur" required />
+                        </div>
+                      </div>
+                      <div className="lp-cs-field">
+                        <label className="lp-cs-label-f" htmlFor="cs-email">Work Email *</label>
+                        <input id="cs-email" type="email" className="lp-cs-input" placeholder="you@company.com" required />
+                      </div>
+                      <div className="lp-cs-grid2">
+                        <div className="lp-cs-field">
+                          <label className="lp-cs-label-f" htmlFor="cs-company">Company *</label>
+                          <input id="cs-company" className="lp-cs-input" placeholder="Acme Corp" required />
+                        </div>
+                        <div className="lp-cs-field">
+                          <label className="lp-cs-label-f" htmlFor="cs-phone">Phone</label>
+                          <input id="cs-phone" type="tel" className="lp-cs-input" placeholder="+91 98765 43210" />
+                        </div>
+                      </div>
+                      <div className="lp-cs-field">
+                        <label className="lp-cs-label-f" htmlFor="cs-size">Organisation Size</label>
+                        <select id="cs-size" className="lp-cs-input lp-cs-select">
+                          <option value="">Select size…</option>
+                          <option>1–50 employees</option>
+                          <option>51–200 employees</option>
+                          <option>201–1000 employees</option>
+                          <option>1001–5000 employees</option>
+                          <option>5000+ employees</option>
+                        </select>
+                      </div>
+                      <div className="lp-cs-field" style={{marginBottom:0}}>
+                        <label className="lp-cs-label-f" htmlFor="cs-message">Message</label>
+                        <textarea id="cs-message" className="lp-cs-input lp-cs-textarea" placeholder="Tell us about your AI governance needs, current challenges, or the frameworks you need to comply with…" />
+                      </div>
+                      <button type="submit" className="lp-cs-submit" disabled={csLoading}>
+                        {csLoading ? "Sending…" : "Send Message →"}
+                      </button>
+                      <p className="lp-cs-privacy">By submitting, you agree to our Privacy Policy. We never share your data.</p>
+                    </form>
+                  </>
+                )}
               </div>
             </div>
           </div>
