@@ -55,6 +55,8 @@ export interface AIModel {
   isCritical: boolean;
   humanOversight: boolean;
   explainability: number;
+  trainingDataset?: string;
+  accuracyScore?: number;
   metadata?: Record<string, unknown>;
   riskAssessments?: RiskAssessment[];
   _count?: { agents: number; promptLogs: number };
@@ -78,6 +80,8 @@ export interface CreateModelPayload {
   isCritical?: boolean;
   humanOversight?: boolean;
   explainability?: number;
+  trainingDataset?: string;
+  accuracyScore?: number;
   metadata?: Record<string, unknown>;
 }
 

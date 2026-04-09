@@ -31,6 +31,8 @@ export function AddModelModal({ onClose, onSuccess }: AddModelModalProps) {
     vendor: "",
     framework: "",
     department: "",
+    trainingDataset: "",
+    accuracyScore: undefined,
     explainability: 50,
     humanOversight: true,
     isPiiProcessing: false,
@@ -134,6 +136,29 @@ export function AddModelModal({ onClose, onSuccess }: AddModelModalProps) {
               value={form.description ?? ""}
               onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="m-dataset">Training Dataset</Label>
+              <Input id="m-dataset" placeholder="e.g. CIFAR-10, Internal CRM 2024" {...field("trainingDataset")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="m-accuracy">Accuracy Score (0–100%)</Label>
+              <Input
+                id="m-accuracy"
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                placeholder="e.g. 94.5"
+                value={form.accuracyScore != null ? Math.round(form.accuracyScore * 100 * 10) / 10 : ""}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setForm((p) => ({ ...p, accuracyScore: isNaN(val) ? undefined : val / 100 }));
+                }}
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">

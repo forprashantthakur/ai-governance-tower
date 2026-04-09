@@ -31,6 +31,8 @@ const CreateModelSchema = z.object({
   isCritical: z.boolean().default(false),
   humanOversight: z.boolean().default(true),
   explainability: z.number().min(0).max(100).default(50),
+  trainingDataset: z.string().optional(),
+  accuracyScore: z.number().min(0).max(1).optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 

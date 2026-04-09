@@ -96,6 +96,38 @@ export default function ModelsPage() {
       },
     },
     {
+      key: "description",
+      header: "Description",
+      cell: (row) => (
+        <span className="text-xs text-muted-foreground max-w-[180px] block truncate" title={row.description ?? ""}>
+          {row.description || <span className="italic opacity-40">—</span>}
+        </span>
+      ),
+    },
+    {
+      key: "trainingDataset" as keyof AIModel,
+      header: "Dataset",
+      cell: (row) => {
+        const ds = (row as AIModel & { trainingDataset?: string }).trainingDataset;
+        return (
+          <span className="text-xs text-muted-foreground max-w-[140px] block truncate" title={ds ?? ""}>
+            {ds || <span className="italic opacity-40">—</span>}
+          </span>
+        );
+      },
+    },
+    {
+      key: "accuracyScore" as keyof AIModel,
+      header: "Accuracy",
+      cell: (row) => {
+        const acc = (row as AIModel & { accuracyScore?: number }).accuracyScore;
+        if (acc == null) return <span className="text-xs italic opacity-40">—</span>;
+        const pct = Math.round(acc * 100);
+        const color = pct >= 90 ? "text-green-400" : pct >= 75 ? "text-amber-400" : "text-red-400";
+        return <span className={`text-xs font-semibold ${color}`}>{pct}%</span>;
+      },
+    },
+    {
       key: "status",
       header: "Status",
       cell: (row) => <StatusBadge status={row.status} />,

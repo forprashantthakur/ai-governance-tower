@@ -169,6 +169,8 @@ model AIModel {
   isCritical       Boolean      @default(false) @map("is_critical")
   humanOversight   Boolean      @default(true)  @map("human_oversight")
   explainability   Int          @default(50)    // 0-100 score
+  trainingDataset  String?      @map("training_dataset")  // name of training dataset
+  accuracyScore    Float?       @map("accuracy_score")    // 0.0-1.0 (e.g. 0.95 = 95%)
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
 
