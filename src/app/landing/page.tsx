@@ -225,6 +225,45 @@ html { scroll-behavior: smooth; }
 .lp-video-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.7)); z-index: 1; }
 .lp-video-title-overlay span { color: #fff; font-size: 0.85rem; font-weight: 600; }
 
+/* CONTACT SALES */
+.lp-cs-section { background: #f8fafc; padding: 5rem 2rem; scroll-margin-top: 80px; }
+.lp-cs-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+.lp-cs-left { padding-top: 0.5rem; }
+.lp-cs-label { color: var(--blue); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
+.lp-cs-title { font-size: 2.2rem; font-weight: 800; color: var(--navy); letter-spacing: -0.025em; line-height: 1.2; margin-bottom: 1rem; }
+.lp-cs-desc { color: var(--gray-600); font-size: 1rem; line-height: 1.75; margin-bottom: 2rem; }
+.lp-cs-cards { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+.lp-cs-card { display: flex; align-items: flex-start; gap: 1rem; background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 1.1rem 1.25rem; }
+.lp-cs-card-icon { width: 40px; height: 40px; border-radius: 9px; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(6,182,212,0.1)); border: 1px solid rgba(37,99,235,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lp-cs-card-icon svg { width: 18px; height: 18px; color: var(--blue); }
+.lp-cs-card-title { font-size: 0.88rem; font-weight: 700; color: var(--navy); margin-bottom: 0.2rem; }
+.lp-cs-card-desc { font-size: 0.8rem; color: var(--gray-600); line-height: 1.5; }
+.lp-cs-support { color: var(--gray-600); font-size: 0.85rem; }
+.lp-cs-support a { color: var(--blue); text-decoration: none; font-weight: 600; }
+.lp-cs-support a:hover { text-decoration: underline; }
+.lp-cs-form-box { background: #fff; border: 1px solid var(--gray-200); border-radius: 16px; padding: 2.25rem; box-shadow: 0 4px 24px rgba(10,35,66,0.07); }
+.lp-cs-form-title { font-size: 1.15rem; font-weight: 700; color: var(--navy); margin-bottom: 0.35rem; }
+.lp-cs-form-sub { font-size: 0.83rem; color: var(--gray-600); margin-bottom: 1.75rem; }
+.lp-cs-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.lp-cs-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+.lp-cs-field:last-of-type { margin-bottom: 0; }
+.lp-cs-label-f { font-size: 0.78rem; font-weight: 600; color: var(--navy); }
+.lp-cs-input { width: 100%; padding: 0.6rem 0.875rem; border: 1px solid var(--gray-200); border-radius: 7px; font-size: 0.875rem; font-family: inherit; color: var(--gray-800); background: #fff; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.lp-cs-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+.lp-cs-input::placeholder { color: var(--gray-400); }
+.lp-cs-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem; }
+.lp-cs-textarea { resize: vertical; min-height: 90px; }
+.lp-cs-submit { width: 100%; padding: 0.8rem; background: var(--blue); color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; margin-top: 1.25rem; }
+.lp-cs-submit:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.35); }
+.lp-cs-privacy { text-align: center; color: var(--gray-400); font-size: 0.73rem; margin-top: 0.75rem; }
+.lp-cs-success { text-align: center; padding: 3rem 1rem; display: none; flex-direction: column; align-items: center; gap: 1rem; }
+.lp-cs-success.show { display: flex; }
+.lp-cs-success-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center; }
+.lp-cs-success-icon svg { width: 32px; height: 32px; color: var(--green); }
+.lp-cs-success h3 { font-size: 1.2rem; font-weight: 700; color: var(--navy); }
+.lp-cs-success p { font-size: 0.9rem; color: var(--gray-600); }
+@media (max-width: 900px) { .lp-cs-inner { grid-template-columns: 1fr; } .lp-cs-grid2 { grid-template-columns: 1fr; } }
+
 /* ANIMATIONS */
 .lp-fade { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
 .lp-fade.visible { opacity: 1; transform: translateY(0); }
@@ -295,6 +334,30 @@ export default function LandingPage() {
     if (!isOpen) item.classList.add("open");
   }
 
+  function submitContactForm(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const get = (id: string) => (form.querySelector(`#cs-${id}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)?.value ?? "";
+    const subject = `AI Governance Control Tower — Enquiry from ${get("fname")} ${get("lname")} (${get("company")})`;
+    const body = [
+      `Name: ${get("fname")} ${get("lname")}`,
+      `Work Email: ${get("email")}`,
+      `Company: ${get("company")}`,
+      `Phone: ${get("phone")}`,
+      `Organisation Size: ${get("size")}`,
+      ``,
+      `Message:`,
+      get("message"),
+    ].join("\n");
+    window.location.href = `mailto:enquiry@aigovernancetower.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setTimeout(() => {
+      const formEl = document.getElementById("contactSalesFormContent");
+      const successEl = document.getElementById("contactSalesSuccess");
+      if (formEl) formEl.style.display = "none";
+      if (successEl) { successEl.style.display = "flex"; successEl.classList.add("show"); }
+    }, 1200);
+  }
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
@@ -325,10 +388,11 @@ export default function LandingPage() {
               <li><a href="#frameworks">Frameworks</a></li>
               <li><a href="#ai-projects">AI Projects</a></li>
               <li><a href="#faq">FAQ</a></li>
+              <li><a href="#contact-sales">Contact Sales</a></li>
             </ul>
             <div className="lp-nav-cta">
-              <a href="/demo-marketing.html" target="_blank" className="lp-btn lp-btn-outline">Watch Demo ▶</a>
-              <Link href="/login" className="lp-btn lp-btn-primary">Launch App →</Link>
+              <a href="https://aigovernancetower.com/login" className="lp-btn lp-btn-outline">Sign In</a>
+              <button className="lp-btn lp-btn-primary" onClick={() => { document.getElementById("contact-sales")?.scrollIntoView({ behavior: "smooth" }); }}>Contact Sales</button>
             </div>
           </div>
         </nav>
@@ -702,6 +766,109 @@ export default function LandingPage() {
                   <div className="lp-faq-ans"><div className="lp-faq-ans-inner">{a}</div></div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CONTACT SALES */}
+        <section className="lp-cs-section" id="contact-sales">
+          <div className="lp-cs-inner">
+            {/* Left */}
+            <div className="lp-cs-left lp-fade">
+              <div className="lp-cs-label">Contact Sales</div>
+              <h2 className="lp-cs-title">Talk to Our<br />Enterprise Team</h2>
+              <p className="lp-cs-desc">Get a personalised walkthrough of the AI Governance Control Tower and learn how it fits your compliance and risk landscape.</p>
+              <div className="lp-cs-cards">
+                {[
+                  {
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+                    title: "Tailored Demo",
+                    desc: "See the platform configured for your industry, frameworks, and AI portfolio.",
+                  },
+                  {
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>,
+                    title: "Flexible Pricing",
+                    desc: "Starter, Professional, and Enterprise plans — or a custom on-premise deployment.",
+                  },
+                  {
+                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+                    title: "Dedicated Onboarding",
+                    desc: "Our team handles setup, migration, and training so you're live within days.",
+                  },
+                ].map((card) => (
+                  <div className="lp-cs-card" key={card.title}>
+                    <div className="lp-cs-card-icon">{card.icon}</div>
+                    <div>
+                      <div className="lp-cs-card-title">{card.title}</div>
+                      <div className="lp-cs-card-desc">{card.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="lp-cs-support">
+                Need immediate help? Email us at{" "}
+                <a href="mailto:enquiry@aigovernancetower.com">enquiry@aigovernancetower.com</a>
+              </p>
+            </div>
+
+            {/* Right — Form */}
+            <div className="lp-fade lp-fade-d1">
+              <div className="lp-cs-form-box">
+                <div id="contactSalesFormContent">
+                  <div className="lp-cs-form-title">Get in Touch</div>
+                  <div className="lp-cs-form-sub">We typically respond within 1 business day.</div>
+                  <form onSubmit={submitContactForm}>
+                    <div className="lp-cs-grid2">
+                      <div className="lp-cs-field">
+                        <label className="lp-cs-label-f" htmlFor="cs-fname">First Name *</label>
+                        <input id="cs-fname" className="lp-cs-input" placeholder="Prashant" required />
+                      </div>
+                      <div className="lp-cs-field">
+                        <label className="lp-cs-label-f" htmlFor="cs-lname">Last Name *</label>
+                        <input id="cs-lname" className="lp-cs-input" placeholder="Thakur" required />
+                      </div>
+                    </div>
+                    <div className="lp-cs-field">
+                      <label className="lp-cs-label-f" htmlFor="cs-email">Work Email *</label>
+                      <input id="cs-email" type="email" className="lp-cs-input" placeholder="you@company.com" required />
+                    </div>
+                    <div className="lp-cs-grid2">
+                      <div className="lp-cs-field">
+                        <label className="lp-cs-label-f" htmlFor="cs-company">Company *</label>
+                        <input id="cs-company" className="lp-cs-input" placeholder="Acme Corp" required />
+                      </div>
+                      <div className="lp-cs-field">
+                        <label className="lp-cs-label-f" htmlFor="cs-phone">Phone</label>
+                        <input id="cs-phone" type="tel" className="lp-cs-input" placeholder="+91 98765 43210" />
+                      </div>
+                    </div>
+                    <div className="lp-cs-field">
+                      <label className="lp-cs-label-f" htmlFor="cs-size">Organisation Size</label>
+                      <select id="cs-size" className="lp-cs-input lp-cs-select">
+                        <option value="">Select size…</option>
+                        <option>1–50 employees</option>
+                        <option>51–200 employees</option>
+                        <option>201–1000 employees</option>
+                        <option>1001–5000 employees</option>
+                        <option>5000+ employees</option>
+                      </select>
+                    </div>
+                    <div className="lp-cs-field" style={{marginBottom:0}}>
+                      <label className="lp-cs-label-f" htmlFor="cs-message">Message</label>
+                      <textarea id="cs-message" className="lp-cs-input lp-cs-textarea" placeholder="Tell us about your AI governance needs, current challenges, or the frameworks you need to comply with…" />
+                    </div>
+                    <button type="submit" className="lp-cs-submit">Send Message →</button>
+                    <p className="lp-cs-privacy">By submitting, you agree to our Privacy Policy. We never share your data.</p>
+                  </form>
+                </div>
+                <div id="contactSalesSuccess" className="lp-cs-success">
+                  <div className="lp-cs-success-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <h3>Message Sent!</h3>
+                  <p>Thank you for reaching out. Our team will get back to you within 1 business day.</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
