@@ -169,23 +169,8 @@ model AIModel {
   isCritical       Boolean      @default(false) @map("is_critical")
   humanOversight   Boolean      @default(true)  @map("human_oversight")
   explainability   Int          @default(50)    // 0-100 score
-  trainingDataset      String?      @map("training_dataset")  // name of training dataset
-  accuracyScore        Float?       @map("accuracy_score")    // 0.0-1.0 (e.g. 0.95 = 95%)
-
-  // ── ISO 42005 §5.3 ─────────────────────────────────────────────────
-  intendedUses         String[]     @default([]) @map("intended_uses")
-  unintendedUses       String[]     @default([]) @map("unintended_uses")
-
-  // ── ISO 42005 §5.5 ─────────────────────────────────────────────────
-  algorithmType        String?      @map("algorithm_type")
-  algorithmDescription String?      @map("algorithm_description")
-  developmentApproach  String?      @map("development_approach")
-
-  // ── ISO 42005 §5.6 ─────────────────────────────────────────────────
-  geographicScope         String[]  @default([]) @map("geographic_scope")
-  deploymentLanguages     String[]  @default([]) @map("deployment_languages")
-  environmentDescription  String?   @map("environment_description")
-
+  trainingDataset  String?      @map("training_dataset")  // name of training dataset
+  accuracyScore    Float?       @map("accuracy_score")    // 0.0-1.0 (e.g. 0.95 = 95%)
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
 
@@ -782,29 +767,46 @@ model EvidenceFile {
   @@map("evidence_files")
 }
 
-/// ISO 42005 §5.8 — structured impact assessment for each AI model (9 dimensions)
+/// ISO 42005 §5.3–§5.8 — full impact assessment record per AI model
+/// §5.3 intended/unintended uses, §5.5 algorithm info, §5.6 deployment env,
+/// §5.8 nine impact dimensions — stored here to avoid altering ai_models table
 model ImpactAssessment {
   id      String  @id @default(uuid())
   modelId String  @unique @map("model_id")
 
+  // ── §5.3 AI System Information ─────────────────────────────────────
+  intendedUses         String[]  @default([]) @map("intended_uses")
+  unintendedUses       String[]  @default([]) @map("unintended_uses")
+
+  // ── §5.5 Algorithm & Model ──────────────────────────────────────────
+  algorithmType        String?   @map("algorithm_type")
+  algorithmDescription String?   @map("algorithm_description")
+  developmentApproach  String?   @map("development_approach")
+
+  // ── §5.6 Deployment Environment ─────────────────────────────────────
+  geographicScope        String[]  @default([]) @map("geographic_scope")
+  deploymentLanguages    String[]  @default([]) @map("deployment_languages")
+  environmentDescription String?   @map("environment_description")
+
+  // ── §5.8 Impact Dimensions ──────────────────────────────────────────
   // §5.8.2.2 Accountability
-  accountability     String?
+  accountability      String?
   // §5.8.2.3 Transparency
-  transparency       String?
+  transparency        String?
   // §5.8.2.4 Fairness & Non-discrimination
-  fairness           String?
+  fairness            String?
   // §5.8.2.5 Privacy
-  privacy            String?
+  privacy             String?
   // §5.8.2.6 Reliability & Robustness
-  reliability        String?
+  reliability         String?
   // §5.8.2.7 Safety
-  safety             String?
+  safety              String?
   // §5.8.2.8 Explainability
-  explainabilityDoc  String?  @map("explainability_doc")
+  explainabilityDoc   String?  @map("explainability_doc")
   // §5.8.2.9 Environmental Impact
-  environmentalImpact String? @map("environmental_impact")
+  environmentalImpact String?  @map("environmental_impact")
   // §5.8.3 Failures & Misuse
-  failureMisuse      String?  @map("failure_misuse")
+  failureMisuse       String?  @map("failure_misuse")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

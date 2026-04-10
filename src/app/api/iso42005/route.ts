@@ -6,10 +6,20 @@ import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
-// ─── Impact Assessment ───────────────────────────────────────────────────────
-
-const ImpactSchema = z.object({
+const UpsertSchema = z.object({
   modelId: z.string().uuid(),
+  // §5.3
+  intendedUses: z.array(z.string()).optional(),
+  unintendedUses: z.array(z.string()).optional(),
+  // §5.5
+  algorithmType: z.string().optional(),
+  algorithmDescription: z.string().optional(),
+  developmentApproach: z.string().optional(),
+  // §5.6
+  geographicScope: z.array(z.string()).optional(),
+  deploymentLanguages: z.array(z.string()).optional(),
+  environmentDescription: z.string().optional(),
+  // §5.8 impact dimensions
   accountability: z.string().optional(),
   transparency: z.string().optional(),
   fairness: z.string().optional(),
@@ -38,15 +48,6 @@ export const GET = withAuth(async (req: NextRequest) => {
           name: true,
           type: true,
           status: true,
-          intendedUses: true,
-          unintendedUses: true,
-          algorithmType: true,
-          algorithmDescription: true,
-          developmentApproach: true,
-          geographicScope: true,
-          deploymentLanguages: true,
-          environmentDescription: true,
-          trainingDataset: true,
           explainability: true,
           humanOversight: true,
           isPiiProcessing: true,
@@ -64,11 +65,11 @@ export const GET = withAuth(async (req: NextRequest) => {
   }
 });
 
-// POST /api/iso42005 — upsert impact assessment
+// POST /api/iso42005 — upsert full impact assessment (§5.3 + §5.5 + §5.6 + §5.8)
 export const POST = withAuth(async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const parsed = ImpactSchema.safeParse(body);
+    const parsed = UpsertSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { modelId, ...data } = parsed.data;
@@ -80,38 +81,6 @@ export const POST = withAuth(async (req: NextRequest) => {
     });
 
     return ok(impact);
-  } catch (err) {
-    return serverError(err);
-  }
-}, "RISK_OFFICER");
-
-// PATCH /api/iso42005 — update AIModel ISO 42005 fields
-const ModelFieldsSchema = z.object({
-  modelId: z.string().uuid(),
-  intendedUses: z.array(z.string()).optional(),
-  unintendedUses: z.array(z.string()).optional(),
-  algorithmType: z.string().optional(),
-  algorithmDescription: z.string().optional(),
-  developmentApproach: z.string().optional(),
-  geographicScope: z.array(z.string()).optional(),
-  deploymentLanguages: z.array(z.string()).optional(),
-  environmentDescription: z.string().optional(),
-});
-
-export const PATCH = withAuth(async (req: NextRequest) => {
-  try {
-    const body = await req.json();
-    const parsed = ModelFieldsSchema.safeParse(body);
-    if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
-
-    const { modelId, ...data } = parsed.data;
-
-    const model = await prisma.aIModel.update({
-      where: { id: modelId },
-      data,
-    });
-
-    return ok(model);
   } catch (err) {
     return serverError(err);
   }
