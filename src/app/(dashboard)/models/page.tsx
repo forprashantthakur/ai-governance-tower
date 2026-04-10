@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Search, RefreshCw, Tag } from "lucide-react";
+import { Plus, Search, RefreshCw, Tag, UserCheck } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { RiskBadge, StatusBadge } from "@/components/shared/risk-badge";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AddModelModal } from "@/components/models/add-model-modal";
 import { ModelDetailDrawer } from "@/components/models/model-detail-drawer";
+import { EvidenceUpload } from "@/components/shared/evidence-upload";
 import { formatDateShort } from "@/lib/utils";
 import type { AIModel, RiskLevel } from "@/types";
 
@@ -166,6 +167,27 @@ export default function ModelsPage() {
         <span className="text-xs text-muted-foreground">
           {formatDateShort(row.createdAt)}
         </span>
+      ),
+    },
+    {
+      key: "owner",
+      header: "Project Approver",
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <UserCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <span className="text-sm">{row.owner?.name ?? "—"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "id",
+      header: "Approval Evidence",
+      cell: (row) => (
+        <EvidenceUpload
+          modelId={row.id}
+          section="approval"
+          compact
+        />
       ),
     },
   ];
