@@ -53,15 +53,15 @@ interface Party {
 }
 
 const IMPACT_DIMS = [
-  { key: "accountability",    label: "§5.8.2.2 Accountability",              clause: "5.8.2.2", icon: "🏛️", desc: "Describe responsible persons/roles, decision trails, and escalation procedures." },
-  { key: "transparency",      label: "§5.8.2.3 Transparency",                clause: "5.8.2.3", icon: "🪟", desc: "Describe AI disclosures to end users, model card availability, and explanation mechanisms." },
-  { key: "fairness",          label: "§5.8.2.4 Fairness & Non-discrimination", clause: "5.8.2.4", icon: "⚖️", desc: "Document bias testing methodology, protected attributes handled, and fairness metrics achieved." },
-  { key: "privacy",           label: "§5.8.2.5 Privacy",                     clause: "5.8.2.5", icon: "🔒", desc: "Describe PII processing, data minimisation measures, and DPIA findings." },
-  { key: "reliability",       label: "§5.8.2.6 Reliability & Robustness",    clause: "5.8.2.6", icon: "🛡️", desc: "Document performance SLAs, identified failure modes, and resilience testing results." },
-  { key: "safety",            label: "§5.8.2.7 Safety",                      clause: "5.8.2.7", icon: "🚨", desc: "Document safety risk identification, human oversight mechanisms, and emergency override capability." },
-  { key: "explainabilityDoc", label: "§5.8.2.8 Explainability",              clause: "5.8.2.8", icon: "🔍", desc: "Describe explainability method (SHAP, LIME, etc.), explanation audiences, and known limitations." },
-  { key: "environmentalImpact", label: "§5.8.2.9 Environmental Impact",      clause: "5.8.2.9", icon: "🌱", desc: "Document compute energy consumption, carbon footprint estimate, and sustainability measures." },
-  { key: "failureMisuse",     label: "§5.8.3 Failures & Misuse",             clause: "5.8.3",   icon: "⚠️", desc: "Document known failure modes, misuse scenarios, and incident response procedures." },
+  { key: "accountability",    label: "Clause 5.8.2.2 — Accountability",              num: 1, clause: "5.8.2.2", icon: "🏛️", desc: "Describe responsible persons/roles, decision trails, and escalation procedures." },
+  { key: "transparency",      label: "Clause 5.8.2.3 — Transparency",                num: 2, clause: "5.8.2.3", icon: "🪟", desc: "Describe AI disclosures to end users, model card availability, and explanation mechanisms." },
+  { key: "fairness",          label: "Clause 5.8.2.4 — Fairness & Non-discrimination", num: 3, clause: "5.8.2.4", icon: "⚖️", desc: "Document bias testing methodology, protected attributes handled, and fairness metrics achieved." },
+  { key: "privacy",           label: "Clause 5.8.2.5 — Privacy",                     num: 4, clause: "5.8.2.5", icon: "🔒", desc: "Describe PII processing, data minimisation measures, and DPIA findings." },
+  { key: "reliability",       label: "Clause 5.8.2.6 — Reliability & Robustness",    num: 5, clause: "5.8.2.6", icon: "🛡️", desc: "Document performance SLAs, identified failure modes, and resilience testing results." },
+  { key: "safety",            label: "Clause 5.8.2.7 — Safety",                      num: 6, clause: "5.8.2.7", icon: "🚨", desc: "Document safety risk identification, human oversight mechanisms, and emergency override capability." },
+  { key: "explainabilityDoc", label: "Clause 5.8.2.8 — Explainability",              num: 7, clause: "5.8.2.8", icon: "🔍", desc: "Describe explainability method (SHAP, LIME, etc.), explanation audiences, and known limitations." },
+  { key: "environmentalImpact", label: "Clause 5.8.2.9 — Environmental Impact",      num: 8, clause: "5.8.2.9", icon: "🌱", desc: "Document compute energy consumption, carbon footprint estimate, and sustainability measures." },
+  { key: "failureMisuse",     label: "Clause 5.8.3 — Failures & Misuse",             num: 9, clause: "5.8.3",   icon: "⚠️", desc: "Document known failure modes, misuse scenarios, and incident response procedures." },
 ] as const;
 
 const PARTY_ROLES = ["USER", "DATA_SUBJECT", "DEPLOYER", "DEVELOPER", "REGULATOR", "SUPPLIER", "OTHER"];
@@ -251,9 +251,6 @@ export default function Iso42005Page() {
             <FileSearch className="h-5 w-5 text-primary" />
             ISO 42005 — AI System Impact Assessment
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Document all sub-clauses §5.3–5.9 per AI model with evidence file upload
-          </p>
         </div>
         <Button onClick={saveAll} disabled={!selectedModelId || saving} className="shrink-0">
           {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving…</>
@@ -315,14 +312,14 @@ export default function Iso42005Page() {
       ) : (
         <div className="space-y-4">
 
-          {/* §5.3 — AI System Information */}
-          <Section title="§5.3 — AI System Information" clause="ISO 42005 §5.3" icon="🤖"
+          {/* Clause 5.3 — AI System Information */}
+          <Section title="Clause 5.3 — AI System Information" clause="ISO 42005 · 5.3" icon="🤖"
             description="System purpose, intended uses, and unintended uses / misuse scenarios"
             defaultOpen>
             <div className="space-y-5">
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  §5.3.4 — Intended Uses <span className="text-red-400">*</span>
+                  Clause 5.3.4 — Intended Uses <span className="text-red-400">*</span>
                 </label>
                 <p className="text-[11px] text-muted-foreground mb-2">Authorised use cases, target user populations, and deployment contexts.</p>
                 <TagInput
@@ -333,7 +330,7 @@ export default function Iso42005Page() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  §5.3.5 — Unintended Uses / Misuse Scenarios <span className="text-red-400">*</span>
+                  Clause 5.3.5 — Unintended Uses / Misuse Scenarios <span className="text-red-400">*</span>
                 </label>
                 <p className="text-[11px] text-muted-foreground mb-2">Known misuse vectors and explicitly out-of-scope applications.</p>
                 <TagInput
@@ -346,13 +343,13 @@ export default function Iso42005Page() {
             </div>
           </Section>
 
-          {/* §5.5 — Algorithm & Model */}
-          <Section title="§5.5 — Algorithm & Model Information" clause="ISO 42005 §5.5" icon="⚙️"
+          {/* Clause 5.5 — Algorithm & Model */}
+          <Section title="Clause 5.5 — Algorithm & Model Information" clause="ISO 42005 · 5.5" icon="⚙️"
             description="Algorithm type, development methodology, training data, model lifecycle">
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground block mb-1.5">§5.5.2 — Algorithm Type</label>
+                  <label className="text-xs font-medium text-muted-foreground block mb-1.5">Clause 5.5.2 — Algorithm Type</label>
                   <input
                     value={data.algorithmType}
                     onChange={(e) => set("algorithmType", e.target.value)}
@@ -361,7 +358,7 @@ export default function Iso42005Page() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground block mb-1.5">§5.5.3 — Development Approach</label>
+                  <label className="text-xs font-medium text-muted-foreground block mb-1.5">Clause 5.5.3 — Development Approach</label>
                   <input
                     value={data.developmentApproach}
                     onChange={(e) => set("developmentApproach", e.target.value)}
@@ -371,7 +368,7 @@ export default function Iso42005Page() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">§5.5.2 — Algorithm Description &amp; Key Design Decisions</label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Clause 5.5.2 — Algorithm Description &amp; Key Design Decisions</label>
                 <Textarea
                   value={data.algorithmDescription}
                   onChange={(v) => set("algorithmDescription", v)}
@@ -382,20 +379,20 @@ export default function Iso42005Page() {
             </div>
           </Section>
 
-          {/* §5.6 — Deployment Environment */}
-          <Section title="§5.6 — Deployment Environment" clause="ISO 42005 §5.6" icon="🌐"
+          {/* Clause 5.6 — Deployment Environment */}
+          <Section title="Clause 5.6 — Deployment Environment" clause="ISO 42005 · 5.6" icon="🌐"
             description="Geographic scope, languages, environment complexity, integrations">
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">§5.6.1 — Geographic Scope</label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Clause 5.6.1 — Geographic Scope</label>
                 <TagInput values={data.geographicScope} onChange={(v) => set("geographicScope", v)} placeholder="e.g. India, Singapore, UAE" />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">§5.6.1 — Deployment Languages</label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Clause 5.6.1 — Deployment Languages</label>
                 <TagInput values={data.deploymentLanguages} onChange={(v) => set("deploymentLanguages", v)} placeholder="e.g. English, Hindi, Tamil" />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">§5.6.2 — Environment Description</label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Clause 5.6.2 — Environment Description</label>
                 <Textarea
                   value={data.environmentDescription}
                   onChange={(v) => set("environmentDescription", v)}
@@ -407,8 +404,8 @@ export default function Iso42005Page() {
             </div>
           </Section>
 
-          {/* §5.7 — Interested Parties */}
-          <Section title="§5.7 — Interested Parties Register" clause="ISO 42005 §5.7" icon="👥"
+          {/* Clause 5.7 — Interested Parties */}
+          <Section title="Clause 5.7 — Interested Parties Register" clause="ISO 42005 · 5.7" icon="👥"
             description="Identify and document all parties with interests in this AI system">
             <div className="space-y-4">
               {parties.length > 0 && (
@@ -482,9 +479,9 @@ export default function Iso42005Page() {
             </div>
           </Section>
 
-          {/* §5.8 — Impact Dimensions */}
-          <Section title="§5.8 — AI System Impacts (9 Dimensions)" clause="ISO 42005 §5.8" icon="⚖️"
-            description="Document all 9 impact dimensions required by ISO 42005 §5.8.2">
+          {/* Clause 5.8 — Impact Dimensions */}
+          <Section title="Clause 5.8 — AI System Impacts (9 Dimensions)" clause="ISO 42005 · 5.8" icon="⚖️"
+            description="Document all 9 impact dimensions required by ISO 42005 Clause 5.8.2">
             <div className="space-y-6">
               {IMPACT_DIMS.map((dim) => {
                 const value = (data[dim.key as keyof AssessmentData] as string) ?? "";
@@ -492,6 +489,7 @@ export default function Iso42005Page() {
                 return (
                   <div key={dim.key} className="space-y-2">
                     <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold shrink-0">{dim.num}</span>
                       <span>{dim.icon}</span>
                       <label className="text-xs font-semibold text-foreground">{dim.label}</label>
                       {filled
@@ -514,14 +512,14 @@ export default function Iso42005Page() {
             </div>
           </Section>
 
-          {/* §5.9 — Measures */}
-          <Section title="§5.9 — Measures (Compliance Controls)" clause="ISO 42005 §5.9" icon="🛡️"
+          {/* Clause 5.9 — Measures */}
+          <Section title="Clause 5.9 — Measures (Compliance Controls)" clause="ISO 42005 · 5.9" icon="🛡️"
             description="Technical and management measures — tracked as Compliance Controls">
             <div className="space-y-3">
               <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
                 <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm text-muted-foreground">
-                  ISO 42005 §5.9 measures are tracked as <strong className="text-foreground">Compliance Controls</strong> under the <strong className="text-foreground">ISO42005</strong> framework.
+                  ISO 42005 Clause 5.9 measures are tracked as <strong className="text-foreground">Compliance Controls</strong> under the <strong className="text-foreground">ISO42005</strong> framework.
                   Visit the <a href="/risk" className="text-primary hover:underline">Risk &amp; Compliance</a> page to manage controls, set their status, and upload evidence per control.
                 </p>
               </div>
