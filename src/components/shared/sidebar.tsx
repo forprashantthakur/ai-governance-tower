@@ -16,6 +16,7 @@ import {
   LogOut,
   Shield,
   FolderKanban,
+  FileSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/projects", icon: FolderKanban, label: "AI Projects" },
   { href: "/models", icon: BrainCircuit, label: "AI Inventory" },
   { href: "/risk", icon: ShieldAlert, label: "Risk & Compliance" },
+  { href: "/iso42005", icon: FileSearch, label: "ISO 42005 Assessment" },
   { href: "/data-governance", icon: Database, label: "Data Governance" },
   { href: "/agents", icon: Bot, label: "Agent Governance" },
   { href: "/monitoring", icon: Activity, label: "Monitoring" },

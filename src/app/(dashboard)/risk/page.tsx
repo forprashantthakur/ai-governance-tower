@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Shield, ChevronDown, CheckSquare } from "lucide-react";
+import { Shield, CheckSquare, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
 import {
   ResponsiveContainer,
   ScatterChart,
@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { AssessModelModal } from "@/components/risk/assess-model-modal";
+import { EvidenceUpload } from "@/components/shared/evidence-upload";
 import type { ComplianceControl, RiskLevel, ComplianceStatus } from "@/types";
 import { formatDateShort } from "@/lib/utils";
 
@@ -40,7 +41,7 @@ const RISK_COLORS: Record<string, string> = {
   CRITICAL: "#ef4444",
 };
 
-const FRAMEWORKS = ["DPDP", "ISO42001", "ISO42005"];
+const FRAMEWORKS = ["DPDP", "ISO42001", "ISO42005", "GDPR", "SOC2"];
 
 export default function RiskPage() {
   const api = useApi();
@@ -49,6 +50,7 @@ export default function RiskPage() {
   const [framework, setFramework] = useState("DPDP");
   const [loading, setLoading] = useState(true);
   const [showAssessModal, setShowAssessModal] = useState(false);
+  const [expandedControl, setExpandedControl] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -73,14 +75,26 @@ export default function RiskPage() {
     {
       key: "controlId",
       header: "Control ID",
-      cell: (row) => <span className="font-mono text-xs">{row.controlId}</span>,
+      cell: (row) => (
+        <button
+          className="font-mono text-xs text-primary hover:underline"
+          onClick={() => setExpandedControl(expandedControl === row.id ? null : row.id)}
+        >
+          {row.controlId}
+        </button>
+      ),
     },
     {
       key: "controlName",
       header: "Control Name",
       cell: (row) => (
         <div>
-          <p className="text-sm font-medium">{row.controlName}</p>
+          <button
+            className="text-sm font-medium hover:text-primary text-left"
+            onClick={() => setExpandedControl(expandedControl === row.id ? null : row.id)}
+          >
+            {row.controlName}
+          </button>
           {row.description && (
             <p className="text-xs text-muted-foreground truncate max-w-xs">{row.description}</p>
           )}
@@ -106,6 +120,20 @@ export default function RiskPage() {
         ) : (
           <span className="text-xs text-muted-foreground">Pending</span>
         ),
+    },
+    {
+      key: "id",
+      header: "Evidence",
+      cell: (row) => (
+        <button
+          onClick={() => setExpandedControl(expandedControl === row.id ? null : row.id)}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+          title="Expand to upload evidence files"
+        >
+          <Paperclip className="h-3 w-3" />
+          {expandedControl === row.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        </button>
+      ),
     },
   ];
 
@@ -238,13 +266,45 @@ export default function RiskPage() {
             ))}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <DataTable
             columns={complianceColumns}
             data={compliance?.controls ?? []}
             loading={loading}
             emptyMessage={`No ${framework} controls mapped yet.`}
           />
+          {/* Expanded evidence panel */}
+          {expandedControl && (() => {
+            const ctrl = compliance?.controls.find((c) => c.id === expandedControl);
+            if (!ctrl) return null;
+            return (
+              <div className="border-t border-border bg-muted/20 p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {ctrl.controlId} — {ctrl.controlName}
+                  </p>
+                  <button onClick={() => setExpandedControl(null)} className="text-xs text-muted-foreground hover:text-foreground">
+                    Close ↑
+                  </button>
+                </div>
+                {ctrl.evidence && (
+                  <div className="text-xs text-muted-foreground bg-background border border-border rounded p-3">
+                    <span className="font-medium text-foreground">Evidence note: </span>{ctrl.evidence}
+                  </div>
+                )}
+                {ctrl.notes && (
+                  <div className="text-xs text-muted-foreground bg-background border border-border rounded p-3">
+                    <span className="font-medium text-foreground">Notes: </span>{ctrl.notes}
+                  </div>
+                )}
+                <EvidenceUpload
+                  controlId={ctrl.id}
+                  section={ctrl.controlId}
+                  label="Upload Evidence Documents"
+                />
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 

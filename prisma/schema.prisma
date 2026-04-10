@@ -169,20 +169,38 @@ model AIModel {
   isCritical       Boolean      @default(false) @map("is_critical")
   humanOversight   Boolean      @default(true)  @map("human_oversight")
   explainability   Int          @default(50)    // 0-100 score
-  trainingDataset  String?      @map("training_dataset")  // name of training dataset
-  accuracyScore    Float?       @map("accuracy_score")    // 0.0-1.0 (e.g. 0.95 = 95%)
+  trainingDataset      String?      @map("training_dataset")  // name of training dataset
+  accuracyScore        Float?       @map("accuracy_score")    // 0.0-1.0 (e.g. 0.95 = 95%)
+
+  // ── ISO 42005 §5.3 ─────────────────────────────────────────────────
+  intendedUses         String[]     @default([]) @map("intended_uses")
+  unintendedUses       String[]     @default([]) @map("unintended_uses")
+
+  // ── ISO 42005 §5.5 ─────────────────────────────────────────────────
+  algorithmType        String?      @map("algorithm_type")
+  algorithmDescription String?      @map("algorithm_description")
+  developmentApproach  String?      @map("development_approach")
+
+  // ── ISO 42005 §5.6 ─────────────────────────────────────────────────
+  geographicScope         String[]  @default([]) @map("geographic_scope")
+  deploymentLanguages     String[]  @default([]) @map("deployment_languages")
+  environmentDescription  String?   @map("environment_description")
+
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
 
   // Relations
-  owner             User              @relation("ModelOwner", fields: [ownerId], references: [id])
-  riskAssessments   RiskAssessment[]
+  owner              User               @relation("ModelOwner", fields: [ownerId], references: [id])
+  riskAssessments    RiskAssessment[]
   complianceControls ComplianceControl[]
-  dataAssets        ModelDataAsset[]
-  agents            Agent[]
-  promptLogs        PromptLog[]
-  auditLogs         AuditLog[]
-  projectLinks      ProjectAIModel[]
+  dataAssets         ModelDataAsset[]
+  agents             Agent[]
+  promptLogs         PromptLog[]
+  auditLogs          AuditLog[]
+  projectLinks       ProjectAIModel[]
+  evidenceFiles      EvidenceFile[]
+  impactAssessment   ImpactAssessment?
+  interestedParties  InterestedParty[]
 
   @@map("ai_models")
 }
@@ -210,8 +228,9 @@ model RiskAssessment {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  model    AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  assessor User    @relation(fields: [assessorId], references: [id])
+  model         AIModel        @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  assessor      User           @relation(fields: [assessorId], references: [id])
+  evidenceFiles EvidenceFile[]
 
   @@map("risk_assessments")
 }
@@ -231,7 +250,8 @@ model ComplianceControl {
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
 
-  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model         AIModel        @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  evidenceFiles EvidenceFile[]
 
   @@unique([modelId, framework, controlId])
   @@map("compliance_controls")
@@ -258,6 +278,7 @@ model DataAsset {
 
   models         ModelDataAsset[]
   consentRecords ConsentRecord[]
+  evidenceFiles  EvidenceFile[]
 
   @@map("data_assets")
 }
@@ -729,4 +750,95 @@ model PolicyConfig {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("policy_configs")
+}
+
+// ─── ISO 42005 Evidence & Compliance ────────────────────────────────────────
+
+/// Uploaded evidence files — attached to compliance controls, risk assessments, models, or data assets
+model EvidenceFile {
+  id           String   @id @default(uuid())
+  name         String
+  url          String
+  size         Int
+  mimeType     String   @map("mime_type")
+  uploadedBy   String   @map("uploaded_by")   // userId
+  section      String?  // ISO clause reference, e.g. "5.3.4"
+  description  String?
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  // Polymorphic parent references (at most one is non-null)
+  controlId    String?  @map("control_id")
+  riskId       String?  @map("risk_id")
+  modelId      String?  @map("model_id")
+  dataAssetId  String?  @map("data_asset_id")
+
+  control   ComplianceControl? @relation(fields: [controlId],   references: [id], onDelete: Cascade)
+  risk      RiskAssessment?    @relation(fields: [riskId],      references: [id], onDelete: Cascade)
+  model     AIModel?           @relation(fields: [modelId],     references: [id], onDelete: Cascade)
+  dataAsset DataAsset?         @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+
+  @@index([controlId])
+  @@index([modelId])
+  @@map("evidence_files")
+}
+
+/// ISO 42005 §5.8 — structured impact assessment for each AI model (9 dimensions)
+model ImpactAssessment {
+  id      String  @id @default(uuid())
+  modelId String  @unique @map("model_id")
+
+  // §5.8.2.2 Accountability
+  accountability     String?
+  // §5.8.2.3 Transparency
+  transparency       String?
+  // §5.8.2.4 Fairness & Non-discrimination
+  fairness           String?
+  // §5.8.2.5 Privacy
+  privacy            String?
+  // §5.8.2.6 Reliability & Robustness
+  reliability        String?
+  // §5.8.2.7 Safety
+  safety             String?
+  // §5.8.2.8 Explainability
+  explainabilityDoc  String?  @map("explainability_doc")
+  // §5.8.2.9 Environmental Impact
+  environmentalImpact String? @map("environmental_impact")
+  // §5.8.3 Failures & Misuse
+  failureMisuse      String?  @map("failure_misuse")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@map("impact_assessments")
+}
+
+enum InterestedPartyRole {
+  USER
+  DATA_SUBJECT
+  DEPLOYER
+  DEVELOPER
+  REGULATOR
+  SUPPLIER
+  OTHER
+}
+
+/// ISO 42005 §5.7 — interested party register per AI model
+model InterestedParty {
+  id          String              @id @default(uuid())
+  modelId     String              @map("model_id")
+  name        String
+  role        InterestedPartyRole @default(OTHER)
+  interest    String?             // their interest/concern regarding the AI system
+  consulted   Boolean             @default(false)
+  consultedAt DateTime?           @map("consulted_at")
+  notes       String?
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+  @@map("interested_parties")
 }
