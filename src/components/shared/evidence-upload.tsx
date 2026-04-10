@@ -98,8 +98,8 @@ export function EvidenceUpload({
       if (section)     form.append("section",      section);
 
       const token = typeof window !== "undefined"
-        ? localStorage.getItem("auth_token")
-        : null;
+        ? JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""
+        : "";
 
       const res = await fetch("/api/upload", {
         method: "POST",
