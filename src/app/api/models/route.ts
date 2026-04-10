@@ -67,6 +67,7 @@ export const GET = withAuth(async (req, { user }) => {
         where,
         include: {
           owner: { select: { id: true, name: true, email: true } },
+          approver: { select: { id: true, name: true, email: true } },
           riskAssessments: {
             orderBy: { createdAt: "desc" },
             take: 1,

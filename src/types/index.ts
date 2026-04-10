@@ -45,6 +45,8 @@ export interface AIModel {
   status: ModelStatus;
   ownerId: string;
   owner?: Pick<AuthUser, "id" | "name" | "email">;
+  approverId?: string | null;
+  approver?: Pick<AuthUser, "id" | "name" | "email"> | null;
   department?: string;
   vendor?: string;
   framework?: string;

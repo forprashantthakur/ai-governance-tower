@@ -119,6 +119,7 @@ model User {
 
   // Relations
   ownedModels       AIModel[]         @relation("ModelOwner")
+  approvedModels    AIModel[]         @relation("ModelApprover")
   riskAssessments   RiskAssessment[]
   auditLogs         AuditLog[]
   apiKeys           ApiKey[]
@@ -158,6 +159,7 @@ model AIModel {
   type             ModelType
   status           ModelStatus  @default(ACTIVE)
   ownerId          String       @map("owner_id")
+  approverId       String?      @map("approver_id")
   department       String?
   vendor           String?
   framework        String?      // e.g. PyTorch, TensorFlow, OpenAI
@@ -176,6 +178,7 @@ model AIModel {
 
   // Relations
   owner              User               @relation("ModelOwner", fields: [ownerId], references: [id])
+  approver           User?              @relation("ModelApprover", fields: [approverId], references: [id])
   riskAssessments    RiskAssessment[]
   complianceControls ComplianceControl[]
   dataAssets         ModelDataAsset[]

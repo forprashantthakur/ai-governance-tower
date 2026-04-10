@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Plus, Search, RefreshCw, Tag, UserCheck } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Plus, Search, RefreshCw, Tag, UserCheck, ChevronDown } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { RiskBadge, StatusBadge } from "@/components/shared/risk-badge";
@@ -12,12 +12,14 @@ import { AddModelModal } from "@/components/models/add-model-modal";
 import { ModelDetailDrawer } from "@/components/models/model-detail-drawer";
 import { EvidenceUpload } from "@/components/shared/evidence-upload";
 import { formatDateShort } from "@/lib/utils";
-import type { AIModel, RiskLevel } from "@/types";
+import type { AIModel, RiskLevel, AuthUser } from "@/types";
 
 interface ModelsResponse {
   models: AIModel[];
   pagination: { page: number; pages: number; total: number; limit: number };
 }
+
+type UserOption = Pick<AuthUser, "id" | "name" | "email">;
 
 export default function ModelsPage() {
   const api = useApi();
@@ -27,6 +29,8 @@ export default function ModelsPage() {
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const savingRef = useRef<Record<string, boolean>>({});
 
   const fetchModels = useCallback(async () => {
     setLoading(true);
@@ -44,6 +48,36 @@ export default function ModelsPage() {
   }, [page, search]);
 
   useEffect(() => { fetchModels(); }, [fetchModels]);
+
+  useEffect(() => {
+    api.get<UserOption[]>("/users").then(setUsers).catch(() => {});
+  }, []);
+
+  async function setApprover(modelId: string, approverId: string | null) {
+    if (savingRef.current[modelId]) return;
+    savingRef.current[modelId] = true;
+    try {
+      await api.patch(`/models/${modelId}`, { approverId });
+      setResponse((prev) =>
+        prev
+          ? {
+              ...prev,
+              models: prev.models.map((m) =>
+                m.id === modelId
+                  ? {
+                      ...m,
+                      approverId,
+                      approver: users.find((u) => u.id === approverId) ?? null,
+                    }
+                  : m
+              ),
+            }
+          : prev
+      );
+    } finally {
+      savingRef.current[modelId] = false;
+    }
+  }
 
   const columns: Column<AIModel>[] = [
     {
@@ -170,12 +204,22 @@ export default function ModelsPage() {
       ),
     },
     {
-      key: "owner",
+      key: "approverId" as keyof AIModel,
       header: "Project Approver",
       cell: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center gap-1.5">
           <UserCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <span className="text-sm">{row.owner?.name ?? "—"}</span>
+          <select
+            value={(row as AIModel).approverId ?? ""}
+            onChange={(e) => setApprover(row.id, e.target.value || null)}
+            className="appearance-none bg-transparent text-sm pr-5 cursor-pointer hover:text-primary focus:outline-none focus:text-primary text-foreground min-w-[90px]"
+          >
+            <option value="">— Select —</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
+          <ChevronDown className="h-3 w-3 text-muted-foreground pointer-events-none absolute right-0" />
         </div>
       ),
     },
