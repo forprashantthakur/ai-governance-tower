@@ -72,13 +72,16 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
 
     return ok(evidenceFile);
   } catch (err: unknown) {
-    // If Vercel Blob is not configured, return a helpful message
-    if (err instanceof Error && err.message.includes("BLOB_READ_WRITE_TOKEN")) {
-      return serverError(
-        new Error(
-          "Vercel Blob not configured. Add BLOB_READ_WRITE_TOKEN to environment variables. " +
-          "Enable Blob storage in your Vercel project dashboard under Storage → Blob."
-        )
+    const msg = err instanceof Error ? err.message : "";
+    // Surface known configuration / table errors clearly regardless of NODE_ENV
+    if (msg.includes("BLOB_READ_WRITE_TOKEN") || msg.includes("blob")) {
+      return badRequest(
+        "Vercel Blob storage is not configured. Go to your Vercel project → Storage → Blob and create a store, then redeploy."
+      );
+    }
+    if (msg.includes("does not exist") || msg.includes("P2021") || msg.includes("evidence_files")) {
+      return badRequest(
+        "Evidence files table not ready yet. The next Vercel deployment will create it automatically via prisma db push."
       );
     }
     return serverError(err);
