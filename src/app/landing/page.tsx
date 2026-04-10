@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const css = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -429,11 +430,7 @@ export default function LandingPage() {
         <nav className="lp-nav">
           <div className="lp-nav-inner">
             <a href="/landing" className="lp-logo">
-              <div className="lp-logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
+              <Image src="/logo.png" alt="AI Governance Control Tower" width={40} height={40} style={{borderRadius:"8px",objectFit:"contain"}} />
               <div>
                 <div className="lp-logo-text">AI Governance</div>
                 <div className="lp-logo-sub">Control Tower</div>
@@ -1095,9 +1092,7 @@ export default function LandingPage() {
           <div className="lp-footer-grid">
             <div>
               <a href="/landing" className="lp-logo">
-                <div className="lp-logo-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                </div>
+                <Image src="/logo.png" alt="AI Governance Control Tower" width={36} height={36} style={{borderRadius:"8px",objectFit:"contain"}} />
                 <div><div className="lp-logo-text">AI Governance</div><div className="lp-logo-sub">Control Tower</div></div>
               </a>
               <p className="lp-footer-desc">Enterprise AI Governance platform for DPDP, ISO 42001, GDPR, and EU AI Act compliance. Monitor, govern, and explain every AI decision at scale.</p>

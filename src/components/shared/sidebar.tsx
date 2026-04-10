@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -49,10 +50,14 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 p-4 border-b border-border h-16">
-        <div className="p-1.5 bg-primary/10 rounded-lg shrink-0">
-          <Shield className="h-6 w-6 text-primary" />
-        </div>
+      <div className="flex items-center gap-2 px-3 border-b border-border h-16">
+        <Image
+          src="/logo.png"
+          alt="AI Governance Control Tower"
+          width={sidebarCollapsed ? 36 : 36}
+          height={36}
+          className="shrink-0 rounded-md object-contain"
+        />
         {!sidebarCollapsed && (
           <div className="min-w-0">
             <p className="text-sm font-bold leading-tight truncate">AI Governance</p>
