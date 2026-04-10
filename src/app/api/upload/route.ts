@@ -98,17 +98,21 @@ export const GET = withAuth(async (req: NextRequest) => {
       return badRequest("Provide at least one filter: controlId, riskId, modelId, or dataAssetId");
     }
 
-    const files = await prisma.evidenceFile.findMany({
-      where: {
-        ...(controlId   && { controlId }),
-        ...(riskId      && { riskId }),
-        ...(modelId     && { modelId }),
-        ...(dataAssetId && { dataAssetId }),
-      },
-      orderBy: { uploadedAt: "desc" },
-    });
-
-    return ok({ files, total: files.length });
+    try {
+      const files = await prisma.evidenceFile.findMany({
+        where: {
+          ...(controlId   && { controlId }),
+          ...(riskId      && { riskId }),
+          ...(modelId     && { modelId }),
+          ...(dataAssetId && { dataAssetId }),
+        },
+        orderBy: { uploadedAt: "desc" },
+      });
+      return ok({ files, total: files.length });
+    } catch {
+      // Table doesn't exist yet (pending prisma db push) — return empty list
+      return ok({ files: [], total: 0 });
+    }
   } catch (err) {
     return serverError(err);
   }

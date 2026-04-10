@@ -38,26 +38,27 @@ export const GET = withAuth(async (req: NextRequest) => {
     const modelId = searchParams.get("modelId");
     if (!modelId) return badRequest("modelId required");
 
-    const [impact, parties, model] = await Promise.all([
-      prisma.impactAssessment.findUnique({ where: { modelId } }),
-      prisma.interestedParty.findMany({ where: { modelId }, orderBy: { createdAt: "asc" } }),
-      prisma.aIModel.findUnique({
-        where: { id: modelId },
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          status: true,
-          explainability: true,
-          humanOversight: true,
-          isPiiProcessing: true,
-          isFinancial: true,
-          isCritical: true,
-        },
-      }),
-    ]);
-
+    const model = await prisma.aIModel.findUnique({
+      where: { id: modelId },
+      select: {
+        id: true, name: true, type: true, status: true,
+        explainability: true, humanOversight: true,
+        isPiiProcessing: true, isFinancial: true, isCritical: true,
+      },
+    });
     if (!model) return notFound("Model not found");
+
+    // Tables may not exist yet if prisma db push hasn't run — return empty gracefully
+    let impact = null;
+    let parties: unknown[] = [];
+    try {
+      [impact, parties] = await Promise.all([
+        prisma.impactAssessment.findUnique({ where: { modelId } }),
+        prisma.interestedParty.findMany({ where: { modelId }, orderBy: { createdAt: "asc" } }),
+      ]);
+    } catch {
+      // Tables don't exist yet — safe to ignore, page will work in read-only mode
+    }
 
     return ok({ model, impact, parties });
   } catch (err) {
@@ -74,13 +75,22 @@ export const POST = withAuth(async (req: NextRequest) => {
 
     const { modelId, ...data } = parsed.data;
 
-    const impact = await prisma.impactAssessment.upsert({
-      where: { modelId },
-      create: { modelId, ...data },
-      update: data,
-    });
-
-    return ok(impact);
+    try {
+      const impact = await prisma.impactAssessment.upsert({
+        where: { modelId },
+        create: { modelId, ...data },
+        update: data,
+      });
+      return ok(impact);
+    } catch (dbErr: unknown) {
+      const msg = dbErr instanceof Error ? dbErr.message : "";
+      if (msg.includes("does not exist") || msg.includes("P2021") || msg.includes("relation")) {
+        return serverError(new Error(
+          "Database tables not yet created. Run 'npx prisma db push' or redeploy to Vercel to create the new tables."
+        ));
+      }
+      throw dbErr;
+    }
   } catch (err) {
     return serverError(err);
   }

@@ -23,12 +23,16 @@ export const GET = withAuth(async (req: NextRequest) => {
     const modelId = searchParams.get("modelId");
     if (!modelId) return badRequest("modelId required");
 
-    const parties = await prisma.interestedParty.findMany({
-      where: { modelId },
-      orderBy: { createdAt: "asc" },
-    });
-
-    return ok({ parties, total: parties.length });
+    try {
+      const parties = await prisma.interestedParty.findMany({
+        where: { modelId },
+        orderBy: { createdAt: "asc" },
+      });
+      return ok({ parties, total: parties.length });
+    } catch {
+      // Table doesn't exist yet — return empty
+      return ok({ parties: [], total: 0 });
+    }
   } catch (err) {
     return serverError(err);
   }
