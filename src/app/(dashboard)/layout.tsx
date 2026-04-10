@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useAuthStore } from "@/store/auth.store";
 import { Sidebar } from "@/components/shared/sidebar";
 import { Header } from "@/components/shared/header";
 import { useUIStore } from "@/store/ui.store";
 import { cn } from "@/lib/utils";
+import { Shield } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -46,7 +46,7 @@ export default function DashboardLayout({
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Image src="/logo.png" alt="Loading" width={64} height={64} className="rounded-xl animate-pulse object-contain" />
+          <Shield className="h-10 w-10 text-primary animate-pulse" />
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>

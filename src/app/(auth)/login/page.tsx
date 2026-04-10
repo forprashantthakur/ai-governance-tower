@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { Eye, EyeOff } from "lucide-react";
+import { Shield, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import { Button } from "@/components/ui/button";
@@ -61,15 +60,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Branding */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <Image
-              src="/logo.png"
-              alt="AI Governance Control Tower"
-              width={90}
-              height={90}
-              className="rounded-2xl object-contain"
-            />
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Shield className="h-10 w-10 text-primary" />
+            </div>
           </div>
           <h1 className="text-2xl font-bold">AI Governance</h1>
           <p className="text-muted-foreground text-sm">Control Tower — Enterprise Edition</p>
