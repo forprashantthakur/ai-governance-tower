@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, FileText, Trash2, ExternalLink, Loader2, Paperclip } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
+import { useAuthStore } from "@/store/auth.store";
 
 interface EvidenceFile {
   id: string;
@@ -56,6 +57,7 @@ export function EvidenceUpload({
   compact = false,
 }: EvidenceUploadProps) {
   const api = useApi();
+  const token = useAuthStore((s) => s.token);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<EvidenceFile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -96,10 +98,6 @@ export function EvidenceUpload({
       if (modelId)     form.append("modelId",      modelId);
       if (dataAssetId) form.append("dataAssetId",  dataAssetId);
       if (section)     form.append("section",      section);
-
-      const token = typeof window !== "undefined"
-        ? JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""
-        : "";
 
       const res = await fetch("/api/upload", {
         method: "POST",
