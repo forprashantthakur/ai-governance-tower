@@ -108,8 +108,8 @@ export function EvidenceUpload({
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Upload failed" }));
-        setError(err.message ?? "Upload failed");
+        const err = await res.json().catch(() => ({ error: "Upload failed" }));
+        setError(err.error ?? err.message ?? "Upload failed");
         return;
       }
 
