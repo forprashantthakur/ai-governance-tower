@@ -165,8 +165,8 @@ export default function Iso42005Page() {
 
   // Fetch projects list on mount
   useEffect(() => {
-    api.get<{ projects: ProjectOption[] }>("/projects?limit=200")
-      .then((r) => { setProjects(r.projects ?? []); })
+    api.get<{ items: ProjectOption[] }>("/projects?limit=200")
+      .then((r) => { setProjects(r.items ?? []); })
       .catch(() => { setProjectsError(true); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
