@@ -33,7 +33,8 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
     const parsed = CreateSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
     const report = await prisma.report.create({
-      data: { ...parsed.data, filters: parsed.data.filters ?? {}, sections: parsed.data.sections ?? [], createdBy: user.userId },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { ...parsed.data, filters: (parsed.data.filters ?? {}) as any, sections: parsed.data.sections ?? [], createdBy: user.userId },
       include: { creator: { select: { id: true, name: true } }, schedules: true },
     });
     return created(report);

@@ -31,7 +31,8 @@ export const PATCH = withAuth(async (req: NextRequest, { params }) => {
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
     const report = await prisma.report.update({
       where: { id: params.id },
-      data: parsed.data,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: parsed.data as any,
       include: { creator: { select: { id: true, name: true } }, schedules: true },
     });
     return ok(report);
