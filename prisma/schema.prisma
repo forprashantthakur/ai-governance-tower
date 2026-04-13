@@ -129,6 +129,8 @@ model User {
   taskReports       ProjectTask[]     @relation("TaskReporter")
   projectResources  ProjectResource[] @relation("ProjectResources")
   createdReports    Report[]          @relation("ReportCreator")
+  requestedWorkflows ApprovalWorkflow[] @relation("WorkflowRequester")
+  assignedSteps      ApprovalStep[]     @relation("StepAssignee")
 
   @@map("users")
 }
@@ -190,6 +192,10 @@ model AIModel {
   evidenceFiles      EvidenceFile[]
   impactAssessment   ImpactAssessment?
   interestedParties  InterestedParty[]
+  approvalWorkflows  ApprovalWorkflow[]
+  misuseScenarios    MisuseScenario[]
+  requiresReassessment Boolean @default(false) @map("requires_reassessment")
+  reassessmentReason   String? @map("reassessment_reason")
 
   @@map("ai_models")
 }
@@ -216,6 +222,12 @@ model RiskAssessment {
   nextReviewDate  DateTime? @map("next_review_date")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  severity               Int?      // 1-5 (ISO harm severity)
+  likelihood             Int?      // 1-5 (probability of harm)
+  harmCategories         HarmCategory[] @default([]) @map("harm_categories")
+  requiresReassessment   Boolean   @default(false) @map("requires_reassessment")
+  reassessmentReason     String?   @map("reassessment_reason")
 
   model         AIModel        @relation(fields: [modelId], references: [id], onDelete: Cascade)
   assessor      User           @relation(fields: [assessorId], references: [id])
@@ -898,4 +910,96 @@ model ReportSchedule {
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@map("report_schedules")
+}
+
+// ─── Approval Workflow ────────────────────────────────────────────────────────
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ESCALATED
+  WITHDRAWN
+}
+
+enum ApprovalStepType {
+  RISK_OFFICER
+  LEGAL
+  ETHICS
+  DATA_PROTECTION
+  EXECUTIVE
+  CUSTOM
+}
+
+enum HarmCategory {
+  DISCRIMINATION
+  PRIVACY_VIOLATION
+  FINANCIAL_HARM
+  PHYSICAL_HARM
+  REPUTATIONAL_HARM
+  AUTONOMY_VIOLATION
+  SOCIETAL_HARM
+  SECURITY_HARM
+  OTHER
+}
+
+model ApprovalWorkflow {
+  id          String         @id @default(uuid())
+  modelId     String         @map("model_id")
+  title       String
+  description String?
+  status      ApprovalStatus @default(PENDING)
+  requestedBy String         @map("requested_by")
+  dueDate     DateTime?      @map("due_date")
+  completedAt DateTime?      @map("completed_at")
+  notes       String?
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  model     AIModel        @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  requester User           @relation("WorkflowRequester", fields: [requestedBy], references: [id])
+  steps     ApprovalStep[]
+
+  @@map("approval_workflows")
+}
+
+model ApprovalStep {
+  id         String           @id @default(uuid())
+  workflowId String           @map("workflow_id")
+  stepType   ApprovalStepType @map("step_type")
+  stepOrder  Int              @map("step_order")
+  label      String
+  assigneeId String?          @map("assignee_id")
+  status     ApprovalStatus   @default(PENDING)
+  comments   String?
+  decidedAt  DateTime?        @map("decided_at")
+  dueDate    DateTime?        @map("due_date")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  workflow ApprovalWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  assignee User?            @relation("StepAssignee", fields: [assigneeId], references: [id])
+
+  @@index([workflowId])
+  @@map("approval_steps")
+}
+
+model MisuseScenario {
+  id             String       @id @default(uuid())
+  modelId        String       @map("model_id")
+  title          String
+  description    String
+  likelihood     Int          // 1-5
+  severity       Int          // 1-5
+  harmCategory   HarmCategory @map("harm_category")
+  affectedGroups String[]     @default([]) @map("affected_groups")
+  mitigations    String?
+  isAddressed    Boolean      @default(false) @map("is_addressed")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+  @@map("misuse_scenarios")
 }

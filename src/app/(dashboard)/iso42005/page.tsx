@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   FileSearch, ChevronDown, ChevronUp, Save, Loader2, Plus, Trash2,
-  CheckCircle2, AlertCircle, Clock, Info
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  CheckCircle2, AlertCircle, Clock, Info, AlertOctagon
 } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +56,34 @@ interface Party {
   id: string; name: string; role: string;
   interest?: string; consulted: boolean; consultedAt?: string; notes?: string;
 }
+
+interface MisuseScenario {
+  id: string;
+  modelId: string;
+  title: string;
+  description: string;
+  likelihood: number; // 1-5
+  severity: number;   // 1-5
+  harmCategory: string;
+  affectedGroups: string[];
+  mitigations?: string;
+  isAddressed: boolean;
+}
+
+const HARM_CATEGORIES = [
+  { value: "DISCRIMINATION", label: "Discrimination" },
+  { value: "PRIVACY_VIOLATION", label: "Privacy Violation" },
+  { value: "FINANCIAL_HARM", label: "Financial Harm" },
+  { value: "PHYSICAL_HARM", label: "Physical Harm" },
+  { value: "REPUTATIONAL_HARM", label: "Reputational Harm" },
+  { value: "AUTONOMY_VIOLATION", label: "Autonomy Violation" },
+  { value: "SOCIETAL_HARM", label: "Societal Harm" },
+  { value: "SECURITY_HARM", label: "Security Harm" },
+  { value: "OTHER", label: "Other" },
+] as const;
+
+const RISK_SCORE_COLOR = (score: number) =>
+  score >= 20 ? "text-red-400" : score >= 12 ? "text-orange-400" : score >= 6 ? "text-amber-400" : "text-green-400";
 
 const IMPACT_DIMS = [
   { key: "accountability",    label: "Clause 5.8.2.2 — Accountability",              num: 1, clause: "5.8.2.2", icon: "🏛️", desc: "Describe responsible persons/roles, decision trails, and escalation procedures." },
@@ -161,6 +190,11 @@ export default function Iso42005Page() {
   const [data, setData] = useState<AssessmentData>(EMPTY);
   const [parties, setParties] = useState<Party[]>([]);
   const [newParty, setNewParty] = useState<Partial<Party>>({ role: "USER", consulted: false });
+  const [misuseScenarios, setMisuseScenarios] = useState<MisuseScenario[]>([]);
+  const [newMisuse, setNewMisuse] = useState<Partial<MisuseScenario>>({
+    likelihood: 3, severity: 3, harmCategory: "OTHER", affectedGroups: [],
+  });
+  const [addingMisuse, setAddingMisuse] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -234,6 +268,10 @@ export default function Iso42005Page() {
         failureMisuse:         ia?.failureMisuse         ?? "",
       });
       setParties(res.parties ?? []);
+      // Also fetch misuse scenarios
+      api.get<MisuseScenario[]>(`/misuse-scenarios?modelId=${selectedModelId}`)
+        .then(setMisuseScenarios)
+        .catch(() => {});
     } catch {
       setData(EMPTY);
     } finally {
@@ -274,6 +312,29 @@ export default function Iso42005Page() {
   async function removeParty(id: string) {
     await api.del(`/iso42005/parties?id=${id}`);
     setParties((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  async function addMisuseScenario() {
+    if (!newMisuse.title || !newMisuse.description || !selectedModelId) return;
+    setAddingMisuse(true);
+    try {
+      const scenario = await api.post<MisuseScenario>("/misuse-scenarios", {
+        ...newMisuse, modelId: selectedModelId,
+        affectedGroups: newMisuse.affectedGroups ?? [],
+      });
+      setMisuseScenarios((prev) => [...prev, scenario]);
+      setNewMisuse({ likelihood: 3, severity: 3, harmCategory: "OTHER", affectedGroups: [] });
+    } catch { /* toast */ } finally { setAddingMisuse(false); }
+  }
+
+  async function toggleMisuseAddressed(id: string, current: boolean) {
+    await api.patch(`/misuse-scenarios/${id}`, { isAddressed: !current });
+    setMisuseScenarios((prev) => prev.map((s) => s.id === id ? { ...s, isAddressed: !current } : s));
+  }
+
+  async function removeMisuseScenario(id: string) {
+    await api.del(`/misuse-scenarios/${id}`);
+    setMisuseScenarios((prev) => prev.filter((s) => s.id !== id));
   }
 
   const filledDims = IMPACT_DIMS.filter((d) => (data[d.key as keyof AssessmentData] as string).trim().length > 0).length;
@@ -563,6 +624,100 @@ export default function Iso42005Page() {
                 </div>
               </div>
               <EvidenceUpload modelId={selectedModelId} section="5.7" label="Evidence — Consultation Records" />
+            </div>
+          </Section>
+
+          {/* Clause 5.3.5 Extension — Foreseeable Misuse Scenario Registry */}
+          <Section title="Foreseeable Misuse Scenarios — Risk Matrix" clause="ISO 42005 · 5.3.5" icon="⚠️"
+            description="Structured modeling of foreseeable misuse, adversarial use, and harm scenarios with severity × likelihood scoring">
+            <div className="space-y-4">
+              {/* Scenario list */}
+              {misuseScenarios.length > 0 && (
+                <div className="space-y-2">
+                  {misuseScenarios.map((s) => {
+                    const riskScore = s.severity * s.likelihood;
+                    return (
+                      <div key={s.id} className={`p-3 rounded-lg border ${s.isAddressed ? "border-green-500/30 bg-green-500/5 opacity-70" : "border-border bg-muted/10"}`}>
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-sm font-semibold">{s.title}</span>
+                              <Badge variant="outline" className="text-xs">{s.harmCategory.replace(/_/g, " ")}</Badge>
+                              <span className={`text-xs font-bold ${RISK_SCORE_COLOR(riskScore)}`}>
+                                Risk: {riskScore}/25
+                              </span>
+                              {s.isAddressed && <span className="text-xs text-green-400">✓ Addressed</span>}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{s.description}</p>
+                            <div className="flex items-center gap-4 mt-1.5 text-[11px] text-muted-foreground">
+                              <span>Severity: <strong className="text-foreground">{s.severity}/5</strong></span>
+                              <span>Likelihood: <strong className="text-foreground">{s.likelihood}/5</strong></span>
+                              {s.affectedGroups.length > 0 && <span>Affects: {s.affectedGroups.join(", ")}</span>}
+                            </div>
+                            {s.mitigations && <p className="text-xs text-muted-foreground mt-1">🛡️ {s.mitigations}</p>}
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button onClick={() => toggleMisuseAddressed(s.id, s.isAddressed)}
+                              className={`text-xs px-2 py-1 rounded border transition-colors ${s.isAddressed ? "border-border text-muted-foreground hover:text-foreground" : "border-green-500/50 text-green-400 hover:bg-green-500/10"}`}>
+                              {s.isAddressed ? "Reopen" : "Mark Addressed"}
+                            </button>
+                            <button onClick={() => removeMisuseScenario(s.id)} className="text-muted-foreground hover:text-red-400 p-1">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add new scenario form */}
+              <div className="border border-dashed border-border rounded-lg p-4 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground">Add Misuse Scenario</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input value={newMisuse.title ?? ""} onChange={(e) => setNewMisuse({ ...newMisuse, title: e.target.value })}
+                    placeholder="Scenario title (e.g. Discriminatory hiring use)"
+                    className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground" />
+                  <select value={newMisuse.harmCategory ?? "OTHER"} onChange={(e) => setNewMisuse({ ...newMisuse, harmCategory: e.target.value })}
+                    className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                    {HARM_CATEGORIES.map((h) => <option key={h.value} value={h.value}>{h.label}</option>)}
+                  </select>
+                </div>
+                <textarea value={newMisuse.description ?? ""} onChange={(e) => setNewMisuse({ ...newMisuse, description: e.target.value })}
+                  placeholder="Describe the misuse scenario, how it could occur, and potential impact…"
+                  rows={2}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground" />
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-[11px] text-muted-foreground block mb-1">Severity (1-5)</label>
+                    <input type="number" min={1} max={5} value={newMisuse.severity ?? 3}
+                      onChange={(e) => setNewMisuse({ ...newMisuse, severity: Number(e.target.value) })}
+                      className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground block mb-1">Likelihood (1-5)</label>
+                    <input type="number" min={1} max={5} value={newMisuse.likelihood ?? 3}
+                      onChange={(e) => setNewMisuse({ ...newMisuse, likelihood: Number(e.target.value) })}
+                      className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[11px] text-muted-foreground block mb-1">Affected Groups (comma-separated)</label>
+                    <input value={(newMisuse.affectedGroups ?? []).join(", ")}
+                      onChange={(e) => setNewMisuse({ ...newMisuse, affectedGroups: e.target.value.split(",").map((g) => g.trim()).filter(Boolean) })}
+                      placeholder="e.g. Women, Minorities, Elderly"
+                      className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground" />
+                  </div>
+                </div>
+                <textarea value={newMisuse.mitigations ?? ""} onChange={(e) => setNewMisuse({ ...newMisuse, mitigations: e.target.value })}
+                  placeholder="Proposed mitigations or controls to address this scenario…"
+                  rows={2}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground" />
+                <Button size="sm" onClick={addMisuseScenario} disabled={!newMisuse.title || !newMisuse.description || addingMisuse}>
+                  {addingMisuse ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
+                  Add Scenario
+                </Button>
+              </div>
             </div>
           </Section>
 
