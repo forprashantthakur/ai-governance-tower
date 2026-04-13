@@ -13,6 +13,7 @@ import { EvidenceUpload } from "@/components/shared/evidence-upload";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface ProjectOption { id: string; name: string; status: string; }
 interface ModelOption { id: string; name: string; type: string; status: string; }
 
 interface AssessmentData {
@@ -149,6 +150,8 @@ function TagInput({ values, onChange, placeholder }: {
 
 export default function Iso42005Page() {
   const api = useApi();
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [models, setModels] = useState<ModelOption[]>([]);
   const [selectedModelId, setSelectedModelId] = useState("");
   const [data, setData] = useState<AssessmentData>(EMPTY);
@@ -157,15 +160,28 @@ export default function Iso42005Page() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [modelsError, setModelsError] = useState(false);
+  const [projectsError, setProjectsError] = useState(false);
+  const [modelsLoading, setModelsLoading] = useState(false);
 
-  // Fetch models list on mount
+  // Fetch projects list on mount
   useEffect(() => {
-    api.get<{ models: ModelOption[] }>("/models?limit=200")
-      .then((r) => { setModels(r.models ?? []); })
-      .catch(() => { setModelsError(true); });
+    api.get<{ projects: ProjectOption[] }>("/projects?limit=200")
+      .then((r) => { setProjects(r.projects ?? []); })
+      .catch(() => { setProjectsError(true); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch models for the selected project
+  useEffect(() => {
+    if (!selectedProjectId) { setModels([]); setSelectedModelId(""); return; }
+    setModelsLoading(true);
+    setSelectedModelId("");
+    api.get<{ model: ModelOption }[]>(`/projects/${selectedProjectId}/models`)
+      .then((links) => { setModels(links.map((l) => l.model)); })
+      .catch(() => { setModels([]); })
+      .finally(() => { setModelsLoading(false); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId]);
 
   // Fetch existing assessment when model changes
   const fetchAssessment = useCallback(async () => {
@@ -259,43 +275,73 @@ export default function Iso42005Page() {
         </Button>
       </div>
 
-      {/* Model selector */}
+      {/* Project → Model selector */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
-                Select AI Model to Assess
-              </label>
-              {modelsError ? (
-                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded px-3 py-2">
-                  Failed to load models. Please refresh the page.
-                </p>
-              ) : (
-                <select
-                  value={selectedModelId}
-                  onChange={(e) => setSelectedModelId(e.target.value)}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  <option value="">— Choose a model —</option>
-                  {models.map((m) => (
-                    <option key={m.id} value={m.id}>{m.name} ({m.type})</option>
-                  ))}
-                </select>
-              )}
-            </div>
-            {selectedModelId && (
-              <div className="flex items-center gap-3 sm:pt-4 shrink-0">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-primary">{filledDims}/{IMPACT_DIMS.length}</div>
-                  <div className="text-[11px] text-muted-foreground">Impact Dims</div>
-                </div>
-                <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(filledDims / IMPACT_DIMS.length) * 100}%` }} />
-                </div>
-              </div>
+        <CardContent className="p-4 space-y-4">
+          {/* Step 1 — Project */}
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+              Step 1 — Select AI Project
+            </label>
+            {projectsError ? (
+              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded px-3 py-2">
+                Failed to load projects. Please refresh the page.
+              </p>
+            ) : (
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">— Choose a project —</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             )}
           </div>
+
+          {/* Step 2 — Model within project */}
+          {selectedProjectId && (
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+                Step 2 — Select AI Model to Assess
+              </label>
+              {modelsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />Loading models…
+                </div>
+              ) : models.length === 0 ? (
+                <p className="text-sm text-muted-foreground bg-muted/40 border border-border rounded px-3 py-2">
+                  No AI models linked to this project yet. Link models in the AI Projects module first.
+                </p>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <select
+                    value={selectedModelId}
+                    onChange={(e) => setSelectedModelId(e.target.value)}
+                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="">— Choose a model —</option>
+                    {models.map((m) => (
+                      <option key={m.id} value={m.id}>{m.name} ({m.type})</option>
+                    ))}
+                  </select>
+                  {selectedModelId && (
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-primary">{filledDims}/{IMPACT_DIMS.length}</div>
+                        <div className="text-[11px] text-muted-foreground">Impact Dims</div>
+                      </div>
+                      <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(filledDims / IMPACT_DIMS.length) * 100}%` }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
