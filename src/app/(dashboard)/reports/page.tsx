@@ -79,26 +79,70 @@ function statusColor(status: string) {
   return "bg-muted text-muted-foreground border-border";
 }
 
-// ── Print helper ─────────────────────────────────────────────────────────────
+// ── Print helper — opens a clean new window so the modal chrome is excluded ──
 
-function printReport(title: string) {
-  const style = document.createElement("style");
-  style.id = "__report_print_css__";
-  style.textContent = `
-    @media print {
-      body > * { display: none !important; }
-      #report-print-root { display: block !important; }
-      #report-print-root { position: fixed; top: 0; left: 0; width: 100%; }
-      .no-print { display: none !important; }
-      @page { margin: 18mm 15mm; size: A4; }
-    }
-  `;
-  document.head.appendChild(style);
-  const prev = document.title;
-  document.title = title;
-  window.print();
-  document.title = prev;
-  setTimeout(() => document.getElementById("__report_print_css__")?.remove(), 500);
+function printReport(title: string, contentEl: HTMLElement | null) {
+  if (!contentEl) return;
+  const html = contentEl.innerHTML;
+  const win = window.open("", "_blank", "width=1000,height=800");
+  if (!win) return;
+  win.document.write(`<!DOCTYPE html><html><head>
+<meta charset="utf-8"/>
+<title>${title}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;color:#111827;background:#fff;padding:16mm 14mm;font-size:13px;line-height:1.5}
+h1{font-size:1.4rem;font-weight:700;margin-bottom:.2rem}
+h3{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:.6rem}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead tr{background:#f9fafb}
+th{padding:.45rem .7rem;text-align:left;font-size:.7rem;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+td{padding:.45rem .7rem;border-bottom:1px solid #f3f4f6;vertical-align:top}
+tr:nth-child(even) td{background:#fafafa}
+.space-y-6>*+*{margin-top:1.5rem}
+.space-y-4>*+*{margin-top:1rem}
+.space-y-3>*+*{margin-top:.75rem}
+.space-y-2>*+*{margin-top:.5rem}
+.grid{display:grid;gap:.75rem}
+.grid-cols-2{grid-template-columns:1fr 1fr}
+.grid-cols-3{grid-template-columns:1fr 1fr 1fr}
+.grid-cols-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.gap-4{gap:1rem}.gap-3{gap:.75rem}.gap-2{gap:.5rem}.gap-6{gap:1.5rem}
+.flex{display:flex}.items-start{align-items:flex-start}.justify-between{justify-content:space-between}
+.text-right{text-align:right}.text-center{text-align:center}
+.font-bold{font-weight:700}.font-semibold{font-weight:600}.font-medium{font-weight:500}
+.font-mono{font-family:monospace}
+.text-2xl{font-size:1.4rem;font-weight:700}.text-xl{font-size:1.15rem;font-weight:700}
+.text-sm{font-size:.85rem}.text-xs{font-size:.75rem}
+.text-muted-foreground{color:#6b7280}
+.uppercase{text-transform:uppercase}.tracking-wide{letter-spacing:.025em}.tracking-widest{letter-spacing:.08em}
+.border{border:1px solid #e5e7eb}.border-b{border-bottom:1px solid #e5e7eb}
+.border-t{border-top:1px solid #e5e7eb}.border-border{border-color:#e5e7eb}
+.rounded-lg{border-radius:.5rem}.rounded{border-radius:.25rem}
+.overflow-hidden{overflow:hidden}
+.p-4{padding:1rem}.p-3{padding:.75rem}.p-5{padding:1.25rem}.p-2{padding:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}
+.py-2{padding-top:.5rem;padding-bottom:.5rem}.pb-5{padding-bottom:1.25rem}.pt-4{padding-top:1rem}.py-8{padding:2rem 0}.py-4{padding:1rem 0}
+.mt-1{margin-top:.25rem}.mt-2{margin-top:.5rem}.mt-0\\.5{margin-top:.125rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}
+.bg-muted\\/20,.bg-muted\\/10{background:#f9fafb}.bg-muted\\/40{background:#f3f4f6}
+.min-w-\\[90px\\]{min-width:90px}
+.whitespace-nowrap{white-space:nowrap}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.flex-wrap{flex-wrap:wrap}
+/* inline badge */
+span.inline-flex,div.inline-flex{display:inline-flex;align-items:center;padding:.1rem .45rem;border-radius:.25rem;font-size:.7rem;font-weight:500;border:1px solid transparent}
+/* colour helpers */
+.text-green-400{color:#16a34a}.text-red-400{color:#dc2626}.text-yellow-400{color:#d97706}.text-orange-400{color:#ea580c}.text-blue-400{color:#2563eb}.text-teal-400{color:#0d9488}.text-purple-400{color:#9333ea}
+.bg-green-500\\/15{background:#dcfce7}.border-green-500\\/30{border-color:#86efac}
+.bg-red-500\\/15{background:#fee2e2}.border-red-500\\/30{border-color:#fca5a5}
+.bg-yellow-500\\/15{background:#fef9c3}.border-yellow-500\\/30{border-color:#fde047}
+.bg-muted{background:#f3f4f6}.border-border{border-color:#e5e7eb}
+/* hide lucide icons in print */
+svg{display:none}
+@page{margin:14mm;size:A4}
+</style>
+</head><body>${html}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 600);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -735,7 +779,7 @@ export default function ReportsPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={!reportData} onClick={() => printReport(viewReport.name)}>
+                <Button size="sm" variant="outline" disabled={!reportData} onClick={() => printReport(viewReport.name, printRef.current)}>
                   <Printer className="h-4 w-4 mr-1.5" />Export PDF
                 </Button>
                 <button onClick={() => { setViewReport(null); setReportData(null); }} className="p-1.5 rounded-lg hover:bg-muted"><X className="h-4 w-4" /></button>
