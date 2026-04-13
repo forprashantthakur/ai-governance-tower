@@ -17,6 +17,7 @@ import {
   Shield,
   FolderKanban,
   FileSearch,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -32,7 +33,8 @@ const NAV_ITEMS = [
   { href: "/data-governance", icon: Database, label: "Data Governance" },
   { href: "/agents", icon: Bot, label: "Agent Governance" },
   { href: "/monitoring", icon: Activity, label: "Monitoring" },
-  { href: "/audit", icon: FileText, label: "Audit & Reports" },
+  { href: "/audit",   icon: FileText,   label: "Audit Logs" },
+  { href: "/reports", icon: BarChart3,  label: "Reports" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 

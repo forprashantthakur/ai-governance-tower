@@ -128,6 +128,7 @@ model User {
   taskAssignments   ProjectTask[]     @relation("TaskAssignee")
   taskReports       ProjectTask[]     @relation("TaskReporter")
   projectResources  ProjectResource[] @relation("ProjectResources")
+  createdReports    Report[]          @relation("ReportCreator")
 
   @@map("users")
 }
@@ -846,4 +847,55 @@ model InterestedParty {
 
   @@index([modelId])
   @@map("interested_parties")
+}
+
+// ─── Reports & Scheduling ─────────────────────────────────────────────────────
+
+enum ReportType {
+  EXECUTIVE_SUMMARY
+  RISK_ASSESSMENT
+  COMPLIANCE_STATUS
+  AI_INVENTORY
+  ISO42005_ASSESSMENT
+}
+
+enum ReportFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model Report {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  type        ReportType
+  filters     Json       @default("{}")
+  sections    String[]   @default([])
+  createdBy   String     @map("created_by")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  creator   User             @relation("ReportCreator", fields: [createdBy], references: [id])
+  schedules ReportSchedule[]
+
+  @@map("reports")
+}
+
+model ReportSchedule {
+  id          String          @id @default(uuid())
+  reportId    String          @map("report_id")
+  frequency   ReportFrequency
+  dayOfWeek   Int?            @map("day_of_week")
+  dayOfMonth  Int?            @map("day_of_month")
+  sendTime    String          @default("09:00") @map("send_time")
+  recipients  String[]
+  isActive    Boolean         @default(true) @map("is_active")
+  lastSentAt  DateTime?       @map("last_sent_at")
+  nextRunAt   DateTime?       @map("next_run_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_schedules")
 }
