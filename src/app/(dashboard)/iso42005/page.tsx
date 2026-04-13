@@ -16,6 +16,9 @@ import { EvidenceUpload } from "@/components/shared/evidence-upload";
 interface ProjectOption { id: string; name: string; status: string; }
 interface ModelOption { id: string; name: string; type: string; status: string; }
 
+// Combined selection value: "project:<id>" or "model:<id>"
+type SelectionValue = "" | `project:${string}` | `model:${string}`;
+
 interface AssessmentData {
   // §5.3
   intendedUses: string[];
@@ -151,8 +154,9 @@ function TagInput({ values, onChange, placeholder }: {
 export default function Iso42005Page() {
   const api = useApi();
   const [projects, setProjects] = useState<ProjectOption[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [models, setModels] = useState<ModelOption[]>([]);
+  const [allInventoryModels, setAllInventoryModels] = useState<ModelOption[]>([]);
+  const [selectedItem, setSelectedItem] = useState<SelectionValue>("");
+  const [projectModels, setProjectModels] = useState<ModelOption[]>([]);
   const [selectedModelId, setSelectedModelId] = useState("");
   const [data, setData] = useState<AssessmentData>(EMPTY);
   const [parties, setParties] = useState<Party[]>([]);
@@ -160,28 +164,44 @@ export default function Iso42005Page() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [projectsError, setProjectsError] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [modelsLoading, setModelsLoading] = useState(false);
 
-  // Fetch projects list on mount
+  // Fetch projects AND all AI inventory models on mount (parallel)
   useEffect(() => {
     api.get<{ items: ProjectOption[] }>("/projects?limit=200")
       .then((r) => { setProjects(r.items ?? []); })
-      .catch(() => { setProjectsError(true); });
+      .catch(() => { setLoadError(true); });
+    api.get<{ models: ModelOption[] }>("/models?limit=200")
+      .then((r) => { setAllInventoryModels(r.models ?? []); })
+      .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch models for the selected project
+  // React to combined selection change
   useEffect(() => {
-    if (!selectedProjectId) { setModels([]); setSelectedModelId(""); return; }
-    setModelsLoading(true);
-    setSelectedModelId("");
-    api.get<{ model: ModelOption }[]>(`/projects/${selectedProjectId}/models`)
-      .then((links) => { setModels(links.map((l) => l.model)); })
-      .catch(() => { setModels([]); })
-      .finally(() => { setModelsLoading(false); });
+    if (!selectedItem) {
+      setProjectModels([]);
+      setSelectedModelId("");
+      return;
+    }
+    if (selectedItem.startsWith("model:")) {
+      // Direct model selection — use it immediately
+      const modelId = selectedItem.slice("model:".length);
+      setProjectModels([]);
+      setSelectedModelId(modelId);
+    } else if (selectedItem.startsWith("project:")) {
+      // Project selection — load models linked to this project
+      const projectId = selectedItem.slice("project:".length);
+      setSelectedModelId("");
+      setModelsLoading(true);
+      api.get<{ model: ModelOption }[]>(`/projects/${projectId}/models`)
+        .then((links) => { setProjectModels(links.map((l) => l.model)); })
+        .catch(() => { setProjectModels([]); })
+        .finally(() => { setModelsLoading(false); });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProjectId]);
+  }, [selectedItem]);
 
   // Fetch existing assessment when model changes
   const fetchAssessment = useCallback(async () => {
@@ -275,71 +295,92 @@ export default function Iso42005Page() {
         </Button>
       </div>
 
-      {/* Project → Model selector */}
+      {/* Combined selector */}
       <Card>
         <CardContent className="p-4 space-y-4">
-          {/* Step 1 — Project */}
+          {/* Combined dropdown — AI Projects + AI Models */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
-              Step 1 — Select AI Project
+              Select AI Project or AI Model
             </label>
-            {projectsError ? (
+            {loadError ? (
               <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded px-3 py-2">
-                Failed to load projects. Please refresh the page.
+                Failed to load data. Please refresh the page.
               </p>
             ) : (
               <select
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
+                value={selectedItem}
+                onChange={(e) => setSelectedItem(e.target.value as SelectionValue)}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Choose a project —</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
+                <option value="">— Choose a project or model to assess —</option>
+                {projects.length > 0 && (
+                  <optgroup label="── AI Projects ──">
+                    {projects.map((p) => (
+                      <option key={p.id} value={`project:${p.id}`}>
+                        {p.name}{p.status ? ` (${p.status.replace(/_/g, " ")})` : ""}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {allInventoryModels.length > 0 && (
+                  <optgroup label="── AI Models (Inventory) ──">
+                    {allInventoryModels.map((m) => (
+                      <option key={m.id} value={`model:${m.id}`}>
+                        {m.name} — {m.type}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             )}
+            <p className="text-[11px] text-muted-foreground mt-1.5">
+              Select a project to pick a linked model, or select a model directly from AI Inventory.
+            </p>
           </div>
 
-          {/* Step 2 — Model within project */}
-          {selectedProjectId && (
+          {/* Step 2 — Model within selected project */}
+          {selectedItem.startsWith("project:") && (
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
-                Step 2 — Select AI Model to Assess
+                Select Model within Project
               </label>
               {modelsLoading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />Loading models…
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />Loading linked models…
                 </div>
-              ) : models.length === 0 ? (
+              ) : projectModels.length === 0 ? (
                 <p className="text-sm text-muted-foreground bg-muted/40 border border-border rounded px-3 py-2">
                   No AI models linked to this project yet. Link models in the AI Projects module first.
                 </p>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                  <select
-                    value={selectedModelId}
-                    onChange={(e) => setSelectedModelId(e.target.value)}
-                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="">— Choose a model —</option>
-                    {models.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name} ({m.type})</option>
-                    ))}
-                  </select>
-                  {selectedModelId && (
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="text-center">
-                        <div className="text-xl font-bold text-primary">{filledDims}/{IMPACT_DIMS.length}</div>
-                        <div className="text-[11px] text-muted-foreground">Impact Dims</div>
-                      </div>
-                      <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(filledDims / IMPACT_DIMS.length) * 100}%` }} />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <select
+                  value={selectedModelId}
+                  onChange={(e) => setSelectedModelId(e.target.value)}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">— Choose a model —</option>
+                  {projectModels.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name} ({m.type})</option>
+                  ))}
+                </select>
               )}
+            </div>
+          )}
+
+          {/* Progress indicator */}
+          {selectedModelId && (
+            <div className="flex items-center gap-3 pt-1 border-t border-border/50">
+              <div className="text-center shrink-0">
+                <div className="text-xl font-bold text-primary">{filledDims}/{IMPACT_DIMS.length}</div>
+                <div className="text-[11px] text-muted-foreground">Impact Dims</div>
+              </div>
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(filledDims / IMPACT_DIMS.length) * 100}%` }} />
+              </div>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {Math.round((filledDims / IMPACT_DIMS.length) * 100)}% complete
+              </span>
             </div>
           )}
         </CardContent>
