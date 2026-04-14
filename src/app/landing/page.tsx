@@ -200,6 +200,36 @@ html { scroll-behavior: smooth; }
 .lp-footer-credit { color: rgba(255,255,255,0.4); font-size: 0.8rem; text-align: right; }
 .lp-footer-credit strong { color: rgba(255,255,255,0.65); }
 
+/* AI MATURITY ASSESSMENT SECTION */
+.lp-assess { background: linear-gradient(135deg, #0a1e3d 0%, var(--navy) 50%, #091a33 100%); padding: 6rem 2rem; position: relative; overflow: hidden; }
+.lp-assess-glow { position: absolute; top: -20%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 65%); pointer-events: none; }
+.lp-assess-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+.lp-assess-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 3rem; }
+.lp-assess-features { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.lp-assess-feat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.2rem; transition: all 0.2s; }
+.lp-assess-feat:hover { background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.3); }
+.lp-assess-feat-icon { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg,rgba(37,99,235,0.2),rgba(6,182,212,0.15)); display: flex; align-items: center; justify-content: center; margin-bottom: 0.6rem; border: 1px solid rgba(37,99,235,0.2); }
+.lp-assess-feat-icon svg { width: 18px; height: 18px; color: var(--blue-glow); }
+.lp-assess-feat-title { color: #fff; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.25rem; }
+.lp-assess-feat-desc { color: rgba(255,255,255,0.5); font-size: 0.78rem; line-height: 1.5; }
+.lp-assess-visual { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 2rem; backdrop-filter: blur(20px); }
+.lp-assess-score { text-align: center; margin-bottom: 1.5rem; }
+.lp-assess-score-num { font-size: 3rem; font-weight: 800; background: linear-gradient(90deg, var(--blue-glow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+.lp-assess-score-label { color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 0.25rem; }
+.lp-assess-dims { display: flex; flex-direction: column; gap: 0.5rem; }
+.lp-assess-dim { display: flex; align-items: center; gap: 0.75rem; }
+.lp-assess-dim-name { color: rgba(255,255,255,0.7); font-size: 0.75rem; width: 120px; flex-shrink: 0; text-align: right; }
+.lp-assess-dim-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+.lp-assess-dim-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+.lp-assess-dim-val { color: rgba(255,255,255,0.5); font-size: 0.7rem; width: 32px; }
+.lp-assess-actions { display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; }
+.lp-btn-gradient { background: linear-gradient(135deg, var(--blue), var(--cyan)); color: #fff; padding: 0.85rem 2rem; font-size: 1rem; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+.lp-btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,99,235,0.35); }
+@media(max-width:768px) {
+  .lp-assess-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .lp-assess-features { grid-template-columns: 1fr; }
+}
+
 /* AI PROJECT MGMT SECTION */
 .lp-pm-section { background: linear-gradient(180deg, #f8fafc 0%, #fff 100%); padding: 6rem 2rem; }
 .lp-pm-split { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; margin-top: 4rem; }
@@ -585,6 +615,7 @@ export default function LandingPage() {
 
               <li><a href="#frameworks" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>Frameworks</a></li>
               <li><a href="#ai-projects" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>AI Projects</a></li>
+              <li><a href="#ai-maturity" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>AI Maturity</a></li>
               <li><a href="#faq" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>FAQ</a></li>
               <li><a href="#contact-sales" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>Contact Sales</a></li>
             </ul>
@@ -1076,6 +1107,70 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* AI MATURITY ASSESSMENT */}
+        <section className="lp-assess" id="ai-maturity">
+          <div className="lp-assess-glow" />
+          <div className="lp-assess-inner">
+            <div className="lp-header-center">
+              <span className="lp-section-label" style={{color:"var(--blue-glow)"}}>AI Readiness</span>
+              <h2 className="lp-section-title" style={{color:"#fff"}}>AI Maturity Assessment &amp; Use Case Finder</h2>
+              <p className="lp-section-desc" style={{color:"rgba(255,255,255,0.55)"}}>
+                Assess your organization&apos;s AI readiness across 9 dimensions, get personalized recommendations from 64+ AI use cases, and receive an LLM-powered roadmap — completely free.
+              </p>
+            </div>
+            <div className="lp-assess-grid">
+              {/* Left — Features */}
+              <div className="lp-assess-features">
+                {[
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg>, title: "9 Assessment Dimensions", desc: "Including Responsible AI & Agentic AI readiness" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>, title: "64 AI Use Cases", desc: "Industry-specific with ROI & effort estimates" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>, title: "LLM-Powered Insights", desc: "AI-generated gap analysis & 90-day roadmap" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>, title: "Industry Workflows", desc: "Visual diagrams showing AI automation opportunities" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>, title: "Industry Benchmarking", desc: "Compare your scores against industry peers" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Quick & Full Modes", desc: "10-min quick assessment or 30-min comprehensive" },
+                ].map((f) => (
+                  <div className="lp-assess-feat" key={f.title}>
+                    <div className="lp-assess-feat-icon">{f.icon}</div>
+                    <div className="lp-assess-feat-title">{f.title}</div>
+                    <div className="lp-assess-feat-desc">{f.desc}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Right — Visual */}
+              <div className="lp-assess-visual">
+                <div className="lp-assess-score">
+                  <div className="lp-assess-score-num">3.8 / 5.0</div>
+                  <div className="lp-assess-score-label">Level 4 — Managed</div>
+                </div>
+                <div className="lp-assess-dims">
+                  {[
+                    { name: "Strategy", pct: 82 }, { name: "Governance", pct: 68 },
+                    { name: "Data", pct: 76 }, { name: "Technology", pct: 84 },
+                    { name: "Organization", pct: 60 }, { name: "Processes", pct: 72 },
+                    { name: "Performance", pct: 78 }, { name: "Responsible AI", pct: 54 },
+                    { name: "Agentic AI", pct: 42 },
+                  ].map((d) => (
+                    <div className="lp-assess-dim" key={d.name}>
+                      <div className="lp-assess-dim-name">{d.name}</div>
+                      <div className="lp-assess-dim-bar">
+                        <div className="lp-assess-dim-fill" style={{width:`${d.pct}%`}} />
+                      </div>
+                      <div className="lp-assess-dim-val">{(d.pct / 20).toFixed(1)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="lp-assess-actions" style={{justifyContent:"center"}}>
+              <a href="https://aima-frontend.onrender.com/register" target="_blank" rel="noopener noreferrer" className="lp-btn-gradient">
+                Launch AI Maturity Assessment
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{width:18,height:18}}><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+              </a>
+              <a href="https://aima-frontend.onrender.com/login" target="_blank" rel="noopener noreferrer" className="lp-btn-ghost-lg">Already have an account? Sign in</a>
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="lp-cta">
           <div className="lp-cta-glow" />
@@ -1105,7 +1200,7 @@ export default function LandingPage() {
             <div>
               <div className="lp-footer-col-title">Product</div>
               <ul className="lp-footer-links">
-                {["AI Inventory", "Risk & Compliance", "Data Governance", "Agent Governance", "Audit & Reports", "Monitoring"].map((l) => <li key={l}><a href="/login">{l}</a></li>)}
+                {["AI Inventory", "Risk & Compliance", "Data Governance", "Agent Governance", "Audit & Reports", "Monitoring", "AI Maturity Assessment"].map((l) => <li key={l}><a href={l === "AI Maturity Assessment" ? "https://aima-frontend.onrender.com" : "/login"} target={l === "AI Maturity Assessment" ? "_blank" : undefined} rel={l === "AI Maturity Assessment" ? "noopener noreferrer" : undefined}>{l}</a></li>)}
               </ul>
             </div>
             <div>
