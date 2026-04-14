@@ -50,16 +50,21 @@ export const GET = withAuth(async (req) => {
       ]);
 
     // Daily call volume for chart
-    const dailyRaw = await prisma.$queryRaw<
-      { date: string; count: bigint }[]
-    >`
-      SELECT DATE("created_at")::text as date, COUNT(*)::bigint as count
-      FROM prompt_logs
-      WHERE "created_at" >= ${since}
-      ${modelId ? prisma.$queryRaw`AND "model_id" = ${modelId}` : prisma.$queryRaw``}
-      GROUP BY DATE("created_at")
-      ORDER BY date ASC
-    `;
+    const dailyRaw = await (modelId
+      ? prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("created_at")::text as date, COUNT(*)::bigint as count
+          FROM prompt_logs
+          WHERE "created_at" >= ${since} AND "model_id" = ${modelId}
+          GROUP BY DATE("created_at")
+          ORDER BY date ASC
+        `
+      : prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("created_at")::text as date, COUNT(*)::bigint as count
+          FROM prompt_logs
+          WHERE "created_at" >= ${since}
+          GROUP BY DATE("created_at")
+          ORDER BY date ASC
+        `);
 
     const dailyVolume = dailyRaw.map((r) => ({
       date: r.date,
