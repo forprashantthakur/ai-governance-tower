@@ -37,7 +37,7 @@ interface ApprovalWorkflow {
   completedAt?: string;
   notes?: string;
   createdAt: string;
-  model: { id: string; name: string; type: string; status: string };
+  model: { id: string; name: string; type: string; status: string } | null;
   requester: { id: string; name: string };
   steps: ApprovalStep[];
 }
@@ -129,19 +129,32 @@ function NewWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
     setSteps(steps.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
   }
 
+  // Virtual model IDs that don't correspond to real DB records
+  const VIRTUAL_MODELS: Record<string, string> = {
+    "agentic-ai-mode": "Agentic AI Mode",
+    "others": "Others",
+  };
+
   async function submit() {
     if (!form.modelId || !form.title || steps.length === 0) return;
     setSaving(true);
     try {
-      const wf = await api.post<ApprovalWorkflow>("/approvals", {
+      // For virtual models, pass modelId as null and embed name in notes
+      const isVirtual = form.modelId in VIRTUAL_MODELS;
+      const payload = {
         ...form,
+        modelId: isVirtual ? null : form.modelId,
+        notes: isVirtual
+          ? `[${VIRTUAL_MODELS[form.modelId]}] ${form.notes ?? ""}`.trim()
+          : form.notes,
         steps: steps.map((s) => ({
           stepType: s.stepType,
           label: s.label || STEP_TYPES.find((t) => t.value === s.stepType)?.label || s.stepType,
           assigneeId: s.assigneeId || undefined,
           dueDate: s.dueDate || undefined,
         })),
-      });
+      };
+      const wf = await api.post<ApprovalWorkflow>("/approvals", payload);
       onCreated(wf);
     } catch { /* toast shown */ } finally { setSaving(false); }
   }
@@ -161,7 +174,15 @@ function NewWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
               <select value={form.modelId} onChange={(e) => setForm({ ...form, modelId: e.target.value })}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
                 <option value="">— Select model —</option>
-                {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                {models.length > 0 && (
+                  <optgroup label="── AI Inventory ──">
+                    {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </optgroup>
+                )}
+                <optgroup label="── Other ──">
+                  <option value="agentic-ai-mode">Agentic AI Mode</option>
+                  <option value="others">Others</option>
+                </optgroup>
               </select>
             </div>
             <div>
@@ -329,7 +350,7 @@ function WorkflowCard({ wf, onStepDecide }: { wf: ApprovalWorkflow; onStepDecide
               {statusBadge(wf.status)}
             </div>
             <p className="text-xs text-muted-foreground">
-              AI Model: <span className="text-foreground">{wf.model.name}</span>
+              AI Model: <span className="text-foreground">{wf.model?.name ?? wf.notes?.match(/^\[([^\]]+)\]/)?.[1] ?? "—"}</span>
               {" · "}Requested by <span className="text-foreground">{wf.requester.name}</span>
               {" · "}{new Date(wf.createdAt).toLocaleDateString("en-IN")}
             </p>

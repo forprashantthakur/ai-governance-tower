@@ -945,7 +945,7 @@ enum HarmCategory {
 
 model ApprovalWorkflow {
   id          String         @id @default(uuid())
-  modelId     String         @map("model_id")
+  modelId     String?        @map("model_id")
   title       String
   description String?
   status      ApprovalStatus @default(PENDING)
@@ -956,7 +956,7 @@ model ApprovalWorkflow {
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
 
-  model     AIModel        @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model     AIModel?       @relation(fields: [modelId], references: [id], onDelete: SetNull)
   requester User           @relation("WorkflowRequester", fields: [requestedBy], references: [id])
   steps     ApprovalStep[]
 

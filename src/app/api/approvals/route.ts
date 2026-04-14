@@ -14,7 +14,7 @@ const StepSchema = z.object({
 });
 
 const CreateSchema = z.object({
-  modelId: z.string().uuid(),
+  modelId: z.string().min(1).nullable().optional(),
   title: z.string().min(1).max(200),
   description: z.string().optional(),
   dueDate: z.string().optional(),
