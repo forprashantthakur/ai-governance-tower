@@ -967,38 +967,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* FAQ */}
-        <section className="lp-section" id="faq">
-          <div className="lp-inner">
-            <div className="lp-header-center">
-              <span className="lp-section-label">Frequently Asked Questions</span>
-              <h2 className="lp-section-title">Everything You Need to Know</h2>
-              <p className="lp-section-desc">Common questions about AI governance, the Control Tower platform, and how to get started.</p>
-            </div>
-            <div className="lp-faq-grid">
-              {[
-                ["What is AI Governance and why does my organization need it?", "AI Governance is the framework of policies, processes, and controls that ensure AI systems operate ethically, legally, and reliably. With regulations like DPDP, GDPR, and the EU AI Act now in force, organizations face real legal and reputational risk from unmonitored AI. Governance is no longer optional — it is a business necessity."],
-                ["How does the Control Tower differ from basic model monitoring tools?", "Basic monitoring tools track accuracy and drift metrics. The AI Governance Control Tower goes far beyond — combining risk assessment, compliance control tracking, data governance, consent management, agent governance, immutable audit logs, and regulatory framework mapping into one unified enterprise platform."],
-                ["Which AI model types and frameworks does it support?", "The platform supports all AI model types — ML, NLP, LLMs, Computer Vision, Anomaly Detection, and Recommendation Systems. It is framework-agnostic, working with models built on TensorFlow, PyTorch, scikit-learn, XGBoost, and any OpenAI or Anthropic API-based systems."],
-                ["How does the platform handle AI agent governance?", "Every AI agent is registered with defined tool permissions, token budgets, and system prompts. Every prompt and response is logged. Sensitive agent actions trigger human approval workflows. You get complete visibility into what your agents are doing, how much they cost, and whether they are staying within policy boundaries."],
-                ["Can I generate compliance reports for auditors and regulators?", "Yes. The Audit & Reports module provides detailed compliance reports mapped to specific frameworks (DPDP, ISO 42001, GDPR, EU AI Act). Reports include control status, evidence, reviewer sign-offs, and full audit logs — all in formats suitable for internal audits and regulatory submissions."],
-                ["How does data governance integrate with AI model governance?", "Every AI model is linked to the data assets it uses. You can see exactly which PII fields feed into which models, whether consent is in place, what the data retention policy is, and whether data subjects have exercised their rights. This end-to-end lineage is critical for DPDP and GDPR compliance."],
-                ["What roles and permissions does the platform support?", "The platform has four built-in roles: Admin (full access), Risk Officer (risk and compliance management), Auditor (read-only with report access), and Viewer (dashboard only). All actions are logged against the user who performed them, creating an accountable audit trail."],
-                ["Is this platform ready for EU AI Act compliance?", "Yes. The platform supports the full EU AI Act compliance lifecycle — classifying AI systems by risk category, tracking conformity assessment requirements, maintaining technical documentation per Article 11, and ensuring human oversight for all high-risk AI decisions."],
-                ["How quickly can we get started?", "The platform is cloud-hosted on Vercel with a Neon PostgreSQL backend — no infrastructure setup needed. Start onboarding AI models within the first hour. Most enterprise teams are fully operational within 30 days."],
-              ].map(([q, a]) => (
-                <div key={q} className="lp-faq-item">
-                  <div className="lp-faq-q" onClick={toggleFaq}>
-                    <span className="lp-faq-qtext">{q}</span>
-                    <svg className="lp-faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                  </div>
-                  <div className="lp-faq-ans"><div className="lp-faq-ans-inner">{a}</div></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* AI MATURITY ASSESSMENT */}
         <section className="lp-assess" id="ai-maturity">
           <div className="lp-assess-glow" />
@@ -1059,6 +1027,38 @@ export default function LandingPage() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{width:18,height:18}}><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
               </a>
               <a href="https://aima-frontend.onrender.com/login" target="_blank" rel="noopener noreferrer" className="lp-btn-ghost-lg">Already have an account? Sign in</a>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="lp-section" id="faq">
+          <div className="lp-inner">
+            <div className="lp-header-center">
+              <span className="lp-section-label">Frequently Asked Questions</span>
+              <h2 className="lp-section-title">Everything You Need to Know</h2>
+              <p className="lp-section-desc">Common questions about AI governance, the Control Tower platform, and how to get started.</p>
+            </div>
+            <div className="lp-faq-grid">
+              {[
+                ["What is AI Governance and why does my organization need it?", "AI Governance is the framework of policies, processes, and controls that ensure AI systems operate ethically, legally, and reliably. With regulations like DPDP, GDPR, and the EU AI Act now in force, organizations face real legal and reputational risk from unmonitored AI. Governance is no longer optional — it is a business necessity."],
+                ["How does the Control Tower differ from basic model monitoring tools?", "Basic monitoring tools track accuracy and drift metrics. The AI Governance Control Tower goes far beyond — combining risk assessment, compliance control tracking, data governance, consent management, agent governance, immutable audit logs, and regulatory framework mapping into one unified enterprise platform."],
+                ["Which AI model types and frameworks does it support?", "The platform supports all AI model types — ML, NLP, LLMs, Computer Vision, Anomaly Detection, and Recommendation Systems. It is framework-agnostic, working with models built on TensorFlow, PyTorch, scikit-learn, XGBoost, and any OpenAI or Anthropic API-based systems."],
+                ["How does the platform handle AI agent governance?", "Every AI agent is registered with defined tool permissions, token budgets, and system prompts. Every prompt and response is logged. Sensitive agent actions trigger human approval workflows. You get complete visibility into what your agents are doing, how much they cost, and whether they are staying within policy boundaries."],
+                ["Can I generate compliance reports for auditors and regulators?", "Yes. The Audit & Reports module provides detailed compliance reports mapped to specific frameworks (DPDP, ISO 42001, GDPR, EU AI Act). Reports include control status, evidence, reviewer sign-offs, and full audit logs — all in formats suitable for internal audits and regulatory submissions."],
+                ["How does data governance integrate with AI model governance?", "Every AI model is linked to the data assets it uses. You can see exactly which PII fields feed into which models, whether consent is in place, what the data retention policy is, and whether data subjects have exercised their rights. This end-to-end lineage is critical for DPDP and GDPR compliance."],
+                ["What roles and permissions does the platform support?", "The platform has four built-in roles: Admin (full access), Risk Officer (risk and compliance management), Auditor (read-only with report access), and Viewer (dashboard only). All actions are logged against the user who performed them, creating an accountable audit trail."],
+                ["Is this platform ready for EU AI Act compliance?", "Yes. The platform supports the full EU AI Act compliance lifecycle — classifying AI systems by risk category, tracking conformity assessment requirements, maintaining technical documentation per Article 11, and ensuring human oversight for all high-risk AI decisions."],
+                ["How quickly can we get started?", "The platform is cloud-hosted on Vercel with a Neon PostgreSQL backend — no infrastructure setup needed. Start onboarding AI models within the first hour. Most enterprise teams are fully operational within 30 days."],
+              ].map(([q, a]) => (
+                <div key={q} className="lp-faq-item">
+                  <div className="lp-faq-q" onClick={toggleFaq}>
+                    <span className="lp-faq-qtext">{q}</span>
+                    <svg className="lp-faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                  <div className="lp-faq-ans"><div className="lp-faq-ans-inner">{a}</div></div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
