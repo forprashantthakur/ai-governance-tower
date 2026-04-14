@@ -999,6 +999,70 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* AI MATURITY ASSESSMENT */}
+        <section className="lp-assess" id="ai-maturity">
+          <div className="lp-assess-glow" />
+          <div className="lp-assess-inner">
+            <div className="lp-header-center">
+              <span className="lp-section-label" style={{color:"var(--blue-glow)"}}>AI Readiness</span>
+              <h2 className="lp-section-title" style={{color:"#fff"}}>AI Maturity Assessment &amp; Use Case Finder</h2>
+              <p className="lp-section-desc" style={{color:"rgba(255,255,255,0.55)"}}>
+                Assess your organization&apos;s AI readiness across 9 dimensions, get personalized recommendations from 64+ AI use cases, and receive an LLM-powered roadmap — completely free.
+              </p>
+            </div>
+            <div className="lp-assess-grid">
+              {/* Left — Features */}
+              <div className="lp-assess-features">
+                {[
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg>, title: "9 Assessment Dimensions", desc: "Including Responsible AI & Agentic AI readiness" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>, title: "64 AI Use Cases", desc: "Industry-specific with ROI & effort estimates" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>, title: "LLM-Powered Insights", desc: "AI-generated gap analysis & 90-day roadmap" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>, title: "Industry Workflows", desc: "Visual diagrams showing AI automation opportunities" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>, title: "Industry Benchmarking", desc: "Compare your scores against industry peers" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Quick & Full Modes", desc: "10-min quick assessment or 30-min comprehensive" },
+                ].map((f) => (
+                  <div className="lp-assess-feat" key={f.title}>
+                    <div className="lp-assess-feat-icon">{f.icon}</div>
+                    <div className="lp-assess-feat-title">{f.title}</div>
+                    <div className="lp-assess-feat-desc">{f.desc}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Right — Visual */}
+              <div className="lp-assess-visual">
+                <div className="lp-assess-score">
+                  <div className="lp-assess-score-num">3.8 / 5.0</div>
+                  <div className="lp-assess-score-label">Level 4 — Managed</div>
+                </div>
+                <div className="lp-assess-dims">
+                  {[
+                    { name: "Strategy", pct: 82 }, { name: "Governance", pct: 68 },
+                    { name: "Data", pct: 76 }, { name: "Technology", pct: 84 },
+                    { name: "Organization", pct: 60 }, { name: "Processes", pct: 72 },
+                    { name: "Performance", pct: 78 }, { name: "Responsible AI", pct: 54 },
+                    { name: "Agentic AI", pct: 42 },
+                  ].map((d) => (
+                    <div className="lp-assess-dim" key={d.name}>
+                      <div className="lp-assess-dim-name">{d.name}</div>
+                      <div className="lp-assess-dim-bar">
+                        <div className="lp-assess-dim-fill" style={{width:`${d.pct}%`}} />
+                      </div>
+                      <div className="lp-assess-dim-val">{(d.pct / 20).toFixed(1)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="lp-assess-actions" style={{justifyContent:"center"}}>
+              <a href="https://aima-frontend.onrender.com/register" target="_blank" rel="noopener noreferrer" className="lp-btn-gradient">
+                Launch AI Maturity Assessment
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{width:18,height:18}}><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+              </a>
+              <a href="https://aima-frontend.onrender.com/login" target="_blank" rel="noopener noreferrer" className="lp-btn-ghost-lg">Already have an account? Sign in</a>
+            </div>
+          </div>
+        </section>
+
         {/* CONTACT SALES */}
         <section className="lp-cs-section" id="contact-sales">
           <div className="lp-cs-inner">
@@ -1103,70 +1167,6 @@ export default function LandingPage() {
                   </>
                 )}
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* AI MATURITY ASSESSMENT */}
-        <section className="lp-assess" id="ai-maturity">
-          <div className="lp-assess-glow" />
-          <div className="lp-assess-inner">
-            <div className="lp-header-center">
-              <span className="lp-section-label" style={{color:"var(--blue-glow)"}}>AI Readiness</span>
-              <h2 className="lp-section-title" style={{color:"#fff"}}>AI Maturity Assessment &amp; Use Case Finder</h2>
-              <p className="lp-section-desc" style={{color:"rgba(255,255,255,0.55)"}}>
-                Assess your organization&apos;s AI readiness across 9 dimensions, get personalized recommendations from 64+ AI use cases, and receive an LLM-powered roadmap — completely free.
-              </p>
-            </div>
-            <div className="lp-assess-grid">
-              {/* Left — Features */}
-              <div className="lp-assess-features">
-                {[
-                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg>, title: "9 Assessment Dimensions", desc: "Including Responsible AI & Agentic AI readiness" },
-                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>, title: "64 AI Use Cases", desc: "Industry-specific with ROI & effort estimates" },
-                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>, title: "LLM-Powered Insights", desc: "AI-generated gap analysis & 90-day roadmap" },
-                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>, title: "Industry Workflows", desc: "Visual diagrams showing AI automation opportunities" },
-                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>, title: "Industry Benchmarking", desc: "Compare your scores against industry peers" },
-                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Quick & Full Modes", desc: "10-min quick assessment or 30-min comprehensive" },
-                ].map((f) => (
-                  <div className="lp-assess-feat" key={f.title}>
-                    <div className="lp-assess-feat-icon">{f.icon}</div>
-                    <div className="lp-assess-feat-title">{f.title}</div>
-                    <div className="lp-assess-feat-desc">{f.desc}</div>
-                  </div>
-                ))}
-              </div>
-              {/* Right — Visual */}
-              <div className="lp-assess-visual">
-                <div className="lp-assess-score">
-                  <div className="lp-assess-score-num">3.8 / 5.0</div>
-                  <div className="lp-assess-score-label">Level 4 — Managed</div>
-                </div>
-                <div className="lp-assess-dims">
-                  {[
-                    { name: "Strategy", pct: 82 }, { name: "Governance", pct: 68 },
-                    { name: "Data", pct: 76 }, { name: "Technology", pct: 84 },
-                    { name: "Organization", pct: 60 }, { name: "Processes", pct: 72 },
-                    { name: "Performance", pct: 78 }, { name: "Responsible AI", pct: 54 },
-                    { name: "Agentic AI", pct: 42 },
-                  ].map((d) => (
-                    <div className="lp-assess-dim" key={d.name}>
-                      <div className="lp-assess-dim-name">{d.name}</div>
-                      <div className="lp-assess-dim-bar">
-                        <div className="lp-assess-dim-fill" style={{width:`${d.pct}%`}} />
-                      </div>
-                      <div className="lp-assess-dim-val">{(d.pct / 20).toFixed(1)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="lp-assess-actions" style={{justifyContent:"center"}}>
-              <a href="https://aima-frontend.onrender.com/register" target="_blank" rel="noopener noreferrer" className="lp-btn-gradient">
-                Launch AI Maturity Assessment
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{width:18,height:18}}><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
-              </a>
-              <a href="https://aima-frontend.onrender.com/login" target="_blank" rel="noopener noreferrer" className="lp-btn-ghost-lg">Already have an account? Sign in</a>
             </div>
           </div>
         </section>
