@@ -19,6 +19,7 @@ import {
   FileSearch,
   BarChart3,
   CheckSquare,
+  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { href: "/risk", icon: ShieldAlert, label: "Risk & Compliance" },
   { href: "/iso42005", icon: FileSearch, label: "ISO 42005 Assessment" },
   { href: "/approvals", icon: CheckSquare, label: "Approval Workflows" },
+  { href: "/compliance-map", icon: Scale, label: "Regulation Mapping" },
   { href: "/data-governance", icon: Database, label: "Data Governance" },
   { href: "/agents", icon: Bot, label: "Agent Governance" },
   { href: "/monitoring", icon: Activity, label: "Monitoring" },
