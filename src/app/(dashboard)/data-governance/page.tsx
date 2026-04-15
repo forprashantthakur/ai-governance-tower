@@ -21,17 +21,25 @@ interface DataAsset {
   owner?: string;
   tags: string[];
   createdAt: string;
+  // included by API
+  models?: {
+    model?: {
+      id: string;
+      name: string;
+      type: string;
+    };
+  }[];
+  _count?: { consentRecords: number };
 }
 
-interface LinkedModel {
+interface ModelSummary {
   id: string;
   name: string;
   type: string;
   status: string;
   isPiiProcessing: boolean;
   isCritical: boolean;
-  agents: { id: string; name: string; status: string }[];
-  dataAssets: { dataAsset: { id: string; name: string; sensitivity: string } }[];
+  _count?: { agents: number; promptLogs: number };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -44,114 +52,99 @@ const SENSITIVITY_COLORS: Record<string, string> = {
   PII: "bg-red-500/15 text-red-400 border-red-500/30",
 };
 
-const STATUS_DOT: Record<string, string> = {
-  RUNNING: "bg-green-400",
-  IDLE: "bg-slate-400",
-  SUSPENDED: "bg-amber-400",
-  ERROR: "bg-red-400",
-};
+// ── Lineage — built from asset → linked models ────────────────────────────────
 
-// ── Real Lineage Visualization ────────────────────────────────────────────────
+interface LineageChain {
+  asset: DataAsset;
+  linkedModels: { id: string; name: string; type: string }[];
+}
 
-function LineageFlow({ models }: { models: LinkedModel[] }) {
+function LineageFlow({ chains }: { chains: LineageChain[] }) {
   const [selected, setSelected] = useState<string | null>(null);
-
-  // Build lineage chains: DataAsset → Model → Agents
-  const chains = models
-    .filter((m) => m.dataAssets.length > 0 || m.agents.length > 0)
-    .slice(0, 8);
 
   if (chains.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-        No lineage data yet. Link data assets to models to see the flow.
+      <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
+        No lineage data yet. Link data assets to AI models to see the flow here.
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      {chains.map((model) => (
+      {chains.map(({ asset, linkedModels }) => (
         <div
-          key={model.id}
-          className={`p-3 rounded-lg border transition-colors cursor-pointer ${
-            selected === model.id ? "border-primary/50 bg-primary/5" : "border-border hover:border-border/80"
+          key={asset.id}
+          onClick={() => setSelected(selected === asset.id ? null : asset.id)}
+          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+            selected === asset.id ? "border-primary/50 bg-primary/5" : "border-border hover:border-border/60"
           }`}
-          onClick={() => setSelected(selected === model.id ? null : model.id)}
         >
-          {/* Compact view */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Data sources */}
-            {model.dataAssets.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {model.dataAssets.map(({ dataAsset }) => (
-                  <div key={dataAsset.id} className="flex items-center gap-1.5 px-2 py-1 rounded bg-muted border border-border text-xs">
-                    <Database className="h-3 w-3 text-blue-400" />
-                    <span className="font-medium">{dataAsset.name}</span>
-                    <span className={`text-[9px] px-1 rounded ${SENSITIVITY_COLORS[dataAsset.sensitivity] ?? ""}`}>
-                      {dataAsset.sensitivity}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="px-2 py-1 rounded bg-muted border border-dashed border-border text-xs text-muted-foreground">
-                <Database className="h-3 w-3 inline mr-1" />No linked assets
-              </div>
-            )}
-
-            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-
-            {/* AI Model */}
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-medium ${
-              model.isCritical ? "bg-red-500/10 border-red-500/30 text-red-300" : "bg-primary/10 border-primary/30 text-primary"
-            }`}>
-              <BrainCircuit className="h-3.5 w-3.5" />
-              <span>{model.name}</span>
-              <Badge variant="outline" className="text-[9px] px-1 h-4">{model.type}</Badge>
-              {model.isPiiProcessing && <span className="text-[9px] px-1 rounded bg-red-500/20 text-red-400">PII</span>}
+            {/* Data Asset node */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-muted border border-border text-xs">
+              <Database className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+              <span className="font-medium">{asset.name}</span>
+              <span className={`text-[9px] px-1 rounded border ${SENSITIVITY_COLORS[asset.sensitivity] ?? "bg-muted"}`}>
+                {asset.sensitivity}
+              </span>
+              {asset.hasPii && (
+                <Lock className="h-3 w-3 text-red-400 shrink-0" />
+              )}
             </div>
 
-            {model.agents.length > 0 && (
+            {linkedModels.length > 0 ? (
               <>
                 <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                {/* Agents */}
+                {/* Linked AI Models */}
                 <div className="flex flex-wrap gap-1.5">
-                  {model.agents.map((agent) => (
-                    <div key={agent.id} className="flex items-center gap-1.5 px-2 py-1 rounded bg-muted border border-border text-xs">
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[agent.status] ?? "bg-slate-400"}`} />
-                      <Bot className="h-3 w-3 text-teal-400" />
-                      <span>{agent.name}</span>
+                  {linkedModels.map((m) => (
+                    <div key={m.id} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-primary/10 border border-primary/30 text-xs">
+                      <BrainCircuit className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="font-medium text-primary">{m.name}</span>
+                      <Badge variant="outline" className="text-[9px] px-1 h-4 border-primary/30">{m.type}</Badge>
                     </div>
                   ))}
                 </div>
+              </>
+            ) : (
+              <>
+                <ArrowRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                <span className="text-xs text-muted-foreground italic">No linked models</span>
               </>
             )}
           </div>
 
           {/* Expanded detail */}
-          {selected === model.id && (
+          {selected === asset.id && (
             <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div>
-                <p className="text-muted-foreground mb-1">Status</p>
-                <p className="font-medium">{model.status.replace("_", " ")}</p>
+                <p className="text-muted-foreground mb-1">Source</p>
+                <p className="font-medium">{asset.source}</p>
               </div>
               <div>
-                <p className="text-muted-foreground mb-1">PII Processing</p>
-                <p className={`font-medium ${model.isPiiProcessing ? "text-red-400" : "text-green-400"}`}>
-                  {model.isPiiProcessing ? "Yes — DPDP applies" : "No"}
+                <p className="text-muted-foreground mb-1">Type</p>
+                <p className="font-medium">{asset.dataType}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-1">PII Fields</p>
+                <p className="font-medium">
+                  {asset.piiFields?.length > 0 ? asset.piiFields.slice(0, 4).join(", ") : "None"}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground mb-1">Critical System</p>
-                <p className={`font-medium ${model.isCritical ? "text-orange-400" : "text-slate-400"}`}>
-                  {model.isCritical ? "Yes" : "No"}
-                </p>
+                <p className="text-muted-foreground mb-1">Consent Records</p>
+                <p className="font-medium">{asset._count?.consentRecords ?? 0}</p>
               </div>
-              <div>
-                <p className="text-muted-foreground mb-1">Active Agents</p>
-                <p className="font-medium">{model.agents.filter((a) => a.status === "RUNNING").length}/{model.agents.length} running</p>
-              </div>
+              {asset.retentionDays && (
+                <div className="col-span-2">
+                  <p className="text-muted-foreground mb-1">Retention Period</p>
+                  <p className={`font-medium ${asset.retentionDays > 365 * 5 ? "text-orange-400" : ""}`}>
+                    {Math.round(asset.retentionDays / 365 * 10) / 10} years ({asset.retentionDays} days)
+                    {asset.retentionDays > 365 * 5 && " — exceeds 5yr, review DPDP retention policy"}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -165,13 +158,17 @@ function LineageFlow({ models }: { models: LinkedModel[] }) {
 export default function DataGovernancePage() {
   const api = useApi();
   const [assets, setAssets] = useState<DataAsset[]>([]);
-  const [models, setModels] = useState<LinkedModel[]>([]);
+  const [models, setModels] = useState<ModelSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      api.get<{ assets: DataAsset[] }>("/data-assets").then((r) => r.assets ?? []).catch(() => []),
-      api.get<{ models: LinkedModel[] }>("/models?limit=50").then((r) => r.models ?? []).catch(() => []),
+      api.get<{ assets: DataAsset[] }>("/data-assets")
+        .then((r) => r.assets ?? [])
+        .catch(() => []),
+      api.get<{ models: ModelSummary[] }>("/models?limit=50")
+        .then((r) => r.models ?? [])
+        .catch(() => []),
     ])
       .then(([a, m]) => {
         setAssets(a);
@@ -180,9 +177,16 @@ export default function DataGovernancePage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Build lineage chains from assets that have linked models
+  const chains: LineageChain[] = assets.map((asset) => ({
+    asset,
+    linkedModels: (asset.models ?? []).map((link) => link.model).filter(Boolean) as { id: string; name: string; type: string }[],
+  }));
+
   const piiAssets = assets.filter((a) => a.hasPii);
-  const retentionRisk = assets.filter((a) => (a.retentionDays ?? 0) > 365 * 5);
   const modelsWithPii = models.filter((m) => m.isPiiProcessing);
+  const retentionRisk = assets.filter((a) => (a.retentionDays ?? 0) > 365 * 5);
+  const linkedAssets = chains.filter((c) => c.linkedModels.length > 0).length;
 
   const assetColumns: Column<DataAsset>[] = [
     {
@@ -218,7 +222,7 @@ export default function DataGovernancePage() {
             <Badge className="text-xs bg-red-500/15 text-red-400 border-red-500/30">
               <Lock className="h-2.5 w-2.5 mr-1" /> PII
             </Badge>
-            {row.piiFields.length > 0 && (
+            {(row.piiFields?.length ?? 0) > 0 && (
               <p className="text-xs text-muted-foreground mt-0.5">
                 {row.piiFields.slice(0, 3).join(", ")}{row.piiFields.length > 3 && "…"}
               </p>
@@ -235,7 +239,7 @@ export default function DataGovernancePage() {
       cell: (row) => {
         const yrs = row.retentionDays ? Math.round(row.retentionDays / 365 * 10) / 10 : null;
         return (
-          <span className={`text-sm ${row.retentionDays && row.retentionDays > 365 * 5 ? "text-orange-400" : ""}`}>
+          <span className={`text-sm ${(row.retentionDays ?? 0) > 365 * 5 ? "text-orange-400" : ""}`}>
             {yrs ? `${yrs} yr${yrs !== 1 ? "s" : ""}` : "Indefinite"}
           </span>
         );
@@ -246,17 +250,29 @@ export default function DataGovernancePage() {
       header: "Tags",
       cell: (row) => (
         <div className="flex flex-wrap gap-1">
-          {row.tags.slice(0, 3).map((t) => (
+          {(row.tags ?? []).slice(0, 3).map((t) => (
             <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-muted border border-border">{t}</span>
           ))}
         </div>
       ),
     },
+    {
+      key: "id",
+      header: "Linked Models",
+      cell: (row) => {
+        const linked = (row.models ?? []).length;
+        return (
+          <span className={`text-xs ${linked > 0 ? "text-primary font-medium" : "text-muted-foreground"}`}>
+            {linked > 0 ? `${linked} model${linked > 1 ? "s" : ""}` : "None"}
+          </span>
+        );
+      },
+    },
   ];
 
   return (
     <div className="space-y-6">
-      {/* DPDP compliance alerts */}
+      {/* DPDP compliance alert */}
       {piiAssets.length > 0 && modelsWithPii.length > 0 && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-yellow-500/30 bg-yellow-500/5 text-sm">
           <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0 mt-0.5" />
@@ -269,12 +285,12 @@ export default function DataGovernancePage() {
         </div>
       )}
 
-      {/* Summary */}
+      {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Total Data Assets", value: assets.length },
           { label: "PII Assets", value: piiAssets.length },
-          { label: "AI Models Using PII", value: modelsWithPii.length },
+          { label: "Linked to AI Models", value: linkedAssets },
           { label: "Long-Retention (5yr+)", value: retentionRisk.length },
         ].map((s) => (
           <Card key={s.label}>
@@ -286,21 +302,23 @@ export default function DataGovernancePage() {
         ))}
       </div>
 
-      {/* Data Lineage — Real */}
+      {/* Data Lineage */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Eye className="h-4 w-4" />
-            Data Lineage — Assets → Models → Agents
+            Data Lineage — Assets → AI Models
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-3">
-              {[...Array(3)].map((_, i) => <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />)}
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
+              ))}
             </div>
           ) : (
-            <LineageFlow models={models} />
+            <LineageFlow chains={chains} />
           )}
         </CardContent>
       </Card>
