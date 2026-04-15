@@ -24,6 +24,7 @@ export const GET = withAuth(async (req: NextRequest) => {
     const modelId = searchParams.get("modelId");
     const scenarios = await prisma.misuseScenario.findMany({
       where: modelId ? { modelId } : undefined,
+      include: { model: { select: { id: true, name: true } } },
       orderBy: [{ severity: "desc" }, { likelihood: "desc" }],
     }).catch(() => []);
     return ok(scenarios);
