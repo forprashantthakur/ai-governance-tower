@@ -411,7 +411,7 @@ const VALUE_PATTERNS: ValuePattern[] = [
 
 function parseColumns(input: string): string[] {
   // Try SQL CREATE TABLE
-  const sqlMatch = input.match(/CREATE\s+TABLE[^(]*\(([^;]+)\)/is);
+  const sqlMatch = input.match(/CREATE\s+TABLE[^(]*\(([\s\S]+?)\)[\s;]*$/i);
   if (sqlMatch) {
     const body = sqlMatch[1];
     return body
