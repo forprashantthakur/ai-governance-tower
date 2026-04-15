@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Search, RefreshCw, Tag, UserCheck, ChevronDown } from "lucide-react";
+import { Plus, Search, RefreshCw, Tag, UserCheck, ChevronDown, Bell, CheckCircle2 } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { RiskBadge, StatusBadge } from "@/components/shared/risk-badge";
@@ -20,6 +20,16 @@ interface ModelsResponse {
 }
 
 type UserOption = Pick<AuthUser, "id" | "name" | "email">;
+
+const REASSESS_DAYS = 180; // flag models not assessed in this many days
+
+function needsReassessment(model: AIModel & { requiresReassessment?: boolean; riskAssessments?: { createdAt: string }[] }): boolean {
+  if (model.requiresReassessment) return true;
+  const lastAssessment = model.riskAssessments?.[0];
+  if (!lastAssessment) return true; // never assessed
+  const daysSince = (Date.now() - new Date(lastAssessment.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  return daysSince > REASSESS_DAYS;
+}
 
 export default function ModelsPage() {
   const api = useApi();
@@ -52,6 +62,11 @@ export default function ModelsPage() {
   useEffect(() => {
     api.get<UserOption[]>("/users").then(setUsers).catch(() => {});
   }, []);
+
+  async function flagReassessment(modelId: string, flag: boolean) {
+    await api.patch(`/models/${modelId}`, { requiresReassessment: flag, reassessmentReason: flag ? "Flagged for manual review" : undefined });
+    fetchModels();
+  }
 
   async function setApprover(modelId: string, approverId: string | null) {
     if (savingRef.current[modelId]) return;
@@ -127,6 +142,35 @@ export default function ModelsPage() {
           </div>
         ) : (
           <span className="text-xs text-muted-foreground">Not assessed</span>
+        );
+      },
+    },
+    {
+      key: "status" as keyof AIModel,
+      header: "Reassessment",
+      cell: (row) => {
+        const needs = needsReassessment(row as AIModel & { requiresReassessment?: boolean; riskAssessments?: { createdAt: string }[] });
+        const flagged = (row as AIModel & { requiresReassessment?: boolean }).requiresReassessment;
+        if (!needs) {
+          return (
+            <span className="flex items-center gap-1 text-[10px] text-green-400">
+              <CheckCircle2 className="h-3 w-3" /> Up to date
+            </span>
+          );
+        }
+        return (
+          <button
+            onClick={(e) => { e.stopPropagation(); flagReassessment(row.id, !flagged); }}
+            className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-colors ${
+              flagged
+                ? "border-orange-500/40 text-orange-400 bg-orange-500/10 hover:bg-orange-500/20"
+                : "border-yellow-500/40 text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20"
+            }`}
+            title={flagged ? "Click to clear reassessment flag" : "Click to flag for reassessment"}
+          >
+            <Bell className="h-2.5 w-2.5" />
+            {flagged ? "Flagged" : "Needs Review"}
+          </button>
         );
       },
     },
@@ -259,6 +303,23 @@ export default function ModelsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Reassessment alert banner */}
+      {response && (() => {
+        const needsReview = response.models.filter((m) =>
+          needsReassessment(m as AIModel & { requiresReassessment?: boolean; riskAssessments?: { createdAt: string }[] })
+        ).length;
+        if (needsReview === 0) return null;
+        return (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-orange-500/30 bg-orange-500/5 text-sm">
+            <Bell className="h-4 w-4 text-orange-400 shrink-0" />
+            <p className="text-orange-300">
+              <span className="font-semibold">{needsReview} model{needsReview > 1 ? "s" : ""}</span>
+              {" "}require reassessment — either never assessed or last reviewed more than {REASSESS_DAYS} days ago.
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Stats strip */}
       {response && (

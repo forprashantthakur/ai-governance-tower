@@ -25,6 +25,8 @@ const UpdateModelSchema = z.object({
   explainability: z.number().min(0).max(100).optional(),
   metadata: z.record(z.unknown()).optional(),
   approverId: z.string().uuid().nullable().optional(),
+  requiresReassessment: z.boolean().optional(),
+  reassessmentReason: z.string().optional(),
 });
 
 // GET /api/models/:id
