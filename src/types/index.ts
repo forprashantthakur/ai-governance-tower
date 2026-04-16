@@ -15,23 +15,43 @@ export type ConsentStatus = "GRANTED" | "REVOKED" | "PENDING" | "EXPIRED";
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
+export type OrgMemberRole = "OWNER" | "ADMIN" | "RISK_OFFICER" | "AUDITOR" | "VIEWER";
+export type PlanTier = "TRIAL" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
+
+export interface OrgInfo {
+  id: string;
+  name: string;
+  slug: string;
+  plan: PlanTier;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  /** @deprecated Use orgRole instead — kept for legacy UI compat */
   role: UserRole;
   department?: string;
   avatarUrl?: string;
+  // Multi-tenant fields (present after SaaS migration)
+  organizationId: string;
+  orgRole: OrgMemberRole;
+  plan: PlanTier;
+  organization?: OrgInfo;
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
+  organizationId?: string;
 }
 
 export interface AuthResponse {
-  token: string;
-  user: AuthUser;
+  token: string | null;
+  user: Pick<AuthUser, "id" | "email" | "name">;
+  requiresOrgPicker?: boolean;
+  requiresOrgSetup?: boolean;
+  organizations?: Array<OrgInfo & { role: OrgMemberRole }>;
 }
 
 // ─── AI Model ─────────────────────────────────────────────────────────────────

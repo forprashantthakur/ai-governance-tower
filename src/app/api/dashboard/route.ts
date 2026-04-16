@@ -2,14 +2,14 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, serverError } from "@/lib/api-response";
-import { getCache, setCache } from "@/lib/redis";
+import { getCache, setCache, orgKey } from "@/lib/redis";
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/dashboard — aggregated KPIs for the main dashboard
-export const GET = withAuth(async () => {
+// GET /api/dashboard — aggregated KPIs for the main dashboard (org-scoped)
+export const GET = withAuth(async (_req, { organizationId }) => {
   try {
-    const cacheKey = "dashboard:kpis";
+    const cacheKey = orgKey(organizationId, "dashboard:kpis");
     const cached = await getCache(cacheKey);
     if (cached) return ok(cached as object);
 
@@ -25,39 +25,45 @@ export const GET = withAuth(async () => {
       usageTrend,
       topRiskyModels,
     ] = await Promise.all([
-      prisma.aIModel.count(),
-      prisma.aIModel.count({ where: { status: "ACTIVE" } }),
+      prisma.aIModel.count({ where: { organizationId } }),
+      prisma.aIModel.count({ where: { organizationId, status: "ACTIVE" } }),
 
-      // Risk distribution from latest assessments (subquery approach)
+      // Risk distribution from latest assessments (org-scoped via model join)
       prisma.riskAssessment.findMany({
+        where: { model: { organizationId } },
         orderBy: { createdAt: "desc" },
         distinct: ["modelId"],
         select: { riskLevel: true, overallScore: true },
       }),
 
-      // Compliance pass rate
+      // Compliance pass rate (org-scoped via model join)
       prisma.complianceControl.groupBy({
         by: ["status"],
+        where: { model: { organizationId } },
         _count: { status: true },
       }),
 
-      // Unread alerts
-      prisma.alert.count({ where: { isRead: false } }),
+      // Unread alerts for this org
+      prisma.alert.count({ where: { organizationId, isRead: false } }),
 
-      // Recent prompt logs
-      prisma.promptLog.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+      // Recent prompt logs for this org
+      prisma.promptLog.count({
+        where: { organizationId, createdAt: { gte: thirtyDaysAgo } },
+      }),
 
-      // Daily usage last 14 days for chart
+      // Daily usage last 14 days for chart (org-scoped)
       prisma.$queryRaw<{ date: string; count: bigint }[]>`
         SELECT DATE("created_at")::text as date, COUNT(*)::bigint as count
         FROM prompt_logs
         WHERE "created_at" >= NOW() - INTERVAL '14 days'
+          AND "organization_id" = ${organizationId}
         GROUP BY DATE("created_at")
         ORDER BY date ASC
       `,
 
-      // Top 5 risky models
+      // Top 5 risky models (org-scoped)
       prisma.riskAssessment.findMany({
+        where: { model: { organizationId } },
         orderBy: { overallScore: "desc" },
         distinct: ["modelId"],
         take: 5,

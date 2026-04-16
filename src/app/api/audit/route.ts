@@ -6,8 +6,8 @@ import { ok, serverError } from "@/lib/api-response";
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/audit
-export const GET = withAuth(async (req) => {
+// GET /api/audit — org-scoped audit log (AUDITOR+)
+export const GET = withAuth(async (req, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
@@ -19,6 +19,7 @@ export const GET = withAuth(async (req) => {
     const to = searchParams.get("to");
 
     const where: Prisma.AuditLogWhereInput = {
+      organizationId,
       ...(userId && { userId }),
       ...(resource && { resource }),
       ...(action && { action: action as Prisma.EnumAuditActionFilter }),
@@ -36,7 +37,7 @@ export const GET = withAuth(async (req) => {
       prisma.auditLog.findMany({
         where,
         include: {
-          user: { select: { id: true, name: true, email: true, role: true } },
+          user: { select: { id: true, name: true, email: true } },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,

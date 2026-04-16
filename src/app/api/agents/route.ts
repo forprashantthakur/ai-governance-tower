@@ -20,7 +20,7 @@ const CreateAgentSchema = z.object({
 });
 
 // GET /api/agents
-export const GET = withAuth(async (req) => {
+export const GET = withAuth(async (req, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const modelId = searchParams.get("modelId");
@@ -28,6 +28,7 @@ export const GET = withAuth(async (req) => {
 
     const agents = await prisma.agent.findMany({
       where: {
+        organizationId,
         ...(modelId && { modelId }),
         ...(status && { status: status as never }),
       },
@@ -45,7 +46,7 @@ export const GET = withAuth(async (req) => {
 });
 
 // POST /api/agents
-export const POST = withAuth(async (req, { user }) => {
+export const POST = withAuth(async (req, { user, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = CreateAgentSchema.safeParse(body);
@@ -53,12 +54,13 @@ export const POST = withAuth(async (req, { user }) => {
 
     const agent = await prisma.agent.create({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: parsed.data as any,
+      data: { ...parsed.data, organizationId } as any,
       include: { model: { select: { id: true, name: true } } },
     });
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "CREATE",
       resource: "Agent",
       resourceId: agent.id,

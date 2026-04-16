@@ -11,7 +11,7 @@ import {
 } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { calculateRiskScore } from "@/lib/risk-scoring";
-import { getCache, setCache, deleteCachePattern } from "@/lib/redis";
+import { getCache, setCache, deleteCachePattern, orgKey } from "@/lib/redis";
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +37,7 @@ const CreateModelSchema = z.object({
 });
 
 // GET /api/models
-export const GET = withAuth(async (req, { user }) => {
+export const GET = withAuth(async (req, { user, organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
@@ -47,11 +47,12 @@ export const GET = withAuth(async (req, { user }) => {
     const status = searchParams.get("status");
     const riskLevel = searchParams.get("riskLevel");
 
-    const cacheKey = `models:${page}:${limit}:${search}:${type}:${status}:${riskLevel}`;
+    const cacheKey = orgKey(organizationId, `models:${page}:${limit}:${search}:${type}:${status}:${riskLevel}`);
     const cached = await getCache(cacheKey);
     if (cached) return ok(cached as object);
 
     const where: Prisma.AIModelWhereInput = {
+      organizationId,
       ...(search && {
         OR: [
           { name: { contains: search, mode: "insensitive" } },
@@ -110,7 +111,7 @@ export const GET = withAuth(async (req, { user }) => {
 });
 
 // POST /api/models
-export const POST = withAuth(async (req, { user }) => {
+export const POST = withAuth(async (req, { user, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = CreateModelSchema.safeParse(body);
@@ -118,7 +119,7 @@ export const POST = withAuth(async (req, { user }) => {
 
     const model = await prisma.aIModel.create({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: { ...parsed.data, ownerId: user.userId, endpoint: parsed.data.endpoint || null } as any,
+      data: { ...parsed.data, organizationId, ownerId: user.userId, endpoint: parsed.data.endpoint || null } as any,
       include: {
         owner: { select: { id: true, name: true, email: true } },
       },
@@ -155,6 +156,7 @@ export const POST = withAuth(async (req, { user }) => {
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "CREATE",
       resource: "AIModel",
       resourceId: model.id,
@@ -162,7 +164,7 @@ export const POST = withAuth(async (req, { user }) => {
       ipAddress: getClientIp(req),
     });
 
-    await deleteCachePattern("models:*");
+    await deleteCachePattern(orgKey(organizationId, "models:*"));
 
     return created(model);
   } catch (err) {

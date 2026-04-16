@@ -14,6 +14,34 @@ datasource db {
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
+// ── SaaS Multi-Tenancy ───────────────────────────────────────────────────────
+
+enum PlanTier {
+  TRIAL
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum OrgMemberRole {
+  OWNER
+  ADMIN
+  RISK_OFFICER
+  AUDITOR
+  VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+// ── Existing Enums ────────────────────────────────────────────────────────────
+
+// Kept for backward compatibility and migration script reference.
+// New code uses OrgMemberRole on OrganizationMember.
 enum UserRole {
   ADMIN
   RISK_OFFICER
@@ -102,53 +130,131 @@ enum ConsentStatus {
   EXPIRED
 }
 
+// ─── SaaS: Organization & Membership ─────────────────────────────────────────
+
+model Organization {
+  id                 String    @id @default(uuid())
+  name               String
+  slug               String    @unique          // e.g. "acme-bank" — URL-safe
+  plan               PlanTier  @default(TRIAL)
+  planExpiresAt      DateTime? @map("plan_expires_at")
+  maxUsers           Int       @default(5)      @map("max_users")
+  maxModels          Int       @default(10)     @map("max_models")
+  isActive           Boolean   @default(true)   @map("is_active")
+  billingEmail       String?   @map("billing_email")
+  externalCustomerId String?   @map("external_customer_id")  // Razorpay customer ID
+  createdAt          DateTime  @default(now())  @map("created_at")
+  updatedAt          DateTime  @updatedAt       @map("updated_at")
+
+  members   OrganizationMember[]
+  invites   OrganizationInvite[]
+
+  // Tenant-scoped data relations
+  models        AIModel[]
+  projects      Project[]
+  dataAssets    DataAsset[]
+  consentRecords ConsentRecord[]
+  agents        Agent[]
+  reports       Report[]
+  apiKeys       ApiKey[]
+  auditLogs     AuditLog[]
+  alerts        Alert[]
+  policyConfigs PolicyConfig[]
+  promptLogs    PromptLog[]
+  approvalWorkflows ApprovalWorkflow[]
+  alertRules        AlertRule[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String        @id @default(uuid())
+  organizationId String        @map("organization_id")
+  userId         String        @map("user_id")
+  role           OrgMemberRole @default(VIEWER)
+  joinedAt       DateTime      @default(now()) @map("joined_at")
+  isActive       Boolean       @default(true) @map("is_active")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+model OrganizationInvite {
+  id             String        @id @default(uuid())
+  organizationId String        @map("organization_id")
+  email          String
+  role           OrgMemberRole @default(VIEWER)
+  token          String        @unique @default(uuid())
+  status         InviteStatus  @default(PENDING)
+  invitedBy      String        @map("invited_by")  // userId
+  expiresAt      DateTime      @map("expires_at")
+  acceptedAt     DateTime?     @map("accepted_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([email, status])
+  @@index([token])
+  @@map("organization_invites")
+}
+
 // ─── Core Identity ────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String
-  passwordHash String   @map("password_hash")
-  role         UserRole @default(VIEWER)
-  department   String?
-  avatarUrl    String?  @map("avatar_url")
-  isActive     Boolean  @default(true) @map("is_active")
-  lastLoginAt  DateTime? @map("last_login_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String
+  passwordHash  String    @map("password_hash")
+  // Kept for migration script reference — authoritative role is now OrganizationMember.role
+  role          UserRole  @default(VIEWER)
+  department    String?
+  avatarUrl     String?   @map("avatar_url")
+  isActive      Boolean   @default(true)  @map("is_active")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt      @map("updated_at")
 
   // Relations
-  ownedModels       AIModel[]         @relation("ModelOwner")
-  approvedModels    AIModel[]         @relation("ModelApprover")
-  riskAssessments   RiskAssessment[]
-  auditLogs         AuditLog[]
-  apiKeys           ApiKey[]
-  promptLogs        PromptLog[]
-  ownedProjects     Project[]         @relation("ProjectOwner")
-  taskAssignments   ProjectTask[]     @relation("TaskAssignee")
-  taskReports       ProjectTask[]     @relation("TaskReporter")
-  projectResources  ProjectResource[] @relation("ProjectResources")
-  createdReports    Report[]          @relation("ReportCreator")
+  memberships        OrganizationMember[]
+  ownedModels        AIModel[]         @relation("ModelOwner")
+  approvedModels     AIModel[]         @relation("ModelApprover")
+  riskAssessments    RiskAssessment[]
+  auditLogs          AuditLog[]
+  apiKeys            ApiKey[]
+  promptLogs         PromptLog[]
+  ownedProjects      Project[]         @relation("ProjectOwner")
+  taskAssignments    ProjectTask[]     @relation("TaskAssignee")
+  taskReports        ProjectTask[]     @relation("TaskReporter")
+  projectResources   ProjectResource[] @relation("ProjectResources")
+  createdReports     Report[]          @relation("ReportCreator")
   requestedWorkflows ApprovalWorkflow[] @relation("WorkflowRequester")
-  assignedSteps      ApprovalStep[]     @relation("StepAssignee")
+  assignedSteps      ApprovalStep[]    @relation("StepAssignee")
 
   @@map("users")
 }
 
 model ApiKey {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  name        String
-  keyHash     String   @unique @map("key_hash")
-  keyPrefix   String   @map("key_prefix")
-  permissions String[] @default([])
-  lastUsedAt  DateTime? @map("last_used_at")
-  expiresAt   DateTime? @map("expires_at")
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  organizationId String?   @map("organization_id")
+  name           String
+  keyHash        String    @unique @map("key_hash")
+  keyPrefix      String    @map("key_prefix")
+  permissions    String[]  @default([])
+  lastUsedAt     DateTime? @map("last_used_at")
+  expiresAt      DateTime? @map("expires_at")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
+  @@index([organizationId])
   @@map("api_keys")
 }
 
@@ -156,6 +262,7 @@ model ApiKey {
 
 model AIModel {
   id               String       @id @default(uuid())
+  organizationId   String?      @map("organization_id")
   name             String
   version          String       @default("1.0.0")
   description      String?
@@ -174,12 +281,15 @@ model AIModel {
   isCritical       Boolean      @default(false) @map("is_critical")
   humanOversight   Boolean      @default(true)  @map("human_oversight")
   explainability   Int          @default(50)    // 0-100 score
-  trainingDataset  String?      @map("training_dataset")  // name of training dataset
-  accuracyScore    Float?       @map("accuracy_score")    // 0.0-1.0 (e.g. 0.95 = 95%)
+  trainingDataset  String?      @map("training_dataset")
+  accuracyScore    Float?       @map("accuracy_score")    // 0.0-1.0
+  requiresReassessment Boolean  @default(false) @map("requires_reassessment")
+  reassessmentReason   String?  @map("reassessment_reason")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
 
   // Relations
+  organization       Organization?      @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   owner              User               @relation("ModelOwner", fields: [ownerId], references: [id])
   approver           User?              @relation("ModelApprover", fields: [approverId], references: [id])
   riskAssessments    RiskAssessment[]
@@ -194,9 +304,8 @@ model AIModel {
   interestedParties  InterestedParty[]
   approvalWorkflows  ApprovalWorkflow[]
   misuseScenarios    MisuseScenario[]
-  requiresReassessment Boolean @default(false) @map("requires_reassessment")
-  reassessmentReason   String? @map("reassessment_reason")
 
+  @@index([organizationId])
   @@map("ai_models")
 }
 
@@ -220,14 +329,13 @@ model RiskAssessment {
   mitigations     String?
   reviewedAt      DateTime? @map("reviewed_at")
   nextReviewDate  DateTime? @map("next_review_date")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  severity               Int?      // 1-5 (ISO harm severity)
-  likelihood             Int?      // 1-5 (probability of harm)
-  harmCategories         HarmCategory[] @default([]) @map("harm_categories")
+  severity        Int?      // 1-5 (ISO harm severity)
+  likelihood      Int?      // 1-5 (probability of harm)
+  harmCategories  HarmCategory[] @default([]) @map("harm_categories")
   requiresReassessment   Boolean   @default(false) @map("requires_reassessment")
   reassessmentReason     String?   @map("reassessment_reason")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   model         AIModel        @relation(fields: [modelId], references: [id], onDelete: Cascade)
   assessor      User           @relation(fields: [assessorId], references: [id])
@@ -261,26 +369,29 @@ model ComplianceControl {
 // ─── Data Governance ─────────────────────────────────────────────────────────
 
 model DataAsset {
-  id               String          @id @default(uuid())
-  name             String
-  description      String?
-  source           String          // e.g. "CRM", "S3 bucket", "API"
-  dataType         String          @map("data_type")  // e.g. "structured", "unstructured"
-  sensitivity      DataSensitivity
-  hasPii           Boolean         @default(false) @map("has_pii")
-  piiFields        String[]        @default([]) @map("pii_fields")
-  retentionDays    Int?            @map("retention_days")
-  location         String?         // storage location / path
-  format           String?         // CSV, JSON, Parquet, etc.
-  owner            String?
-  tags             String[]        @default([])
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
+  id             String          @id @default(uuid())
+  organizationId String?         @map("organization_id")
+  name           String
+  description    String?
+  source         String          // e.g. "CRM", "S3 bucket", "API"
+  dataType       String          @map("data_type")  // e.g. "structured", "unstructured"
+  sensitivity    DataSensitivity
+  hasPii         Boolean         @default(false) @map("has_pii")
+  piiFields      String[]        @default([]) @map("pii_fields")
+  retentionDays  Int?            @map("retention_days")
+  location       String?         // storage location / path
+  format         String?         // CSV, JSON, Parquet, etc.
+  owner          String?
+  tags           String[]        @default([])
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
+  organization   Organization?   @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   models         ModelDataAsset[]
   consentRecords ConsentRecord[]
   evidenceFiles  EvidenceFile[]
 
+  @@index([organizationId])
   @@map("data_assets")
 }
 
@@ -298,53 +409,60 @@ model ModelDataAsset {
 }
 
 model ConsentRecord {
-  id           String        @id @default(uuid())
-  dataAssetId  String        @map("data_asset_id")
-  subjectId    String        @map("subject_id")    // data subject identifier
-  consentType  ConsentType   @map("consent_type")
-  status       ConsentStatus
-  grantedAt    DateTime?     @map("granted_at")
-  revokedAt    DateTime?     @map("revoked_at")
-  expiresAt    DateTime?     @map("expires_at")
-  ipAddress    String?       @map("ip_address")
-  metadata     Json?
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+  id             String        @id @default(uuid())
+  organizationId String?       @map("organization_id")
+  dataAssetId    String        @map("data_asset_id")
+  subjectId      String        @map("subject_id")    // data subject identifier
+  consentType    ConsentType   @map("consent_type")
+  status         ConsentStatus
+  grantedAt      DateTime?     @map("granted_at")
+  revokedAt      DateTime?     @map("revoked_at")
+  expiresAt      DateTime?     @map("expires_at")
+  ipAddress      String?       @map("ip_address")
+  metadata       Json?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  dataAsset DataAsset @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  dataAsset    DataAsset     @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
   @@map("consent_records")
 }
 
 // ─── Agent Governance ────────────────────────────────────────────────────────
 
 model Agent {
-  id           String      @id @default(uuid())
-  name         String
-  description  String?
-  modelId      String      @map("model_id")
-  status       AgentStatus @default(IDLE)
-  systemPrompt String?     @map("system_prompt")
-  tools        String[]    @default([])  // tool names the agent can use
-  version      String      @default("1.0.0")
-  maxTokens    Int?        @map("max_tokens")
-  temperature  Float?
-  metadata     Json?
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
+  id             String      @id @default(uuid())
+  organizationId String?     @map("organization_id")
+  name           String
+  description    String?
+  modelId        String      @map("model_id")
+  status         AgentStatus @default(IDLE)
+  systemPrompt   String?     @map("system_prompt")
+  tools          String[]    @default([])  // tool names the agent can use
+  version        String      @default("1.0.0")
+  maxTokens      Int?        @map("max_tokens")
+  temperature    Float?
+  metadata       Json?
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
 
-  model      AIModel     @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  promptLogs PromptLog[]
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  model        AIModel       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  promptLogs   PromptLog[]
 
+  @@index([organizationId])
   @@map("agents")
 }
 
 model PromptLog {
-  id               String   @id @default(uuid())
-  agentId          String?  @map("agent_id")
-  modelId          String   @map("model_id")
-  userId           String?  @map("user_id")
-  sessionId        String?  @map("session_id")
+  id             String   @id @default(uuid())
+  organizationId String?  @map("organization_id")
+  agentId        String?  @map("agent_id")
+  modelId        String   @map("model_id")
+  userId         String?  @map("user_id")
+  sessionId      String?  @map("session_id")
 
   // Request
   prompt           String
@@ -358,24 +476,26 @@ model PromptLog {
   latencyMs        Int?     @map("latency_ms")
 
   // Quality flags
-  isHallucination  Boolean  @default(false) @map("is_hallucination")
-  isPolicyViolation Boolean @default(false) @map("is_policy_violation")
-  toxicityScore    Float?   @map("toxicity_score")   // 0-1
-  accuracyScore    Float?   @map("accuracy_score")   // 0-1 (manual)
-  biasScore        Float?   @map("bias_score")        // 0-1
-  flagged          Boolean  @default(false)
-  flagReason       String?  @map("flag_reason")
+  isHallucination   Boolean  @default(false) @map("is_hallucination")
+  isPolicyViolation Boolean  @default(false) @map("is_policy_violation")
+  toxicityScore     Float?   @map("toxicity_score")   // 0-1
+  accuracyScore     Float?   @map("accuracy_score")   // 0-1 (manual)
+  biasScore         Float?   @map("bias_score")        // 0-1
+  flagged           Boolean  @default(false)
+  flagReason        String?  @map("flag_reason")
 
   // Metadata
-  environment      String   @default("production")
-  ipAddress        String?  @map("ip_address")
-  metadata         Json?
-  createdAt        DateTime @default(now()) @map("created_at")
+  environment  String   @default("production")
+  ipAddress    String?  @map("ip_address")
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
 
-  agent  Agent?  @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  model  AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  agent        Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  model        AIModel       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([organizationId, createdAt])
   @@index([modelId, createdAt])
   @@index([agentId, createdAt])
   @@index([flagged])
@@ -385,41 +505,47 @@ model PromptLog {
 // ─── Monitoring & Alerts ─────────────────────────────────────────────────────
 
 model Alert {
-  id         String        @id @default(uuid())
-  title      String
-  message    String
-  severity   AlertSeverity
-  modelId    String?       @map("model_id")
-  agentId    String?       @map("agent_id")
-  isRead     Boolean       @default(false) @map("is_read")
-  resolvedAt DateTime?     @map("resolved_at")
-  resolvedBy String?       @map("resolved_by")
-  metadata   Json?
-  createdAt  DateTime      @default(now()) @map("created_at")
+  id             String        @id @default(uuid())
+  organizationId String?       @map("organization_id")
+  title          String
+  message        String
+  severity       AlertSeverity
+  modelId        String?       @map("model_id")
+  agentId        String?       @map("agent_id")
+  isRead         Boolean       @default(false) @map("is_read")
+  resolvedAt     DateTime?     @map("resolved_at")
+  resolvedBy     String?       @map("resolved_by")
+  metadata       Json?
+  createdAt      DateTime      @default(now()) @map("created_at")
 
-  @@index([isRead, severity])
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, isRead, severity])
   @@map("alerts")
 }
 
 // ─── Audit Trail ─────────────────────────────────────────────────────────────
 
 model AuditLog {
-  id         String      @id @default(uuid())
-  userId     String?     @map("user_id")
-  action     AuditAction
-  resource   String      // e.g. "AIModel", "RiskAssessment"
-  resourceId String?     @map("resource_id")
-  modelId    String?     @map("model_id")
-  before     Json?       // previous state snapshot
-  after      Json?       // new state snapshot
-  ipAddress  String?     @map("ip_address")
-  userAgent  String?     @map("user_agent")
-  metadata   Json?
-  createdAt  DateTime    @default(now()) @map("created_at")
+  id             String      @id @default(uuid())
+  organizationId String?     @map("organization_id")
+  userId         String?     @map("user_id")
+  action         AuditAction
+  resource       String      // e.g. "AIModel", "RiskAssessment"
+  resourceId     String?     @map("resource_id")
+  modelId        String?     @map("model_id")
+  before         Json?       // previous state snapshot
+  after          Json?       // new state snapshot
+  ipAddress      String?     @map("ip_address")
+  userAgent      String?     @map("user_agent")
+  metadata       Json?
+  createdAt      DateTime    @default(now()) @map("created_at")
 
-  user  User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  model AIModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  model        AIModel?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
 
+  @@index([organizationId, createdAt])
   @@index([userId, createdAt])
   @@index([resource, resourceId])
   @@index([createdAt])
@@ -514,24 +640,26 @@ model ProjectTemplate {
 }
 
 model Project {
-  id           String              @id @default(uuid())
-  name         String
-  description  String?
-  status       ProjectStatus       @default(DRAFT)
-  currentPhase ProjectPhase        @default(BUSINESS_CASE) @map("current_phase")
-  ownerId      String              @map("owner_id")
-  templateId   String?             @map("template_id")
-  startDate    DateTime?           @map("start_date")
-  targetDate   DateTime?           @map("target_date")
-  completedAt  DateTime?           @map("completed_at")
-  healthScore  Float               @default(100) @map("health_score")
-  healthStatus ProjectHealthStatus @default(UNKNOWN) @map("health_status")
-  budget       Float?
-  tags         String[]            @default([])
-  metadata     Json?
-  createdAt    DateTime            @default(now()) @map("created_at")
-  updatedAt    DateTime            @updatedAt @map("updated_at")
+  id             String              @id @default(uuid())
+  organizationId String?             @map("organization_id")
+  name           String
+  description    String?
+  status         ProjectStatus       @default(DRAFT)
+  currentPhase   ProjectPhase        @default(BUSINESS_CASE) @map("current_phase")
+  ownerId        String              @map("owner_id")
+  templateId     String?             @map("template_id")
+  startDate      DateTime?           @map("start_date")
+  targetDate     DateTime?           @map("target_date")
+  completedAt    DateTime?           @map("completed_at")
+  healthScore    Float               @default(100) @map("health_score")
+  healthStatus   ProjectHealthStatus @default(UNKNOWN) @map("health_status")
+  budget         Float?
+  tags           String[]            @default([])
+  metadata       Json?
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
 
+  organization Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   owner        User                 @relation("ProjectOwner", fields: [ownerId], references: [id])
   template     ProjectTemplate?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
   phases       ProjectPhaseRecord[]
@@ -543,7 +671,7 @@ model Project {
   n8nWebhooks  N8nWebhook[]
   linkedModels ProjectAIModel[]
 
-  @@index([status, healthStatus])
+  @@index([organizationId, status, healthStatus])
   @@index([ownerId])
   @@map("projects")
 }
@@ -704,19 +832,19 @@ model WorkflowCanvas {
 }
 
 model N8nWebhook {
-  id              String         @id @default(uuid())
-  projectId       String         @map("project_id")
+  id              String          @id @default(uuid())
+  projectId       String          @map("project_id")
   name            String
-  webhookUrl      String         @map("webhook_url")
+  webhookUrl      String          @map("webhook_url")
   triggerEvent    N8nTriggerEvent @map("trigger_event")
-  milestoneId     String?        @map("milestone_id")
-  isActive        Boolean        @default(true) @map("is_active")
-  payloadTemplate Json?          @map("payload_template")
-  lastTriggeredAt DateTime?      @map("last_triggered_at")
-  lastStatus      String?        @map("last_status")
-  lastResponse    Json?          @map("last_response")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
+  milestoneId     String?         @map("milestone_id")
+  isActive        Boolean         @default(true) @map("is_active")
+  payloadTemplate Json?           @map("payload_template")
+  lastTriggeredAt DateTime?       @map("last_triggered_at")
+  lastStatus      String?         @map("last_status")
+  lastResponse    Json?           @map("last_response")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
   project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   milestone Milestone? @relation("MilestoneTrigger", fields: [milestoneId], references: [id], onDelete: SetNull)
@@ -742,14 +870,19 @@ model ProjectAIModel {
 // ─── Policy Configuration ─────────────────────────────────────────────────────
 
 model PolicyConfig {
-  id          String   @id @default(uuid())
-  key         String   @unique
-  value       Json
-  description String?
-  updatedBy   String?  @map("updated_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(uuid())
+  organizationId String?  @map("organization_id")
+  key            String
+  value          Json
+  description    String?
+  updatedBy      String?  @map("updated_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  // Compound unique: each org can have its own value for each key
+  @@unique([organizationId, key])
   @@map("policy_configs")
 }
 
@@ -757,21 +890,21 @@ model PolicyConfig {
 
 /// Uploaded evidence files — attached to compliance controls, risk assessments, models, or data assets
 model EvidenceFile {
-  id           String   @id @default(uuid())
-  name         String
-  url          String
-  size         Int
-  mimeType     String   @map("mime_type")
-  uploadedBy   String   @map("uploaded_by")   // userId
-  section      String?  // ISO clause reference, e.g. "5.3.4"
-  description  String?
-  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+  id          String   @id @default(uuid())
+  name        String
+  url         String
+  size        Int
+  mimeType    String   @map("mime_type")
+  uploadedBy  String   @map("uploaded_by")   // userId
+  section     String?  // ISO clause reference, e.g. "5.3.4"
+  description String?
+  uploadedAt  DateTime @default(now()) @map("uploaded_at")
 
   // Polymorphic parent references (at most one is non-null)
-  controlId    String?  @map("control_id")
-  riskId       String?  @map("risk_id")
-  modelId      String?  @map("model_id")
-  dataAssetId  String?  @map("data_asset_id")
+  controlId   String?  @map("control_id")
+  riskId      String?  @map("risk_id")
+  modelId     String?  @map("model_id")
+  dataAssetId String?  @map("data_asset_id")
 
   control   ComplianceControl? @relation(fields: [controlId],   references: [id], onDelete: Cascade)
   risk      RiskAssessment?    @relation(fields: [riskId],      references: [id], onDelete: Cascade)
@@ -784,8 +917,6 @@ model EvidenceFile {
 }
 
 /// ISO 42005 §5.3–§5.8 — full impact assessment record per AI model
-/// §5.3 intended/unintended uses, §5.5 algorithm info, §5.6 deployment env,
-/// §5.8 nine impact dimensions — stored here to avoid altering ai_models table
 model ImpactAssessment {
   id      String  @id @default(uuid())
   modelId String  @unique @map("model_id")
@@ -805,23 +936,14 @@ model ImpactAssessment {
   environmentDescription String?   @map("environment_description")
 
   // ── §5.8 Impact Dimensions ──────────────────────────────────────────
-  // §5.8.2.2 Accountability
   accountability      String?
-  // §5.8.2.3 Transparency
   transparency        String?
-  // §5.8.2.4 Fairness & Non-discrimination
   fairness            String?
-  // §5.8.2.5 Privacy
   privacy             String?
-  // §5.8.2.6 Reliability & Robustness
   reliability         String?
-  // §5.8.2.7 Safety
   safety              String?
-  // §5.8.2.8 Explainability
   explainabilityDoc   String?  @map("explainability_doc")
-  // §5.8.2.9 Environmental Impact
   environmentalImpact String?  @map("environmental_impact")
-  // §5.8.3 Failures & Misuse
   failureMisuse       String?  @map("failure_misuse")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -848,7 +970,7 @@ model InterestedParty {
   modelId     String              @map("model_id")
   name        String
   role        InterestedPartyRole @default(OTHER)
-  interest    String?             // their interest/concern regarding the AI system
+  interest    String?
   consulted   Boolean             @default(false)
   consultedAt DateTime?           @map("consulted_at")
   notes       String?
@@ -878,34 +1000,37 @@ enum ReportFrequency {
 }
 
 model Report {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  type        ReportType
-  filters     Json       @default("{}")
-  sections    String[]   @default([])
-  createdBy   String     @map("created_by")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  id             String     @id @default(uuid())
+  organizationId String?    @map("organization_id")
+  name           String
+  description    String?
+  type           ReportType
+  filters        Json       @default("{}")
+  sections       String[]   @default([])
+  createdBy      String     @map("created_by")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  creator   User             @relation("ReportCreator", fields: [createdBy], references: [id])
-  schedules ReportSchedule[]
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  creator      User           @relation("ReportCreator", fields: [createdBy], references: [id])
+  schedules    ReportSchedule[]
 
+  @@index([organizationId])
   @@map("reports")
 }
 
 model ReportSchedule {
-  id          String          @id @default(uuid())
-  reportId    String          @map("report_id")
-  frequency   ReportFrequency
-  dayOfWeek   Int?            @map("day_of_week")
-  dayOfMonth  Int?            @map("day_of_month")
-  sendTime    String          @default("09:00") @map("send_time")
-  recipients  String[]
-  isActive    Boolean         @default(true) @map("is_active")
-  lastSentAt  DateTime?       @map("last_sent_at")
-  nextRunAt   DateTime?       @map("next_run_at")
-  createdAt   DateTime        @default(now()) @map("created_at")
+  id         String          @id @default(uuid())
+  reportId   String          @map("report_id")
+  frequency  ReportFrequency
+  dayOfWeek  Int?            @map("day_of_week")
+  dayOfMonth Int?            @map("day_of_month")
+  sendTime   String          @default("09:00") @map("send_time")
+  recipients String[]
+  isActive   Boolean         @default(true) @map("is_active")
+  lastSentAt DateTime?       @map("last_sent_at")
+  nextRunAt  DateTime?       @map("next_run_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
@@ -944,22 +1069,25 @@ enum HarmCategory {
 }
 
 model ApprovalWorkflow {
-  id          String         @id @default(uuid())
-  modelId     String?        @map("model_id")
-  title       String
-  description String?
-  status      ApprovalStatus @default(PENDING)
-  requestedBy String         @map("requested_by")
-  dueDate     DateTime?      @map("due_date")
-  completedAt DateTime?      @map("completed_at")
-  notes       String?
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  id             String         @id @default(uuid())
+  organizationId String?        @map("organization_id")
+  modelId        String?        @map("model_id")
+  title          String
+  description    String?
+  status         ApprovalStatus @default(PENDING)
+  requestedBy    String         @map("requested_by")
+  dueDate        DateTime?      @map("due_date")
+  completedAt    DateTime?      @map("completed_at")
+  notes          String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  model     AIModel?       @relation(fields: [modelId], references: [id], onDelete: SetNull)
-  requester User           @relation("WorkflowRequester", fields: [requestedBy], references: [id])
-  steps     ApprovalStep[]
+  organization Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  model        AIModel?       @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  requester    User           @relation("WorkflowRequester", fields: [requestedBy], references: [id])
+  steps        ApprovalStep[]
 
+  @@index([organizationId])
   @@map("approval_workflows")
 }
 
@@ -1002,4 +1130,24 @@ model MisuseScenario {
 
   @@index([modelId])
   @@map("misuse_scenarios")
+}
+
+// ─── Alert Rules ─────────────────────────────────────────────────────────────
+
+model AlertRule {
+  id             String   @id @default(uuid())
+  organizationId String?  @map("organization_id")
+  name           String
+  metric         String   // e.g. "toxicity_score", "latency_ms", "flag_rate"
+  threshold      Float
+  condition      String   @default("gt")  // gt | lt | eq
+  severity       AlertSeverity @default(WARNING)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@map("alert_rules")
 }

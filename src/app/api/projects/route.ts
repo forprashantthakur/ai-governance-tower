@@ -35,7 +35,7 @@ async function ensureTemplates() {
   }
 }
 
-export const GET = withAuth(async (req: NextRequest, { user }) => {
+export const GET = withAuth(async (req: NextRequest, { user, organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
@@ -43,7 +43,7 @@ export const GET = withAuth(async (req: NextRequest, { user }) => {
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "20");
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { organizationId };
     if (status) where.status = status;
     if (search) where.name = { contains: search, mode: "insensitive" };
 
@@ -70,7 +70,7 @@ export const GET = withAuth(async (req: NextRequest, { user }) => {
 });
 
 export const POST = withAuth(
-  async (req: NextRequest, { user }) => {
+  async (req: NextRequest, { user, organizationId }) => {
     try {
       const body = await req.json();
       const parsed = CreateProjectSchema.safeParse(body);
@@ -93,6 +93,7 @@ export const POST = withAuth(
           data: {
             name,
             description,
+            organizationId,
             ownerId: user.userId,
             templateId: template?.id,
             startDate: start,
@@ -181,6 +182,7 @@ export const POST = withAuth(
 
       await logAudit({
         userId: user.userId,
+        organizationId,
         action: "CREATE",
         resource: "Project",
         resourceId: project.id,

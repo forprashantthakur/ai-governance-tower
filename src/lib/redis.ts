@@ -26,6 +26,12 @@ if (process.env.NODE_ENV !== "production") {
   globalForRedis.redis = redis;
 }
 
+// ─── Tenant-scoped key helper ─────────────────────────────────────────────────
+// Always use this for any cache key that is specific to an organization.
+// Prevents cross-tenant cache leakage.
+export const orgKey = (organizationId: string, key: string): string =>
+  `org:${organizationId}:${key}`;
+
 // ─── Cache Helpers ────────────────────────────────────────────────────────────
 
 export async function getCache<T>(key: string): Promise<T | null> {

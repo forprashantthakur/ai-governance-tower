@@ -5,8 +5,8 @@ import { ok, serverError } from "@/lib/api-response";
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/monitoring — aggregated metrics
-export const GET = withAuth(async (req) => {
+// GET /api/monitoring — aggregated metrics (org-scoped)
+export const GET = withAuth(async (req, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const modelId = searchParams.get("modelId");
@@ -14,6 +14,7 @@ export const GET = withAuth(async (req) => {
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     const where = {
+      organizationId,
       createdAt: { gte: since },
       ...(modelId && { modelId }),
     };
@@ -43,18 +44,20 @@ export const GET = withAuth(async (req) => {
           },
         }),
         prisma.alert.findMany({
-          where: { isRead: false },
+          where: { organizationId, isRead: false },
           orderBy: { createdAt: "desc" },
           take: 10,
         }),
       ]);
 
-    // Daily call volume for chart
+    // Daily call volume for chart (org-scoped raw SQL)
     const dailyRaw = await (modelId
       ? prisma.$queryRaw<{ date: string; count: bigint }[]>`
           SELECT DATE("created_at")::text as date, COUNT(*)::bigint as count
           FROM prompt_logs
-          WHERE "created_at" >= ${since} AND "model_id" = ${modelId}
+          WHERE "created_at" >= ${since}
+            AND "organization_id" = ${organizationId}
+            AND "model_id" = ${modelId}
           GROUP BY DATE("created_at")
           ORDER BY date ASC
         `
@@ -62,6 +65,7 @@ export const GET = withAuth(async (req) => {
           SELECT DATE("created_at")::text as date, COUNT(*)::bigint as count
           FROM prompt_logs
           WHERE "created_at" >= ${since}
+            AND "organization_id" = ${organizationId}
           GROUP BY DATE("created_at")
           ORDER BY date ASC
         `);

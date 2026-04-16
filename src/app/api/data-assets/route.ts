@@ -23,9 +23,10 @@ const CreateAssetSchema = z.object({
 });
 
 // GET /api/data-assets
-export const GET = withAuth(async (req) => {
+export const GET = withAuth(async (req, { organizationId }) => {
   try {
     const assets = await prisma.dataAsset.findMany({
+      where: { organizationId },
       include: {
         models: {
           include: { model: { select: { id: true, name: true, type: true } } },
@@ -42,16 +43,19 @@ export const GET = withAuth(async (req) => {
 });
 
 // POST /api/data-assets
-export const POST = withAuth(async (req, { user }) => {
+export const POST = withAuth(async (req, { user, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = CreateAssetSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
-    const asset = await prisma.dataAsset.create({ data: parsed.data });
+    const asset = await prisma.dataAsset.create({
+      data: { ...parsed.data, organizationId },
+    });
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "CREATE",
       resource: "DataAsset",
       resourceId: asset.id,

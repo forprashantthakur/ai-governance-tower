@@ -20,10 +20,12 @@ const AssessmentSchema = z.object({
   nextReviewDate: z.string().datetime().optional(),
 });
 
-// GET /api/risk/:modelId — latest assessment + history
-export const GET = withAuth(async (_req, { params }) => {
+// GET /api/risk/:modelId — latest assessment + history (org-scoped)
+export const GET = withAuth(async (_req, { params, organizationId }) => {
   try {
-    const model = await prisma.aIModel.findUnique({ where: { id: params.modelId } });
+    const model = await prisma.aIModel.findUnique({
+      where: { id: params.modelId, organizationId },
+    });
     if (!model) return notFound("Model");
 
     const assessments = await prisma.riskAssessment.findMany({
@@ -40,9 +42,11 @@ export const GET = withAuth(async (_req, { params }) => {
 });
 
 // POST /api/risk/:modelId — create new assessment
-export const POST = withAuth(async (req, { params, user }) => {
+export const POST = withAuth(async (req, { params, user, organizationId }) => {
   try {
-    const model = await prisma.aIModel.findUnique({ where: { id: params.modelId } });
+    const model = await prisma.aIModel.findUnique({
+      where: { id: params.modelId, organizationId },
+    });
     if (!model) return notFound("Model");
 
     const body = await req.json();
@@ -88,6 +92,7 @@ export const POST = withAuth(async (req, { params, user }) => {
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "CREATE",
       resource: "RiskAssessment",
       resourceId: assessment.id,

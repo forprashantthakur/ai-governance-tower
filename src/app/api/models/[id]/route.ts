@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
-import { deleteCachePattern } from "@/lib/redis";
+import { deleteCachePattern, orgKey } from "@/lib/redis";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,10 +30,10 @@ const UpdateModelSchema = z.object({
 });
 
 // GET /api/models/:id
-export const GET = withAuth(async (req, { params }) => {
+export const GET = withAuth(async (req, { params, organizationId }) => {
   try {
     const model = await prisma.aIModel.findUnique({
-      where: { id: params.id },
+      where: { id: params.id, organizationId },
       include: {
         owner: { select: { id: true, name: true, email: true } },
         riskAssessments: { orderBy: { createdAt: "desc" }, take: 5 },
@@ -52,9 +52,9 @@ export const GET = withAuth(async (req, { params }) => {
 });
 
 // PATCH /api/models/:id
-export const PATCH = withAuth(async (req, { params, user }) => {
+export const PATCH = withAuth(async (req, { params, user, organizationId }) => {
   try {
-    const existing = await prisma.aIModel.findUnique({ where: { id: params.id } });
+    const existing = await prisma.aIModel.findUnique({ where: { id: params.id, organizationId } });
     if (!existing) return notFound("Model");
 
     const body = await req.json();
@@ -73,6 +73,7 @@ export const PATCH = withAuth(async (req, { params, user }) => {
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "UPDATE",
       resource: "AIModel",
       resourceId: params.id,
@@ -81,7 +82,7 @@ export const PATCH = withAuth(async (req, { params, user }) => {
       ipAddress: getClientIp(req),
     });
 
-    await deleteCachePattern("models:*");
+    await deleteCachePattern(orgKey(organizationId, "models:*"));
     return ok(updated);
   } catch (err) {
     return serverError(err);
@@ -89,15 +90,16 @@ export const PATCH = withAuth(async (req, { params, user }) => {
 }, "RISK_OFFICER");
 
 // DELETE /api/models/:id
-export const DELETE = withAuth(async (req, { params, user }) => {
+export const DELETE = withAuth(async (req, { params, user, organizationId }) => {
   try {
-    const existing = await prisma.aIModel.findUnique({ where: { id: params.id } });
+    const existing = await prisma.aIModel.findUnique({ where: { id: params.id, organizationId } });
     if (!existing) return notFound("Model");
 
     await prisma.aIModel.delete({ where: { id: params.id } });
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "DELETE",
       resource: "AIModel",
       resourceId: params.id,
@@ -105,7 +107,7 @@ export const DELETE = withAuth(async (req, { params, user }) => {
       ipAddress: getClientIp(req),
     });
 
-    await deleteCachePattern("models:*");
+    await deleteCachePattern(orgKey(organizationId, "models:*"));
     return noContent();
   } catch (err) {
     return serverError(err);

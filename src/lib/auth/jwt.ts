@@ -1,11 +1,13 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-import { UserRole } from "@prisma/client";
+import { OrgMemberRole, PlanTier } from "@prisma/client";
 
 export interface JwtUserPayload extends JWTPayload {
   userId: string;
   email: string;
-  role: UserRole;
   name: string;
+  organizationId: string;
+  orgRole: OrgMemberRole;
+  plan: PlanTier;
 }
 
 const secret = new TextEncoder().encode(

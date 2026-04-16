@@ -18,8 +18,8 @@ const CreateControlSchema = z.object({
   notes: z.string().optional(),
 });
 
-// GET /api/compliance — list controls, optionally filtered
-export const GET = withAuth(async (req) => {
+// GET /api/compliance — list controls filtered to org's models
+export const GET = withAuth(async (req, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const modelId = searchParams.get("modelId");
@@ -28,6 +28,7 @@ export const GET = withAuth(async (req) => {
 
     const controls = await prisma.complianceControl.findMany({
       where: {
+        model: { organizationId },
         ...(modelId && { modelId }),
         ...(framework && { framework }),
         ...(status && { status: status as never }),
@@ -54,11 +55,17 @@ export const GET = withAuth(async (req) => {
 });
 
 // POST /api/compliance
-export const POST = withAuth(async (req, { user }) => {
+export const POST = withAuth(async (req, { user, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = CreateControlSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+
+    // Ensure model belongs to this org
+    const model = await prisma.aIModel.findUnique({
+      where: { id: parsed.data.modelId, organizationId },
+    });
+    if (!model) return badRequest("Model not found in this organization");
 
     const control = await prisma.complianceControl.upsert({
       where: {
@@ -84,6 +91,7 @@ export const POST = withAuth(async (req, { user }) => {
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "UPDATE",
       resource: "ComplianceControl",
       resourceId: control.id,

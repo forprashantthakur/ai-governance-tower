@@ -6,23 +6,22 @@ import { signJwt } from "@/lib/auth/jwt";
 import { ok, badRequest, unauthorized, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const LoginSchema = z.object({
   email: z.string().email("Invalid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(1, "Password is required"),
+  // Optional: if user belongs to multiple orgs, client sends which one to log into
+  organizationId: z.string().uuid().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
+    if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
-    if (!parsed.success) {
-      return badRequest("Validation failed", parsed.error.flatten());
-    }
-
-    const { email, password } = parsed.data;
+    const { email, password, organizationId: preferredOrgId } = parsed.data;
 
     const user = await withRetry(() =>
       prisma.user.findUnique({
@@ -31,19 +30,62 @@ export async function POST(req: NextRequest) {
           id: true,
           email: true,
           name: true,
-          role: true,
           passwordHash: true,
           isActive: true,
+          memberships: {
+            where: { isActive: true },
+            include: {
+              organization: {
+                select: { id: true, name: true, slug: true, plan: true, isActive: true },
+              },
+            },
+            orderBy: { joinedAt: "asc" },
+          },
         },
       })
     );
 
-    if (!user || !user.isActive) {
-      return unauthorized("Invalid credentials");
-    }
+    if (!user || !user.isActive) return unauthorized("Invalid credentials");
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) return unauthorized("Invalid credentials");
+
+    // Resolve which org membership to use for this session
+    const activeMemberships = user.memberships.filter((m) => m.organization.isActive);
+
+    if (activeMemberships.length === 0) {
+      // Edge case: user exists but has no active org (legacy user pre-migration)
+      // Return a list-orgs:[] signal so the client can prompt org creation
+      return ok({
+        token: null,
+        user: { id: user.id, email: user.email, name: user.name },
+        requiresOrgSetup: true,
+        organizations: [],
+      });
+    }
+
+    // If user is in multiple orgs and a preference was provided, honour it
+    let membership = activeMemberships[0];
+    if (preferredOrgId) {
+      const preferred = activeMemberships.find((m) => m.organizationId === preferredOrgId);
+      if (preferred) membership = preferred;
+    }
+
+    // If user is in multiple orgs and no preference given, ask client to pick
+    if (activeMemberships.length > 1 && !preferredOrgId) {
+      return ok({
+        token: null,
+        requiresOrgPicker: true,
+        user: { id: user.id, email: user.email, name: user.name },
+        organizations: activeMemberships.map((m) => ({
+          id: m.organizationId,
+          name: m.organization.name,
+          slug: m.organization.slug,
+          plan: m.organization.plan,
+          role: m.role,
+        })),
+      });
+    }
 
     // Update last login
     await prisma.user.update({
@@ -54,8 +96,10 @@ export async function POST(req: NextRequest) {
     const token = await signJwt({
       userId: user.id,
       email: user.email,
-      role: user.role,
       name: user.name,
+      organizationId: membership.organizationId,
+      orgRole: membership.role,
+      plan: membership.organization.plan,
     });
 
     await logAudit({
@@ -67,14 +111,22 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get("user-agent") ?? undefined,
     });
 
-    return ok(
-      {
-        token,
-        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    return ok({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: membership.role,         // orgRole used as "role" for UI compat
+        organizationId: membership.organizationId,
+        organization: {
+          id: membership.organizationId,
+          name: membership.organization.name,
+          slug: membership.organization.slug,
+          plan: membership.organization.plan,
+        },
       },
-      undefined,
-      200
-    );
+    });
   } catch (err) {
     return serverError(err);
   }
