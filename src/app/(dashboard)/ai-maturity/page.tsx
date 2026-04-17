@@ -174,7 +174,27 @@ function TagInput({
         />
         <Button type="button" variant="outline" size="sm" onClick={() => add(input)}><Plus className="h-4 w-4" /></Button>
       </div>
-      {/* Suggestion chips */}
+      {/* Selected tags — solid primary style, clearly "added" */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {tags.map((t) => (
+            <span
+              key={t}
+              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-primary text-primary-foreground"
+            >
+              {t}
+              <button
+                type="button"
+                onClick={() => remove(t)}
+                className="ml-0.5 rounded-full hover:bg-white/20 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      {/* Suggestion chips — ghost style, clearly "available to add" */}
       {suggestions && (
         <div className="flex flex-wrap gap-1 mt-1">
           {suggestions.filter((s) => !tags.includes(s)).slice(0, 10).map((s) => (
@@ -182,20 +202,10 @@ function TagInput({
               key={s}
               type="button"
               onClick={() => add(s)}
-              className="text-xs px-2 py-0.5 rounded-full border border-border bg-muted hover:border-primary hover:bg-primary/10 transition-colors"
+              className="text-xs px-2 py-0.5 rounded-full border border-dashed border-border/70 text-muted-foreground bg-transparent hover:border-primary hover:text-primary hover:bg-primary/10 transition-colors"
             >
               + {s}
             </button>
-          ))}
-        </div>
-      )}
-      {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1">
-          {tags.map((t) => (
-            <Badge key={t} variant="secondary" className="flex items-center gap-1">
-              {t}
-              <button onClick={() => remove(t)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
-            </Badge>
           ))}
         </div>
       )}
