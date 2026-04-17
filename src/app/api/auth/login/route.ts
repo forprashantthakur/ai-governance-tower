@@ -87,12 +87,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Update last login
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
-
+    // Sign JWT first — don't block the response on non-critical writes
     const token = await signJwt({
       userId: user.id,
       email: user.email,
@@ -102,7 +97,9 @@ export async function POST(req: NextRequest) {
       plan: membership.organization.plan,
     });
 
-    await logAudit({
+    // Fire-and-forget: neither lastLoginAt nor audit log should delay login
+    prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => null);
+    logAudit({
       userId: user.id,
       action: "LOGIN",
       resource: "User",
