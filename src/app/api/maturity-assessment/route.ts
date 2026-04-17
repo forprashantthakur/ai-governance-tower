@@ -7,7 +7,7 @@ import { ok, created, badRequest } from "@/lib/api-response";
 import { logAudit } from "@/lib/audit-logger";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60; // allow up to 60s for Claude API call
+export const maxDuration = 60;
 
 const CreateSchema = z.object({
   organizationProfile: z.string().min(20, "Provide at least 20 characters describing the organization"),
@@ -34,7 +34,7 @@ function buildPrompt(data: z.infer<typeof CreateSchema>): string {
 Your task is to analyze the organization's AI maturity assessment and generate HIGH-IMPACT, IMPLEMENTABLE AI recommendations with REAL n8n workflow definitions.
 
 CRITICAL RULES:
-- Limit output to MAX 3 use cases
+- Generate EXACTLY 1 use case (the single highest-impact one for this organization)
 - Return STRICT VALID JSON only — no markdown, no code fences, no text outside the JSON
 - For n8n_workflow.nodes, use ONLY real n8n node types from the allowed list below
 - Every node must have: step, node_type (exact n8n type string), name (display name), description, and parameters (key config values as object)
@@ -202,8 +202,8 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
       const prompt = buildPrompt(data);
 
       const message = await anthropic.messages.create({
-        model: "claude-opus-4-5",
-        max_tokens: 4096,
+        model: "claude-3-5-haiku-20241022",
+        max_tokens: 2500,
         messages: [{ role: "user", content: prompt }],
       });
 
