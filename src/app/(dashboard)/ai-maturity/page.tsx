@@ -581,11 +581,11 @@ export default function AIMaturityPage() {
     setFunctions((prev) => prev.includes(fn) ? prev.filter((f) => f !== fn) : [...prev, fn]);
 
   const canGoNext = useCallback(() => {
-    if (step === 1) return orgProfile.trim().length >= 20 && industry;
+    if (step === 1) return orgProfile.trim().length >= 20 && !!industry;
     if (step === 2) return functions.length >= 1 && maturityScore >= 1;
-    if (step === 3) return businessGoals.length >= 1;
+    if (step === 3) return true; // Data & Systems are optional — always allow continue
     return true;
-  }, [step, orgProfile, industry, functions, maturityScore, businessGoals]);
+  }, [step, orgProfile, industry, functions, maturityScore]);
 
   async function handleSubmit() {
     setLoading(true);
