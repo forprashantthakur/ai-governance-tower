@@ -590,9 +590,10 @@ export default function AIMaturityPage() {
   async function handleSubmit() {
     setLoading(true);
     try {
+      const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
       const res = await fetch("/api/maturity-assessment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           organizationProfile: orgProfile,
           industry,
