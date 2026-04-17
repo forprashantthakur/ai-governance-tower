@@ -637,10 +637,10 @@ export default function AIMaturityPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Brain className="h-6 w-6 text-primary" />
-            AI Maturity Assessment
+            AI Use Case Finder
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Generate AI use case recommendations tailored to your organization's maturity and goals
+            Generate high-impact AI use cases with n8n workflows tailored to your organization
           </p>
         </div>
         {result && (
