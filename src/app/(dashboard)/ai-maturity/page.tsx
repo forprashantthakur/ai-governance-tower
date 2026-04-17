@@ -604,12 +604,17 @@ export default function AIMaturityPage() {
           businessGoals,
         }),
       });
-      const json = await res.json();
+      let json: { success: boolean; error?: string; data?: { id: string; status: string; useCases: UseCase[] } };
+      try {
+        json = await res.json();
+      } catch {
+        throw new Error(`HTTP ${res.status} — response was not JSON`);
+      }
       if (!res.ok || !json.success) {
-        addNotification({ type: "error", title: "Assessment failed", message: json.error });
+        addNotification({ type: "error", title: "Assessment failed", message: `[${res.status}] ${json.error ?? "Unknown error"}` });
         return;
       }
-      const useCases = json.data.useCases as UseCase[];
+      const useCases = (json.data?.useCases ?? []) as UseCase[];
       setResult(useCases);
       setAssessmentId(json.data.id);
       setHistory((h) => [{ id: json.data.id, label: `${industry} — Level ${maturityScore}` }, ...h]);
