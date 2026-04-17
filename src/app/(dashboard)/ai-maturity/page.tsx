@@ -614,10 +614,11 @@ export default function AIMaturityPage() {
         addNotification({ type: "error", title: "Assessment failed", message: `[${res.status}] ${json.error ?? "Unknown error"}` });
         return;
       }
-      const useCases = (json.data?.useCases ?? []) as UseCase[];
+      const data = json.data!;
+      const useCases = (data.useCases ?? []) as UseCase[];
       setResult(useCases);
-      setAssessmentId(json.data.id);
-      setHistory((h) => [{ id: json.data.id, label: `${industry} — Level ${maturityScore}` }, ...h]);
+      setAssessmentId(data.id);
+      setHistory((h) => [{ id: data.id, label: `${industry} — Level ${maturityScore}` }, ...h]);
       setStep(5);
     } catch {
       addNotification({ type: "error", title: "Network error", message: "Please try again." });
