@@ -1,9 +1,9 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, created, badRequest, serverError } from "@/lib/api-response";
+import { ok, created, badRequest } from "@/lib/api-response";
 import { logAudit } from "@/lib/audit-logger";
 
 export const dynamic = "force-dynamic";
@@ -162,7 +162,9 @@ export const GET = withAuth(async (_req, { organizationId }) => {
     });
     return ok(assessments);
   } catch (err) {
-    return serverError(err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[maturity-assessment GET]", err);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 });
 
@@ -177,7 +179,7 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
 
     // Check Anthropic API key
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return serverError("ANTHROPIC_API_KEY is not configured");
+    if (!apiKey) return NextResponse.json({ success: false, error: "ANTHROPIC_API_KEY is not configured on the server" }, { status: 500 });
 
     // Create assessment record in PROCESSING state
     const assessment = await prisma.maturityAssessment.create({
@@ -201,7 +203,7 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
 
       const message = await anthropic.messages.create({
         model: "claude-opus-4-5",
-        max_tokens: 4096,
+        max_tokens: 2048,
         messages: [{ role: "user", content: prompt }],
       });
 
@@ -254,6 +256,8 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
       throw aiErr;
     }
   } catch (err) {
-    return serverError(err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[maturity-assessment POST]", err);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 });
