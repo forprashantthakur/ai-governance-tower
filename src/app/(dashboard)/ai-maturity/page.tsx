@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   Loader2,
   CheckCircle2,
-  AlertCircle,
   Building2,
   Target,
   Database,
@@ -23,8 +22,17 @@ import {
   X,
   TrendingUp,
   RefreshCw,
-  FileText,
   ArrowRight,
+  Download,
+  ArrowDown,
+  GitBranch,
+  Globe,
+  Mail,
+  MessageSquare,
+  Play,
+  Filter,
+  Braces,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,8 +52,15 @@ interface Agent {
 
 interface WorkflowNode {
   step: number;
+  name: string;
   node_type: string;
   description: string;
+  parameters?: Record<string, unknown>;
+}
+
+interface WorkflowConnection {
+  from: string;
+  to: string;
 }
 
 interface Phase {
@@ -67,6 +82,7 @@ interface UseCase {
     workflow_name: string;
     trigger: string;
     nodes: WorkflowNode[];
+    connections?: WorkflowConnection[];
     integrations: string[];
     workflow_summary: string;
   };
@@ -187,6 +203,86 @@ function TagInput({
   );
 }
 
+// ── n8n utilities ────────────────────────────────────────────────────────────
+
+/** Map a node_type to a display colour + icon label */
+function nodeStyle(nodeType: string): { bg: string; border: string; label: string; category: string } {
+  if (nodeType.includes("webhook") || nodeType.includes("scheduleTrigger") || nodeType.includes("manualTrigger"))
+    return { bg: "bg-green-500/10", border: "border-green-500/40", label: "Trigger", category: "trigger" };
+  if (nodeType.includes("langchain.agent") || nodeType.includes("chainLlm"))
+    return { bg: "bg-purple-500/10", border: "border-purple-500/40", label: "AI Agent", category: "ai" };
+  if (nodeType.includes("langchain") || nodeType.includes("openAi") || nodeType.includes("Anthropic") || nodeType.includes("embeddings") || nodeType.includes("vector"))
+    return { bg: "bg-violet-500/10", border: "border-violet-500/40", label: "LLM", category: "ai" };
+  if (nodeType.includes("if") || nodeType.includes("switch") || nodeType.includes("filter") || nodeType.includes("merge"))
+    return { bg: "bg-yellow-500/10", border: "border-yellow-500/40", label: "Logic", category: "logic" };
+  if (nodeType.includes("httpRequest") || nodeType.includes("respondToWebhook"))
+    return { bg: "bg-blue-500/10", border: "border-blue-500/40", label: "HTTP", category: "http" };
+  if (nodeType.includes("postgres") || nodeType.includes("mysql") || nodeType.includes("mongo") || nodeType.includes("redis"))
+    return { bg: "bg-orange-500/10", border: "border-orange-500/40", label: "Database", category: "db" };
+  if (nodeType.includes("email") || nodeType.includes("slack") || nodeType.includes("teams") || nodeType.includes("twilio"))
+    return { bg: "bg-pink-500/10", border: "border-pink-500/40", label: "Notify", category: "comms" };
+  if (nodeType.includes("salesforce") || nodeType.includes("hubspot") || nodeType.includes("airtable"))
+    return { bg: "bg-cyan-500/10", border: "border-cyan-500/40", label: "CRM", category: "crm" };
+  if (nodeType.includes("code") || nodeType.includes("set") || nodeType.includes("itemLists"))
+    return { bg: "bg-slate-500/10", border: "border-slate-500/40", label: "Data", category: "data" };
+  return { bg: "bg-muted", border: "border-border", label: "Node", category: "other" };
+}
+
+/** Generate importable n8n workflow JSON from use-case data */
+function buildN8nJson(wf: UseCase["n8n_workflow"], useCaseName: string): object {
+  const GRID_X = 250;
+  const GRID_Y_START = 300;
+  const GRID_Y_STEP = 180;
+
+  const nodes = wf.nodes.map((node, i) => ({
+    id: `node_${i + 1}`,
+    name: node.name || `Step ${node.step}`,
+    type: node.node_type,
+    typeVersion: 1,
+    position: [GRID_X, GRID_Y_START + i * GRID_Y_STEP],
+    parameters: node.parameters ?? {},
+    notes: node.description,
+  }));
+
+  // Build connections: sequential by default, augmented by explicit connections field
+  const connections: Record<string, { main: Array<Array<{ node: string; type: string; index: number }>> }> = {};
+  if (wf.connections && wf.connections.length > 0) {
+    // Use explicit connections from Claude
+    for (const conn of wf.connections) {
+      if (!connections[conn.from]) connections[conn.from] = { main: [[]] };
+      connections[conn.from].main[0].push({ node: conn.to, type: "main", index: 0 });
+    }
+  } else {
+    // Fall back to sequential
+    nodes.slice(0, -1).forEach((n, i) => {
+      connections[n.name] = { main: [[{ node: nodes[i + 1].name, type: "main", index: 0 }]] };
+    });
+  }
+
+  return {
+    name: wf.workflow_name || useCaseName,
+    nodes,
+    connections,
+    active: false,
+    settings: { executionOrder: "v1" },
+    meta: {
+      instanceId: "ai-governance-tower",
+      templateCredsSetupCompleted: true,
+    },
+  };
+}
+
+/** Download a JSON object as a .json file */
+function downloadJson(obj: object, filename: string) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ── Use Case Card ─────────────────────────────────────────────────────────────
 function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
   const [tab, setTab] = useState<"overview" | "agents" | "workflow" | "plan" | "arch">("overview");
@@ -277,46 +373,123 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
         )}
 
         {tab === "workflow" && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-3 text-sm">
-              <div><span className="text-muted-foreground">Name: </span><span className="font-medium">{uc.n8n_workflow.workflow_name}</span></div>
-              <div><span className="text-muted-foreground">Trigger: </span><Badge variant="secondary">{uc.n8n_workflow.trigger}</Badge></div>
-            </div>
-
-            {/* Workflow nodes */}
-            <div className="space-y-2">
-              {uc.n8n_workflow.nodes.map((node, i) => (
-                <div key={i} className="flex gap-3 items-start">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-                    {node.step}
-                  </div>
-                  <div className="flex-1 rounded-lg border border-border bg-muted/30 p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-xs font-mono">{node.node_type}</Badge>
-                    </div>
-                    <p className="text-sm text-foreground">{node.description}</p>
-                  </div>
-                  {i < uc.n8n_workflow.nodes.length - 1 && (
-                    <div className="absolute ml-3 mt-7 h-5 w-px bg-border" />
-                  )}
+          <div className="space-y-5">
+            {/* Header row: workflow name + trigger + Download button */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Workflow: </span>
+                  <span className="font-semibold text-foreground">{uc.n8n_workflow.workflow_name}</span>
                 </div>
-              ))}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Trigger: </span>
+                  <Badge variant="secondary" className="text-xs">{uc.n8n_workflow.trigger}</Badge>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 shrink-0"
+                onClick={() =>
+                  downloadJson(
+                    buildN8nJson(uc.n8n_workflow, uc.use_case_name),
+                    `${uc.use_case_name.replace(/\s+/g, "_")}_n8n_workflow.json`
+                  )
+                }
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download n8n JSON
+              </Button>
             </div>
 
+            {/* Visual flowchart */}
+            <div className="flex flex-col items-stretch gap-0">
+              {uc.n8n_workflow.nodes.map((node, i) => {
+                const style = nodeStyle(node.node_type);
+                const CategoryIcon =
+                  style.category === "trigger" ? Play
+                  : style.category === "ai"      ? Bot
+                  : style.category === "logic"   ? GitBranch
+                  : style.category === "http"    ? Globe
+                  : style.category === "db"      ? Database
+                  : style.category === "comms"   ? Mail
+                  : style.category === "crm"     ? Link2
+                  : Braces;
+                return (
+                  <div key={i} className="flex flex-col items-center w-full">
+                    {/* Node card */}
+                    <div className={cn("w-full rounded-xl border p-4 space-y-2.5", style.bg, style.border)}>
+                      {/* Top row: icon + name + category badge + step */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border", style.bg, style.border)}>
+                            <CategoryIcon className="h-3.5 w-3.5 text-foreground" />
+                          </div>
+                          <span className="font-semibold text-sm text-foreground truncate">
+                            {node.name || `Step ${node.step}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge variant="outline" className={cn("text-xs border", style.border)}>
+                            {style.label}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                            #{node.step}
+                          </span>
+                        </div>
+                      </div>
+                      {/* node_type pill */}
+                      <div className="font-mono text-xs text-muted-foreground bg-background/60 px-2 py-1 rounded border border-border break-all">
+                        {node.node_type}
+                      </div>
+                      {/* Description */}
+                      <p className="text-sm text-foreground leading-relaxed">{node.description}</p>
+                      {/* Key parameters */}
+                      {node.parameters && Object.keys(node.parameters).length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {Object.entries(node.parameters).slice(0, 5).map(([k, v]) => (
+                            <span
+                              key={k}
+                              className="text-xs bg-background/80 border border-border rounded px-2 py-0.5 font-mono"
+                            >
+                              <span className="text-muted-foreground">{k}:</span>{" "}
+                              <span className="text-foreground">{String(v).slice(0, 45)}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Downward arrow connector */}
+                    {i < uc.n8n_workflow.nodes.length - 1 && (
+                      <div className="flex flex-col items-center py-0.5">
+                        <div className="w-px h-4 bg-border" />
+                        <ArrowDown className="h-4 w-4 text-muted-foreground -mt-1" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Integrations */}
             {uc.n8n_workflow.integrations.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Integrations</p>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Integrations</p>
                 <div className="flex flex-wrap gap-1.5">
                   {uc.n8n_workflow.integrations.map((intg, i) => (
-                    <Badge key={i} variant="secondary">{intg}</Badge>
+                    <Badge key={i} variant="secondary" className="flex items-center gap-1">
+                      <Link2 className="h-3 w-3" />
+                      {intg}
+                    </Badge>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Workflow summary */}
             <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-1">Workflow Summary</p>
-              <p className="text-sm text-foreground">{uc.n8n_workflow.workflow_summary}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Workflow Summary</p>
+              <p className="text-sm text-foreground leading-relaxed">{uc.n8n_workflow.workflow_summary}</p>
             </div>
           </div>
         )}

@@ -29,17 +29,29 @@ function buildPrompt(data: z.infer<typeof CreateSchema>): string {
     5: "Level 5 — Optimized (AI-first organization, continuous improvement)",
   };
 
-  return `You are an Enterprise AI Architect and Agentic AI Solution Designer.
+  return `You are an Enterprise AI Architect and Agentic AI Solution Designer specialising in n8n workflow automation.
 
-Your task is to analyze the organization's AI maturity assessment and generate HIGH-IMPACT, IMPLEMENTABLE AI recommendations.
+Your task is to analyze the organization's AI maturity assessment and generate HIGH-IMPACT, IMPLEMENTABLE AI recommendations with REAL n8n workflow definitions.
 
-IMPORTANT:
+CRITICAL RULES:
 - Limit output to MAX 3 use cases
-- Return STRICT VALID JSON only — no markdown, no code fences, no explanations outside the JSON
-- Keep responses concise and structured
-- Use realistic, industry-specific language
-- n8n_workflow nodes must be concrete and actionable
-- If data is missing, infer reasonably based on the industry
+- Return STRICT VALID JSON only — no markdown, no code fences, no text outside the JSON
+- For n8n_workflow.nodes, use ONLY real n8n node types from the allowed list below
+- Every node must have: step, node_type (exact n8n type string), name (display name), description, and parameters (key config values as object)
+- Nodes must be connected sequentially — the output of step N feeds into step N+1
+- If data is missing, infer reasonably from the industry context
+
+ALLOWED n8n NODE TYPES (use exact strings):
+Triggers: n8n-nodes-base.webhook | n8n-nodes-base.scheduleTrigger | n8n-nodes-base.manualTrigger
+HTTP/API: n8n-nodes-base.httpRequest
+Logic: n8n-nodes-base.if | n8n-nodes-base.switch | n8n-nodes-base.merge | n8n-nodes-base.splitInBatches | n8n-nodes-base.filter
+Data: n8n-nodes-base.set | n8n-nodes-base.code | n8n-nodes-base.itemLists
+AI/LLM: @n8n/n8n-nodes-langchain.agent | @n8n/n8n-nodes-langchain.chainLlm | @n8n/n8n-nodes-langchain.lmChatAnthropic | @n8n/n8n-nodes-langchain.lmChatOpenAi | @n8n/n8n-nodes-langchain.openAi | @n8n/n8n-nodes-langchain.embeddingsOpenAi | @n8n/n8n-nodes-langchain.vectorStoreInMemory | @n8n/n8n-nodes-langchain.toolWorkflow
+Database: n8n-nodes-base.postgres | n8n-nodes-base.mySql | n8n-nodes-base.mongoDb | n8n-nodes-base.redis
+Communication: n8n-nodes-base.emailSend | n8n-nodes-base.slack | n8n-nodes-base.microsoftTeams | n8n-nodes-base.twilio
+CRM: n8n-nodes-base.salesforce | n8n-nodes-base.hubspot | n8n-nodes-base.airtable
+Files: n8n-nodes-base.spreadsheetFile | n8n-nodes-base.awsS3 | n8n-nodes-base.googleDrive | n8n-nodes-base.pdf
+Utility: n8n-nodes-base.wait | n8n-nodes-base.respondToWebhook | n8n-nodes-base.noOp
 
 --------------------------------------------------
 
@@ -68,7 +80,7 @@ ${data.businessGoals.join("; ")}
 
 --------------------------------------------------
 
-OUTPUT FORMAT (return ONLY this JSON, no other text):
+OUTPUT FORMAT (return ONLY this JSON):
 
 {
   "use_cases": [
@@ -95,9 +107,16 @@ OUTPUT FORMAT (return ONLY this JSON, no other text):
         "nodes": [
           {
             "step": 1,
-            "node_type": "",
-            "description": ""
+            "name": "Trigger Node Display Name",
+            "node_type": "n8n-nodes-base.webhook",
+            "description": "What this node does in business terms",
+            "parameters": {
+              "key": "value"
+            }
           }
+        ],
+        "connections": [
+          { "from": "Node Display Name A", "to": "Node Display Name B" }
         ],
         "integrations": [],
         "workflow_summary": ""
