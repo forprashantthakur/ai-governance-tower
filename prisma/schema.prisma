@@ -114,6 +114,7 @@ enum AuditAction {
   APPROVE
   REJECT
   ESCALATE
+  AI_MATURITY_ASSESSMENT_COMPLETED
 }
 
 enum ConsentType {
@@ -163,6 +164,7 @@ model Organization {
   promptLogs    PromptLog[]
   approvalWorkflows ApprovalWorkflow[]
   alertRules        AlertRule[]
+  maturityAssessments MaturityAssessment[]
 
   @@map("organizations")
 }
@@ -1150,4 +1152,39 @@ model AlertRule {
 
   @@index([organizationId])
   @@map("alert_rules")
+}
+
+// ─── AI Maturity Assessment ───────────────────────────────────────────────────
+
+enum MaturityStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model MaturityAssessment {
+  id                  String         @id @default(uuid())
+  organizationId      String         @map("organization_id")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  // Inputs
+  organizationProfile String         @map("organization_profile")
+  industry            String
+  functions           String[]       @default([])
+  maturityScore       Int            @map("maturity_score")   // 1–5 scale
+  dataSources         String[]       @default([]) @map("data_sources")
+  existingSystems     String[]       @default([]) @map("existing_systems")
+  businessGoals       String[]       @default([]) @map("business_goals")
+
+  // Generated output
+  useCases            Json?          @map("use_cases")       // Array of use case objects
+  status              MaturityStatus @default(PENDING)
+  errorMessage        String?        @map("error_message")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("maturity_assessments")
 }

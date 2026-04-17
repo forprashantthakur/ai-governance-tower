@@ -21,6 +21,7 @@ import {
   CheckSquare,
   Scale,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { href: "/projects", icon: FolderKanban, label: "AI Projects" },
   { href: "/models", icon: BrainCircuit, label: "AI Inventory" },
   { href: "/risk", icon: ShieldAlert, label: "Risk & Compliance" },
+  { href: "/ai-maturity", icon: Sparkles, label: "AI Maturity Assessment" },
   { href: "/iso42005", icon: FileSearch, label: "ISO 42005 Assessment" },
   { href: "/approvals", icon: CheckSquare, label: "Approval Workflows" },
   { href: "/compliance-map", icon: Scale, label: "Regulation Mapping" },
