@@ -201,11 +201,30 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
       const anthropic = new Anthropic({ apiKey });
       const prompt = buildPrompt(data);
 
-      const message = await anthropic.messages.create({
-        model: "claude-3-5-haiku-20241022",
-        max_tokens: 2500,
-        messages: [{ role: "user", content: prompt }],
-      });
+      // Try models in order of preference — fall back if one is deprecated
+      const MODELS = [
+        "claude-3-5-sonnet-20241022",
+        "claude-3-5-haiku-20241022",
+        "claude-3-opus-20240229",
+      ];
+
+      let message: Awaited<ReturnType<typeof anthropic.messages.create>> | null = null;
+      let lastError: unknown;
+      for (const model of MODELS) {
+        try {
+          message = await anthropic.messages.create({
+            model,
+            max_tokens: 2500,
+            messages: [{ role: "user", content: prompt }],
+          });
+          break; // success — stop trying
+        } catch (e: unknown) {
+          const status = (e as { status?: number })?.status;
+          if (status === 404) { lastError = e; continue; } // model not found — try next
+          throw e; // other error — bubble up immediately
+        }
+      }
+      if (!message) throw lastError;
 
       const rawText = message.content
         .filter((b) => b.type === "text")
