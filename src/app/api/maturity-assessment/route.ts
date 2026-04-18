@@ -203,7 +203,7 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
 
       const message = await anthropic.messages.create({
         model: "claude-sonnet-4-6",
-        max_tokens: 2500,
+        max_tokens: 4000,
         messages: [{ role: "user", content: prompt }],
       });
 
@@ -212,20 +212,25 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
         .map((b) => (b as { type: "text"; text: string }).text)
         .join("");
 
-      // Parse the JSON response — Claude sometimes wraps in markdown fences
-      // or adds leading text. Extract the outermost { ... } to be safe.
+      // Parse the JSON response from Claude — strip markdown fences if present
       let useCases: unknown;
       try {
-        const start = rawText.indexOf("{");
-        const end = rawText.lastIndexOf("}");
+        // Remove markdown code fences if Claude wrapped the JSON
+        const stripped = rawText
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```\s*$/i, "")
+          .trim();
+        const start = stripped.indexOf("{");
+        const end = stripped.lastIndexOf("}");
         if (start === -1 || end === -1 || end <= start) {
-          throw new Error(`No JSON object found in Claude response: ${rawText.slice(0, 200)}`);
+          throw new Error(`PARSE_FAIL|rawLen=${rawText.length}|preview=${rawText.slice(0, 300)}`);
         }
-        const jsonStr = rawText.slice(start, end + 1);
+        const jsonStr = stripped.slice(start, end + 1);
         const parsed = JSON.parse(jsonStr);
         useCases = parsed.use_cases ?? parsed;
-      } catch {
-        throw new Error(`Claude returned invalid JSON: ${rawText.slice(0, 300)}`);
+      } catch (parseErr) {
+        const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+        throw new Error(`Claude JSON parse error: ${msg}`);
       }
 
       // Save result
