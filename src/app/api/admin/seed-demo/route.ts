@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "XGBoost / MLflow",
       tags: ["credit", "financial", "rbi", "critical"],
-      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: true, explainability: 68,
+      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: true, explainability: 68, accuracyScore: 0.91,
       risk: { level: "HIGH" as const, score: 78, dataSens: 85, complexity: 72, explainability: 68, oversight: 70, regulatory: 88 },
     },
     {
@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "TensorFlow / Vertex AI",
       tags: ["fraud", "real-time", "financial", "critical"],
-      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: false, explainability: 45,
+      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: false, explainability: 45, accuracyScore: 0.97,
       risk: { level: "CRITICAL" as const, score: 85, dataSens: 90, complexity: 88, explainability: 45, oversight: 30, regulatory: 95 },
     },
     {
@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "PyTorch / OpenCV",
       tags: ["kyc", "identity", "dpdp", "aadhaar"],
-      isPiiProcessing: true, isFinancial: false, isCritical: true, humanOversight: true, explainability: 38,
+      isPiiProcessing: true, isFinancial: false, isCritical: true, humanOversight: true, explainability: 38, accuracyScore: 0.89,
       risk: { level: "HIGH" as const, score: 82, dataSens: 95, complexity: 75, explainability: 38, oversight: 75, regulatory: 90 },
     },
     {
@@ -219,7 +219,7 @@ export async function POST(req: NextRequest) {
       vendor: "NICE Actimize (customised)",
       framework: "Graph Neural Network / PyG",
       tags: ["aml", "compliance", "rbi", "sebi"],
-      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: true, explainability: 55,
+      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: true, explainability: 55, accuracyScore: 0.94,
       risk: { level: "HIGH" as const, score: 79, dataSens: 80, complexity: 85, explainability: 55, oversight: 80, regulatory: 92 },
     },
     {
@@ -233,7 +233,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "Scikit-learn / SHAP",
       tags: ["lending", "underwriting", "rbi", "critical"],
-      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: false, explainability: 30,
+      isPiiProcessing: true, isFinancial: true, isCritical: true, humanOversight: false, explainability: 30, accuracyScore: 0.83,
       risk: { level: "CRITICAL" as const, score: 88, dataSens: 88, complexity: 82, explainability: 30, oversight: 25, regulatory: 95 },
       requiresReassessment: true,
       reassessmentReason: "Explainability score below RBI threshold. Human oversight missing for high-value loans.",
@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "Keras / LSTM",
       tags: ["market-risk", "sebi", "trading", "var"],
-      isPiiProcessing: false, isFinancial: true, isCritical: true, humanOversight: true, explainability: 62,
+      isPiiProcessing: false, isFinancial: true, isCritical: true, humanOversight: true, explainability: 62, accuracyScore: 0.88,
       risk: { level: "MEDIUM" as const, score: 65, dataSens: 40, complexity: 78, explainability: 62, oversight: 85, regulatory: 70 },
     },
     {
@@ -263,7 +263,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "HuggingFace / BERT",
       tags: ["insurance", "irdai", "nlp", "claims"],
-      isPiiProcessing: true, isFinancial: true, isCritical: false, humanOversight: true, explainability: 55,
+      isPiiProcessing: true, isFinancial: true, isCritical: false, humanOversight: true, explainability: 55, accuracyScore: 0.92,
       risk: { level: "MEDIUM" as const, score: 60, dataSens: 70, complexity: 55, explainability: 55, oversight: 80, regulatory: 65 },
     },
     {
@@ -277,7 +277,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "Scikit-learn / LightGBM",
       tags: ["customer", "retention", "marketing"],
-      isPiiProcessing: true, isFinancial: false, isCritical: false, humanOversight: true, explainability: 75,
+      isPiiProcessing: true, isFinancial: false, isCritical: false, humanOversight: true, explainability: 75, accuracyScore: 0.86,
       risk: { level: "LOW" as const, score: 35, dataSens: 50, complexity: 40, explainability: 75, oversight: 90, regulatory: 30 },
     },
     {
@@ -291,7 +291,7 @@ export async function POST(req: NextRequest) {
       vendor: "Internal",
       framework: "HuggingFace Transformers",
       tags: ["nlp", "compliance", "legal", "document"],
-      isPiiProcessing: false, isFinancial: false, isCritical: false, humanOversight: true, explainability: 70,
+      isPiiProcessing: false, isFinancial: false, isCritical: false, humanOversight: true, explainability: 70, accuracyScore: 0.95,
       risk: { level: "LOW" as const, score: 28, dataSens: 30, complexity: 35, explainability: 70, oversight: 95, regulatory: 25 },
     },
     {
@@ -305,7 +305,7 @@ export async function POST(req: NextRequest) {
       vendor: "OpenAI",
       framework: "GPT-4 / LangChain",
       tags: ["hr", "sentiment", "employee", "pii"],
-      isPiiProcessing: true, isFinancial: false, isCritical: false, humanOversight: true, explainability: 60,
+      isPiiProcessing: true, isFinancial: false, isCritical: false, humanOversight: true, explainability: 60, accuracyScore: 0.79,
       risk: { level: "MEDIUM" as const, score: 58, dataSens: 75, complexity: 50, explainability: 60, oversight: 85, regulatory: 45 },
     },
   ];
@@ -314,7 +314,7 @@ export async function POST(req: NextRequest) {
   for (const m of modelDefs) {
     const model = await prisma.aIModel.upsert({
       where: { id: m.id },
-      update: {},
+      update: { accuracyScore: (m as any).accuracyScore ?? null },
       create: {
         id: m.id,
         organizationId: orgId,
@@ -335,6 +335,7 @@ export async function POST(req: NextRequest) {
         explainability: m.explainability,
         requiresReassessment: (m as any).requiresReassessment ?? false,
         reassessmentReason: (m as any).reassessmentReason ?? null,
+        accuracyScore: (m as any).accuracyScore ?? null,
       },
     });
     createdModels.push({ id: model.id, name: model.name });
@@ -749,47 +750,41 @@ export async function POST(req: NextRequest) {
 
   const promptTemplates = [
     {
-      modelIdx: 0,
-      agentIdx: null,
+      modelIdx: 0, agentIdx: null, accuracy: 0.91,
       prompts: [
         { p: "Evaluate credit risk for applicant ID 4821 with CIBIL score 712 and monthly income ₹85,000", r: "Credit risk score: 34/100 (LOW). Recommended: APPROVE with standard terms.", tokens: [180, 95] },
         { p: "Re-assess credit profile for applicant 9934 — income verification failed", r: "Credit risk score: 71/100 (HIGH). Recommended: DECLINE or require additional collateral.", tokens: [210, 120] },
       ],
     },
     {
-      modelIdx: 1,
-      agentIdx: 0,
+      modelIdx: 1, agentIdx: 0, accuracy: 0.97,
       prompts: [
         { p: "Transaction TXN-88291: ₹2,45,000 transfer from account 9821XXXX to new beneficiary. Flag for fraud?", r: "FLAGGED — HIGH risk. New beneficiary + large amount + off-hours transaction. Recommend: BLOCK and alert customer.", tokens: [220, 140] },
         { p: "Batch scan: 500 transactions from 02:00–04:00 IST. Identify anomalies.", r: "12 anomalous transactions detected. 3 CRITICAL (structuring pattern), 9 WARNING (velocity spike). Report attached.", tokens: [340, 280] },
       ],
     },
     {
-      modelIdx: 2,
-      agentIdx: 1,
+      modelIdx: 2, agentIdx: 1, accuracy: 0.89,
       prompts: [
         { p: "Verify Aadhaar document for customer onboarding ID KYC-2291. Confidence threshold: 85%", r: "Verification: PASS (confidence 91%). Name match: OK. Photo match: OK. No tampering detected.", tokens: [195, 110] },
         { p: "PAN card verification failed for customer KYC-3847. Manual review requested.", r: "Escalating to human reviewer. Reason: PAN number format valid but name mismatch detected (similarity 67%).", tokens: [170, 95] },
       ],
     },
     {
-      modelIdx: 3,
-      agentIdx: 0,
+      modelIdx: 3, agentIdx: 0, accuracy: 0.94,
       prompts: [
         { p: "Analyse transaction network for customer C-9821. Check for layering or structuring patterns.", r: "3-hop network analysis complete. No layering detected. Account C-9821 connected to 2 flagged entities — recommend enhanced monitoring.", tokens: [260, 180] },
         { p: "Weekly AML digest: summarise top 10 alerts for compliance officer review", r: "Weekly digest generated. 847 total alerts. 12 escalated to MLRO. 3 SAR reports filed. 832 closed as false positive.", tokens: [310, 220] },
       ],
     },
     {
-      modelIdx: 7,
-      agentIdx: null,
+      modelIdx: 7, agentIdx: null, accuracy: 0.86,
       prompts: [
         { p: "Predict 30-day churn probability for customer segment: tenure < 6 months, product: savings account", r: "Churn probability: 34% for this segment. Top drivers: low engagement (0.2 logins/week), no SIP linked. Recommend: proactive outreach.", tokens: [240, 160] },
       ],
     },
     {
-      modelIdx: 9,
-      agentIdx: null,
+      modelIdx: 9, agentIdx: null, accuracy: 0.79,
       prompts: [
         { p: "Analyse employee survey Q4 2025 — sentiment across Risk Management department (82 responses)", r: "Overall sentiment: NEUTRAL (score 0.42). Concerns: workload (mentioned 47 times), tooling (31 times). Positive: team cohesion (58 times).", tokens: [280, 200] },
       ],
@@ -828,6 +823,7 @@ export async function POST(req: NextRequest) {
           isHallucination: false,
           isPolicyViolation: false,
           toxicityScore: 0.01,
+          accuracyScore: (tmpl as any).accuracy ?? null,
           flagged: false,
           createdAt: callTime,
         },
