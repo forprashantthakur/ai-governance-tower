@@ -53,20 +53,23 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   // Allow public paths
   if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
 
-  // Root "/" — always redirect: login if unauthenticated, /models if authenticated
+  // Root "/" — marketing landing for guests, app for authenticated users
   if (pathname === "/") {
     const token =
       req.cookies.get("auth_token")?.value ??
       extractBearerToken(req.headers.get("authorization"));
 
     if (!token) {
-      return NextResponse.redirect(new URL("/login", req.url));
+      // No session → show marketing landing page
+      return NextResponse.redirect(new URL("/landing", req.url));
     }
     try {
       await verifyJwt(token);
+      // Valid session → go straight into the app
       return NextResponse.redirect(new URL("/models", req.url));
     } catch {
-      const res = NextResponse.redirect(new URL("/login", req.url));
+      // Expired/invalid session → clear cookie and show landing
+      const res = NextResponse.redirect(new URL("/landing", req.url));
       res.cookies.delete("auth_token");
       return res;
     }
