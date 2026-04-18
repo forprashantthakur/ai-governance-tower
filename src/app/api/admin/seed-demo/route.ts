@@ -743,6 +743,100 @@ export async function POST(req: NextRequest) {
   }
   results.auditLogs = auditActions.length;
 
+  // ── 9. PROMPT LOGS — 14 days of realistic AI call history ────────────────────
+  // Daily call volumes: ramp up mid-week, dip on weekends, spike on day 10
+  const dailyVolumes = [12, 18, 31, 27, 45, 38, 14, 22, 41, 67, 53, 48, 35, 29];
+
+  const promptTemplates = [
+    {
+      modelIdx: 0,
+      agentIdx: null,
+      prompts: [
+        { p: "Evaluate credit risk for applicant ID 4821 with CIBIL score 712 and monthly income ₹85,000", r: "Credit risk score: 34/100 (LOW). Recommended: APPROVE with standard terms.", tokens: [180, 95] },
+        { p: "Re-assess credit profile for applicant 9934 — income verification failed", r: "Credit risk score: 71/100 (HIGH). Recommended: DECLINE or require additional collateral.", tokens: [210, 120] },
+      ],
+    },
+    {
+      modelIdx: 1,
+      agentIdx: 0,
+      prompts: [
+        { p: "Transaction TXN-88291: ₹2,45,000 transfer from account 9821XXXX to new beneficiary. Flag for fraud?", r: "FLAGGED — HIGH risk. New beneficiary + large amount + off-hours transaction. Recommend: BLOCK and alert customer.", tokens: [220, 140] },
+        { p: "Batch scan: 500 transactions from 02:00–04:00 IST. Identify anomalies.", r: "12 anomalous transactions detected. 3 CRITICAL (structuring pattern), 9 WARNING (velocity spike). Report attached.", tokens: [340, 280] },
+      ],
+    },
+    {
+      modelIdx: 2,
+      agentIdx: 1,
+      prompts: [
+        { p: "Verify Aadhaar document for customer onboarding ID KYC-2291. Confidence threshold: 85%", r: "Verification: PASS (confidence 91%). Name match: OK. Photo match: OK. No tampering detected.", tokens: [195, 110] },
+        { p: "PAN card verification failed for customer KYC-3847. Manual review requested.", r: "Escalating to human reviewer. Reason: PAN number format valid but name mismatch detected (similarity 67%).", tokens: [170, 95] },
+      ],
+    },
+    {
+      modelIdx: 3,
+      agentIdx: 0,
+      prompts: [
+        { p: "Analyse transaction network for customer C-9821. Check for layering or structuring patterns.", r: "3-hop network analysis complete. No layering detected. Account C-9821 connected to 2 flagged entities — recommend enhanced monitoring.", tokens: [260, 180] },
+        { p: "Weekly AML digest: summarise top 10 alerts for compliance officer review", r: "Weekly digest generated. 847 total alerts. 12 escalated to MLRO. 3 SAR reports filed. 832 closed as false positive.", tokens: [310, 220] },
+      ],
+    },
+    {
+      modelIdx: 7,
+      agentIdx: null,
+      prompts: [
+        { p: "Predict 30-day churn probability for customer segment: tenure < 6 months, product: savings account", r: "Churn probability: 34% for this segment. Top drivers: low engagement (0.2 logins/week), no SIP linked. Recommend: proactive outreach.", tokens: [240, 160] },
+      ],
+    },
+    {
+      modelIdx: 9,
+      agentIdx: null,
+      prompts: [
+        { p: "Analyse employee survey Q4 2025 — sentiment across Risk Management department (82 responses)", r: "Overall sentiment: NEUTRAL (score 0.42). Concerns: workload (mentioned 47 times), tooling (31 times). Positive: team cohesion (58 times).", tokens: [280, 200] },
+      ],
+    },
+  ];
+
+  let promptLogCount = 0;
+  for (let dayOffset = 0; dayOffset < 14; dayOffset++) {
+    const dayDate = addDays(now, -(13 - dayOffset)); // day 0 = 13 days ago, day 13 = today
+    const volume = dailyVolumes[dayOffset] ?? 20;
+    const callsToCreate = Math.min(volume, 8); // cap per-day inserts to keep seed fast
+
+    for (let i = 0; i < callsToCreate; i++) {
+      const tmpl = promptTemplates[i % promptTemplates.length];
+      const promptVariant = tmpl.prompts[i % tmpl.prompts.length];
+      const modelId = createdModels[tmpl.modelIdx]?.id ?? createdModels[0].id;
+      const agentId = tmpl.agentIdx !== null ? agentDefs[tmpl.agentIdx].id : null;
+
+      // Spread calls across the business day (9am–7pm IST)
+      const callTime = new Date(dayDate);
+      callTime.setHours(9 + Math.floor((i / callsToCreate) * 10));
+      callTime.setMinutes(Math.floor(Math.random() * 60));
+
+      await prisma.promptLog.create({
+        data: {
+          organizationId: orgId,
+          modelId,
+          agentId,
+          userId,
+          sessionId: `sess-${dayOffset}-${i}`,
+          prompt: promptVariant.p,
+          response: promptVariant.r,
+          inputTokens: promptVariant.tokens[0],
+          outputTokens: promptVariant.tokens[1],
+          latencyMs: 800 + Math.floor(Math.random() * 2400),
+          isHallucination: false,
+          isPolicyViolation: false,
+          toxicityScore: 0.01,
+          flagged: false,
+          createdAt: callTime,
+        },
+      });
+      promptLogCount++;
+    }
+  }
+  results.promptLogs = promptLogCount;
+
   return NextResponse.json({
     ok: true,
     email,
