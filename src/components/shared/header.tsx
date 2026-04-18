@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Home, Search, LogOut, User, Building2, ChevronDown, Settings } from "lucide-react";
+import { Bell, Home, Search, LogOut, Building2, ChevronDown, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,14 +130,6 @@ export function Header() {
                   >
                     <Settings className="h-4 w-4 text-muted-foreground" />
                     Account Settings
-                  </Link>
-                  <Link
-                    href="/settings/profile"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted/60 transition-colors"
-                  >
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    Profile
                   </Link>
                 </div>
 
