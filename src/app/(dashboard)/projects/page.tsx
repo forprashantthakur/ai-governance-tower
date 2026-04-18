@@ -8,6 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Project, ProjectHealthStatus, ProjectStatus } from "@/types";
 
+type PortfolioProject = Pick<Project, "id" | "name" | "status" | "currentPhase" | "healthScore" | "healthStatus" | "description" | "targetDate"> & {
+  _count?: { tasks: number; milestones: number };
+  updatedAt: string;
+};
+
 const PHASE_LABELS: Record<string, string> = {
   BUSINESS_CASE: "Business Case",
   DATA_DISCOVERY: "Data Discovery",
@@ -54,7 +59,7 @@ function HealthGauge({ score, status }: { score: number; status: ProjectHealthSt
   );
 }
 
-function ProjectCard({ project }: { project: Project & { _count?: { tasks: number; milestones: number } } }) {
+function ProjectCard({ project }: { project: PortfolioProject }) {
   return (
     <Link href={`/projects/${project.id}`}>
       <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 cursor-pointer group">
@@ -101,7 +106,7 @@ function ProjectCard({ project }: { project: Project & { _count?: { tasks: numbe
 }
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [allProjects, setAllProjects] = useState<PortfolioProject[]>([]);
   const [portfolio, setPortfolio] = useState<{
     totalProjects: number;
     avgHealthScore: number;
@@ -114,18 +119,20 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
-    const headers = { Authorization: `Bearer ${token}` };
-    Promise.all([
-      fetch(`/api/projects?limit=50${statusFilter ? `&status=${statusFilter}` : ""}`, { headers }),
-      fetch("/api/projects/portfolio", { headers }),
-    ])
-      .then(([r1, r2]) => Promise.all([r1.json(), r2.json()]))
-      .then(([p, port]) => {
-        setProjects(p.data?.items ?? []);
-        setPortfolio(port.data);
+    fetch("/api/projects/portfolio", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success) {
+          setAllProjects(res.data?.projects ?? []);
+          setPortfolio(res.data);
+        }
       })
       .finally(() => setLoading(false));
-  }, [statusFilter]);
+  }, []);
+
+  const projects = statusFilter
+    ? allProjects.filter((p) => p.status === statusFilter)
+    : allProjects;
 
   const stats = [
     { label: "Total Projects", value: portfolio?.totalProjects ?? 0, icon: FolderKanban, color: "text-blue-400" },

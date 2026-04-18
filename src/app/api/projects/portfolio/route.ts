@@ -5,11 +5,12 @@ import { ok, serverError } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
-export const GET = withAuth(async (_req: NextRequest) => {
+export const GET = withAuth(async (_req: NextRequest, { organizationId }) => {
   try {
     const [projects, taskCounts] = await Promise.all([
       withRetry(() =>
         prisma.project.findMany({
+          where: { organizationId },
           select: {
             id: true,
             name: true,
@@ -18,6 +19,8 @@ export const GET = withAuth(async (_req: NextRequest) => {
             healthScore: true,
             healthStatus: true,
             updatedAt: true,
+            description: true,
+            targetDate: true,
             _count: { select: { tasks: true, milestones: true } },
           },
           orderBy: { updatedAt: "desc" },
