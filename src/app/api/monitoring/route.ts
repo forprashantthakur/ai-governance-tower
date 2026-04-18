@@ -72,7 +72,7 @@ export const GET = withAuth(async (req, { organizationId }) => {
 
     const dailyVolume = dailyRaw.map((r) => ({
       date: r.date,
-      count: Number(r.count),
+      calls: Number(r.count),
     }));
 
     return ok({
