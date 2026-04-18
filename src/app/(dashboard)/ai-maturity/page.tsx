@@ -361,8 +361,8 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
 
         {tab === "agents" && (
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">{uc.agentic_ai_design.agents.length} autonomous agents in this workflow</p>
-            {uc.agentic_ai_design.agents.map((agent, i) => (
+            <p className="text-xs text-muted-foreground">{(uc.agentic_ai_design?.agents ?? []).length} autonomous agents in this workflow</p>
+            {(uc.agentic_ai_design?.agents ?? []).map((agent, i) => (
               <div key={i} className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <Bot className="h-4 w-4 text-primary" />
@@ -370,7 +370,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                   <Badge variant="outline" className="text-xs ml-auto">{agent.role}</Badge>
                 </div>
                 <ul className="space-y-1 pl-6">
-                  {agent.responsibilities.map((r, j) => (
+                  {(agent.responsibilities ?? []).map((r, j) => (
                     <li key={j} className="text-sm text-muted-foreground flex items-start gap-1.5">
                       <ArrowRight className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
                       {r}
@@ -414,7 +414,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
 
             {/* Visual flowchart */}
             <div className="flex flex-col items-stretch gap-0">
-              {uc.n8n_workflow.nodes.map((node, i) => {
+              {(uc.n8n_workflow?.nodes ?? []).map((node, i) => {
                 const style = nodeStyle(node.node_type);
                 const CategoryIcon =
                   style.category === "trigger" ? Play
@@ -470,7 +470,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                       )}
                     </div>
                     {/* Downward arrow connector */}
-                    {i < uc.n8n_workflow.nodes.length - 1 && (
+                    {i < (uc.n8n_workflow?.nodes ?? []).length - 1 && (
                       <div className="flex flex-col items-center py-0.5">
                         <div className="w-px h-4 bg-border" />
                         <ArrowDown className="h-4 w-4 text-muted-foreground -mt-1" />
@@ -482,11 +482,11 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
             </div>
 
             {/* Integrations */}
-            {uc.n8n_workflow.integrations.length > 0 && (
+            {(uc.n8n_workflow?.integrations ?? []).length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Integrations</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {uc.n8n_workflow.integrations.map((intg, i) => (
+                  {(uc.n8n_workflow?.integrations ?? []).map((intg, i) => (
                     <Badge key={i} variant="secondary" className="flex items-center gap-1">
                       <Link2 className="h-3 w-3" />
                       {intg}
@@ -511,7 +511,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
               <span className="font-medium">Total Timeline: {uc.implementation_plan.timeline_weeks}</span>
             </div>
             <div className="space-y-3">
-              {uc.implementation_plan.phases.map((phase, i) => (
+              {(uc.implementation_plan?.phases ?? []).map((phase, i) => (
                 <div key={i} className="rounded-lg border border-border bg-muted/30 p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -521,7 +521,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                     <Badge variant="outline" className="text-xs">{phase.duration}</Badge>
                   </div>
                   <ul className="space-y-1 pl-4">
-                    {phase.activities.map((act, j) => (
+                    {(phase.activities ?? []).map((act, j) => (
                       <li key={j} className="text-sm text-muted-foreground flex items-start gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-green-400" />
                         {act}
@@ -540,7 +540,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Systems Involved</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {uc.integration_architecture.systems_involved.map((s, i) => (
+                  {(uc.integration_architecture?.systems_involved ?? []).map((s, i) => (
                     <Badge key={i} variant="secondary" className="flex items-center gap-1">
                       <Cpu className="h-3 w-3" />{s}
                     </Badge>
@@ -550,7 +550,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">API Requirements</p>
                 <ul className="space-y-1">
-                  {uc.integration_architecture.api_requirements.map((api, i) => (
+                  {(uc.integration_architecture?.api_requirements ?? []).map((api, i) => (
                     <li key={i} className="text-sm text-muted-foreground font-mono flex items-center gap-1.5">
                       <Zap className="h-3.5 w-3.5 text-primary shrink-0" />{api}
                     </li>
