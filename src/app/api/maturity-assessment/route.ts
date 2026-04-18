@@ -202,7 +202,7 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
       const prompt = buildPrompt(data);
 
       const message = await anthropic.messages.create({
-        model: "claude-3-haiku-20240307",
+        model: "claude-3-5-haiku-20241022",
         max_tokens: 2500,
         messages: [{ role: "user", content: prompt }],
       });
