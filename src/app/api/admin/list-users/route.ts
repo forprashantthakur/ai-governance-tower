@@ -80,12 +80,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Upsert membership
-  const existing = await prisma.orgMember.findUnique({
-    where: { userId_organizationId: { userId: admin.id, organizationId: org.id } },
+  const existing = await prisma.organizationMember.findUnique({
+    where: { organizationId_userId: { organizationId: org.id, userId: admin.id } },
   });
 
   if (!existing) {
-    await prisma.orgMember.create({
+    await prisma.organizationMember.create({
       data: {
         userId: admin.id,
         organizationId: org.id,
@@ -94,8 +94,8 @@ export async function POST(req: NextRequest) {
       },
     });
   } else {
-    await prisma.orgMember.update({
-      where: { userId_organizationId: { userId: admin.id, organizationId: org.id } },
+    await prisma.organizationMember.update({
+      where: { organizationId_userId: { organizationId: org.id, userId: admin.id } },
       data: { role: "OWNER", isActive: true },
     });
   }
