@@ -205,13 +205,6 @@ export default function LoginPage() {
               </Link>
             </p>
 
-            {/* Demo credentials hint */}
-            <div className="mt-4 p-3 bg-muted rounded-lg text-xs text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">Demo credentials</p>
-              <p>Admin: admin@aigovernance.com / Admin@123456</p>
-              <p>Risk Officer: risk@aigovernance.com / Risk@123456</p>
-              <p>Auditor: auditor@aigovernance.com / Audit@123456</p>
-            </div>
           </CardContent>
         </Card>
       </div>
