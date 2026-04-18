@@ -53,16 +53,40 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   // Allow public paths
   if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
 
-  // Protect dashboard routes
-  if (pathname.startsWith("/(dashboard)") || pathname === "/") {
+  // Root "/" — always redirect: login if unauthenticated, /models if authenticated
+  if (pathname === "/") {
     const token =
       req.cookies.get("auth_token")?.value ??
       extractBearerToken(req.headers.get("authorization"));
 
     if (!token) {
-      return NextResponse.redirect(new URL("/landing", req.url));
+      return NextResponse.redirect(new URL("/login", req.url));
     }
+    try {
+      await verifyJwt(token);
+      return NextResponse.redirect(new URL("/models", req.url));
+    } catch {
+      const res = NextResponse.redirect(new URL("/login", req.url));
+      res.cookies.delete("auth_token");
+      return res;
+    }
+  }
 
+  // Protect all other dashboard routes
+  if (
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/landing") &&
+    !pathname.startsWith("/login") &&
+    !pathname.startsWith("/register") &&
+    !pathname.startsWith("/_next")
+  ) {
+    const token =
+      req.cookies.get("auth_token")?.value ??
+      extractBearerToken(req.headers.get("authorization"));
+
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
     try {
       await verifyJwt(token);
     } catch {

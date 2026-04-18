@@ -63,7 +63,7 @@ export default function LoginPage() {
       if (data.token && data.user) {
         setAuth(data.token, data.user as never);
         document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-        window.location.href = "/";
+        window.location.href = "/models";
       }
     } catch {
       addNotification({ type: "error", title: "Network error", message: "Please try again." });
