@@ -560,7 +560,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
             </div>
             <div className="rounded-lg border border-border bg-muted/30 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Data Flow</p>
-              <p className="text-sm text-foreground leading-relaxed">{uc.integration_architecture.data_flow}</p>
+              <p className="text-sm text-foreground leading-relaxed">{uc.integration_architecture?.data_flow ?? ""}</p>
             </div>
           </div>
         )}
