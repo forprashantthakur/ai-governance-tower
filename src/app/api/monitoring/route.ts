@@ -19,7 +19,7 @@ export const GET = withAuth(async (req, { organizationId }) => {
       ...(modelId && { modelId }),
     };
 
-    const [totalCalls, flaggedLogs, avgMetrics, recentLogs, alerts] =
+    const [totalCalls, flaggedLogs, avgMetrics, recentLogs, alerts, alertCount] =
       await Promise.all([
         prisma.promptLog.count({ where }),
         prisma.promptLog.count({ where: { ...where, flagged: true } }),
@@ -48,6 +48,8 @@ export const GET = withAuth(async (req, { organizationId }) => {
           orderBy: { createdAt: "desc" },
           take: 10,
         }),
+        // Exact count (not capped) — used for KPI card to match dashboard
+        prisma.alert.count({ where: { organizationId, isRead: false } }),
       ]);
 
     // Daily call volume for chart (org-scoped raw SQL)
@@ -78,6 +80,7 @@ export const GET = withAuth(async (req, { organizationId }) => {
     return ok({
       summary: {
         totalCalls,
+        alertCount,
         flaggedCount: flaggedLogs,
         flaggedRate:
           totalCalls > 0 ? ((flaggedLogs / totalCalls) * 100).toFixed(1) : "0",
