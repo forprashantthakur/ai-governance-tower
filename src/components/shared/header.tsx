@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Home, Search, LogOut, Building2, ChevronDown, Settings } from "lucide-react";
+import { Bell, Home, Search, LogOut, ChevronDown, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,19 +105,6 @@ export function Header() {
                       <p className="font-semibold text-sm truncate">{user.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Org + role */}
-                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2.5 text-sm">
-                  <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">
-                      {user.organization?.name ?? "My Organization"}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {user.orgRole?.toLowerCase().replace("_", " ")} · {user.plan} plan
-                    </p>
                   </div>
                 </div>
 
