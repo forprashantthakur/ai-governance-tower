@@ -55,7 +55,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   // Allow public paths
   if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
 
-  // Root "/" — marketing landing for guests, app for authenticated users
+  // Root "/" — marketing landing for guests, dashboard for authenticated users
   if (pathname === "/") {
     const token =
       req.cookies.get("auth_token")?.value ??
@@ -67,8 +67,8 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     }
     try {
       await verifyJwt(token);
-      // Valid session → go straight into the app
-      return NextResponse.redirect(new URL("/models", req.url));
+      // Valid session → render the dashboard (let Next.js serve (dashboard)/page.tsx)
+      return NextResponse.next();
     } catch {
       // Expired/invalid session → clear cookie and show landing
       const res = NextResponse.redirect(new URL("/landing", req.url));
