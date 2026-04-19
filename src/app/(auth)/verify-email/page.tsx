@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Shield, CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 
 type Status = "loading" | "success" | "error" | "already_verified";
 
-export default function VerifyEmailPage() {
+// Inner component — uses useSearchParams(), must be inside <Suspense>
+function VerifyEmailContent() {
   const params = useSearchParams();
   const token = params.get("token");
   const { setAuth } = useAuthStore();
@@ -45,7 +46,6 @@ export default function VerifyEmailPage() {
         if (json.data?.token && json.data?.user) {
           setAuth(json.data.token, json.data.user);
           document.cookie = `auth_token=${json.data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-          // Redirect to dashboard after short delay
           setTimeout(() => {
             window.location.href = "/models";
           }, 2000);
@@ -61,6 +61,73 @@ export default function VerifyEmailPage() {
   }, [token]);
 
   return (
+    <>
+      {/* Status card */}
+      <div className="rounded-xl border border-border bg-card p-8 shadow-sm space-y-4">
+        {status === "loading" && (
+          <>
+            <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
+            <p className="text-lg font-semibold">Verifying your email…</p>
+            <p className="text-sm text-muted-foreground">Please wait a moment.</p>
+          </>
+        )}
+
+        {status === "success" && (
+          <>
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+            <p className="text-lg font-semibold text-green-600">Email Verified!</p>
+            <p className="text-sm text-muted-foreground">
+              Your account is active. Redirecting you to the dashboard…
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Taking you in…
+            </div>
+          </>
+        )}
+
+        {status === "already_verified" && (
+          <>
+            <CheckCircle className="h-12 w-12 text-blue-500 mx-auto" />
+            <p className="text-lg font-semibold">Already Verified</p>
+            <p className="text-sm text-muted-foreground">{message}</p>
+            <Button className="w-full" onClick={() => (window.location.href = "/login")}>
+              Sign In
+            </Button>
+          </>
+        )}
+
+        {status === "error" && (
+          <>
+            <XCircle className="h-12 w-12 text-destructive mx-auto" />
+            <p className="text-lg font-semibold text-destructive">Verification Failed</p>
+            <p className="text-sm text-muted-foreground">{message}</p>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button className="w-full" onClick={() => (window.location.href = "/register")}>
+                Register Again
+              </Button>
+              <Button variant="outline" className="w-full" onClick={() => (window.location.href = "/login")}>
+                Back to Sign In
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Help text */}
+      {(status === "error" || status === "loading") && (
+        <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+          <Mail className="h-3 w-3" />
+          Check your inbox for the verification email from noreply@aigovernancetower.com
+        </p>
+      )}
+    </>
+  );
+}
+
+// Page wrapper — provides Suspense boundary required by useSearchParams()
+export default function VerifyEmailPage() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6 text-center">
         {/* Branding */}
@@ -71,65 +138,16 @@ export default function VerifyEmailPage() {
         </div>
         <h1 className="text-2xl font-bold">AI Governance Tower</h1>
 
-        {/* Status card */}
-        <div className="rounded-xl border border-border bg-card p-8 shadow-sm space-y-4">
-          {status === "loading" && (
-            <>
+        <Suspense
+          fallback={
+            <div className="rounded-xl border border-border bg-card p-8 shadow-sm space-y-4">
               <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
-              <p className="text-lg font-semibold">Verifying your email…</p>
-              <p className="text-sm text-muted-foreground">Please wait a moment.</p>
-            </>
-          )}
-
-          {status === "success" && (
-            <>
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-              <p className="text-lg font-semibold text-green-600">Email Verified!</p>
-              <p className="text-sm text-muted-foreground">
-                Your account is active. Redirecting you to the dashboard…
-              </p>
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Taking you in…
-              </div>
-            </>
-          )}
-
-          {status === "already_verified" && (
-            <>
-              <CheckCircle className="h-12 w-12 text-blue-500 mx-auto" />
-              <p className="text-lg font-semibold">Already Verified</p>
-              <p className="text-sm text-muted-foreground">{message}</p>
-              <Button className="w-full" onClick={() => (window.location.href = "/login")}>
-                Sign In
-              </Button>
-            </>
-          )}
-
-          {status === "error" && (
-            <>
-              <XCircle className="h-12 w-12 text-destructive mx-auto" />
-              <p className="text-lg font-semibold text-destructive">Verification Failed</p>
-              <p className="text-sm text-muted-foreground">{message}</p>
-              <div className="flex flex-col gap-2 pt-2">
-                <Button className="w-full" onClick={() => (window.location.href = "/register")}>
-                  Register Again
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => (window.location.href = "/login")}>
-                  Back to Sign In
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Help text */}
-        {(status === "error" || status === "loading") && (
-          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-            <Mail className="h-3 w-3" />
-            Check your inbox for the verification email from noreply@aigovernancetower.com
-          </p>
-        )}
+              <p className="text-lg font-semibold">Loading…</p>
+            </div>
+          }
+        >
+          <VerifyEmailContent />
+        </Suspense>
       </div>
     </div>
   );
