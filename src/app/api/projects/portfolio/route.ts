@@ -60,7 +60,7 @@ export const GET = withAuth(async (_req: NextRequest, { organizationId }) => {
       atRiskCount,
       criticalCount,
       recentActivity,
-      projects: projects.slice(0, 12),
+      projects,
     });
   } catch (err) {
     return serverError(err);
