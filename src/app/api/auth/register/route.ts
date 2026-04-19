@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { signJwt } from "@/lib/auth/jwt";
 import { created, badRequest, conflict, notFound, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
+import { sendVerificationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -164,10 +166,22 @@ export async function POST(req: NextRequest) {
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 14);
 
+    // Generate email verification token (24h expiry)
+    const verificationToken = randomBytes(32).toString("hex");
+    const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     // Create user + org + membership in one transaction
-    const [user, org, membership] = await prisma.$transaction(async (tx) => {
+    const [user, org] = await prisma.$transaction(async (tx) => {
       const u = await tx.user.create({
-        data: { name, email: email.toLowerCase(), passwordHash, department },
+        data: {
+          name,
+          email: email.toLowerCase(),
+          passwordHash,
+          department,
+          emailVerified: false,
+          verificationToken,
+          verificationTokenExpiresAt,
+        },
       });
       const o = await tx.organization.create({
         data: {
@@ -178,19 +192,10 @@ export async function POST(req: NextRequest) {
           billingEmail: email.toLowerCase(),
         },
       });
-      const m = await tx.organizationMember.create({
+      await tx.organizationMember.create({
         data: { organizationId: o.id, userId: u.id, role: "OWNER" },
       });
-      return [u, o, m];
-    });
-
-    const token = await signJwt({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      organizationId: org.id,
-      orgRole: membership.role,
-      plan: org.plan,
+      return [u, o];
     });
 
     await logAudit({
@@ -201,21 +206,17 @@ export async function POST(req: NextRequest) {
       ipAddress: getClientIp(req),
     });
 
+    // Send verification email (non-blocking — don't fail registration if email fails)
+    try {
+      await sendVerificationEmail(user.email, user.name, verificationToken);
+    } catch (emailErr) {
+      console.error("[register] Failed to send verification email:", emailErr);
+    }
+
     return created({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: membership.role,
-        organizationId: org.id,
-        organization: {
-          id: org.id,
-          name: org.name,
-          slug: org.slug,
-          plan: org.plan,
-        },
-      },
+      requiresEmailVerification: true,
+      email: user.email,
+      message: "Account created. Please check your email to verify your account before signing in.",
     });
   } catch (err) {
     return serverError(err);

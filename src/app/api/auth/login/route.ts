@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
           name: true,
           passwordHash: true,
           isActive: true,
+          emailVerified: true,
           memberships: {
             where: { isActive: true },
             include: {
@@ -49,6 +50,11 @@ export async function POST(req: NextRequest) {
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) return unauthorized("Invalid credentials");
+
+    // Block login if email not verified (skip check for invite-based users — they're pre-verified)
+    if (!user.emailVerified) {
+      return unauthorized("Please verify your email address before signing in. Check your inbox for the verification link.");
+    }
 
     // Resolve which org membership to use for this session
     const activeMemberships = user.memberships.filter((m) => m.organization.isActive);

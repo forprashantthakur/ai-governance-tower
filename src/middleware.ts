@@ -5,8 +5,10 @@ const PUBLIC_PATHS = new Set([
   "/landing",
   "/login",
   "/register",
+  "/verify-email",
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/verify-email",
 ]);
 
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX ?? "100");

@@ -216,8 +216,10 @@ model User {
   department    String?
   avatarUrl     String?   @map("avatar_url")
   isActive      Boolean   @default(true)  @map("is_active")
-  emailVerified Boolean   @default(false) @map("email_verified")
-  lastLoginAt   DateTime? @map("last_login_at")
+  emailVerified              Boolean   @default(false) @map("email_verified")
+  verificationToken          String?   @unique         @map("verification_token")
+  verificationTokenExpiresAt DateTime?                 @map("verification_token_expires_at")
+  lastLoginAt                DateTime?                 @map("last_login_at")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt      @map("updated_at")
 

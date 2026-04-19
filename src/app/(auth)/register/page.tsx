@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Shield, Building2, User } from "lucide-react";
+import { Shield, Building2, User, Mail, CheckCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ export default function RegisterPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   function validateStep1() {
     const e: Record<string, string> = {};
@@ -79,6 +81,14 @@ export default function RegisterPage() {
         return;
       }
 
+      // New flow: email verification required before login
+      if (json.data?.requiresEmailVerification) {
+        setRegisteredEmail(json.data.email ?? form.email);
+        setEmailSent(true);
+        return;
+      }
+
+      // Fallback: legacy direct login (invite path)
       const { token, user } = json.data as AuthResponse;
       if (token && user) {
         setAuth(token, user as never);
@@ -88,7 +98,7 @@ export default function RegisterPage() {
           title: "Welcome!",
           message: `${form.orgName} workspace created. 14-day trial started.`,
         });
-        window.location.href = "/";
+        window.location.href = "/models";
       }
     } catch {
       addNotification({ type: "error", title: "Network error", message: "Please try again." });
@@ -102,6 +112,39 @@ export default function RegisterPage() {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((p) => ({ ...p, [key]: e.target.value })),
   });
+
+  // ── Email verification sent screen ────────────────────────────────────────
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-6 text-center">
+          <div className="flex justify-center">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Shield className="h-10 w-10 text-primary" />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-8 shadow-sm space-y-4">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+            <h2 className="text-xl font-bold">Check your email</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              We sent a verification link to{" "}
+              <span className="font-semibold text-foreground">{registeredEmail}</span>.
+              <br /><br />
+              Click the link in the email to activate your account and sign in.
+            </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center pt-2">
+              <Mail className="h-4 w-4" />
+              Check spam / junk folder if you don&apos;t see it within 2 minutes
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Already verified?{" "}
+            <Link href="/login" className="text-primary hover:underline">Sign in</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
