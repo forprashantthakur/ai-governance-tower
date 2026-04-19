@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
           passwordHash: true,
           isActive: true,
           emailVerified: true,
+          verificationToken: true,
           memberships: {
             where: { isActive: true },
             include: {
@@ -51,9 +52,19 @@ export async function POST(req: NextRequest) {
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) return unauthorized("Invalid credentials");
 
-    // Block login if email not verified (skip check for invite-based users — they're pre-verified)
+    // Block login only for NEW unverified users (those with a pending verificationToken).
+    // Legacy users (created before email verification was added) have verificationToken = null
+    // and should be allowed in — we auto-verify them on login.
     if (!user.emailVerified) {
-      return unauthorized("Please verify your email address before signing in. Check your inbox for the verification link.");
+      if (user.verificationToken) {
+        // New user who registered but hasn't clicked the verification link yet
+        return unauthorized("Please verify your email address before signing in. Check your inbox for the verification link.");
+      }
+      // Legacy user — auto-verify on first login so they're not locked out
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+      });
     }
 
     // Resolve which org membership to use for this session
