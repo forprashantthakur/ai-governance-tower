@@ -22,6 +22,7 @@ import {
   Scale,
   ShieldCheck,
   Sparkles,
+  Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -53,7 +54,8 @@ const NAV_ITEMS = [
   { href: "/reports",    icon: BarChart3, label: "Reports" },
 
   // ── Strategy ──────────────────────────────────────────────
-  { href: "/ai-maturity", icon: Sparkles, label: "AI Use Case Finder" },
+  { href: "/ai-maturity",  icon: Sparkles,  label: "AI Use Case Finder" },
+  { href: "/n8n-builder",  icon: Workflow,  label: "n8n Workflow Builder" },
 
   // ── Admin ─────────────────────────────────────────────────
   { href: "/settings", icon: Settings, label: "Settings" },
