@@ -956,8 +956,11 @@ export default function AIMaturityPage() {
       setResult(useCases);
       setAssessmentId(result?.id ?? null);
       setStep(6);
-    } catch {
-      // api.post already showed the error notification — nothing to do here
+    } catch (err) {
+      // api.post shows a toast for HTTP errors; this catches anything else
+      const msg = err instanceof Error ? err.message : "Unexpected error — check console";
+      console.error("[handleSubmit]", err);
+      addNotification({ type: "error", title: "Generation failed", message: msg });
     } finally {
       setLoading(false);
     }
