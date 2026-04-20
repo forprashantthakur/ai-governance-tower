@@ -43,6 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUIStore } from "@/store/ui.store";
 import { useApi } from "@/hooks/use-api";
+import { generateAssessmentPDF } from "@/lib/generate-assessment-pdf";
 import { cn } from "@/lib/utils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -841,6 +842,7 @@ export default function AIMaturityPage() {
   const api = useApi();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [result, setResult] = useState<UseCase[] | null>(null);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
 
@@ -903,6 +905,46 @@ export default function AIMaturityPage() {
     if (step === 5) return businessGoals.length >= 1;
     return true;
   }, [step, orgProfile, industry, primaryObjective, painPoints, valueChainStage, businessGoals]);
+
+  async function handleDownloadPDF(uc: UseCase) {
+    setPdfLoading(true);
+    try {
+      await generateAssessmentPDF({
+        useCase: uc,
+        assessmentId,
+        industry,
+        primaryObjective,
+        targetKPI,
+        kpiBaseline,
+        kpiTarget,
+        timeHorizon,
+        orgProfile,
+        painPoints,
+        valueChainStage,
+        processType,
+        decisionFrequency,
+        dataQuality,
+        dataVolume,
+        dataFreshness,
+        dataAccess,
+        dataSources,
+        businessGoals,
+        estimatedRevenueImpact,
+        estimatedCostSaving,
+        transactionVolume,
+        existingSystems,
+        regulatoryImpact,
+        cloudReadiness,
+        integrationComplexity,
+        skillAvailability,
+      });
+    } catch (err) {
+      console.error("[PDF generation]", err);
+      addNotification({ type: "error", title: "PDF failed", message: "Could not generate PDF — check console" });
+    } finally {
+      setPdfLoading(false);
+    }
+  }
 
   async function handleSubmit() {
     setLoading(true);
@@ -1011,11 +1053,29 @@ export default function AIMaturityPage() {
                 For {industry} · {primaryObjective} · {timeHorizon}
               </p>
             </div>
-            {assessmentId && (
-              <Badge variant="outline" className="text-xs font-mono shrink-0">
-                ID: {assessmentId.slice(0, 8)}
-              </Badge>
-            )}
+            <div className="flex items-center gap-2 shrink-0">
+              {assessmentId && (
+                <Badge variant="outline" className="text-xs font-mono">
+                  ID: {assessmentId.slice(0, 8)}
+                </Badge>
+              )}
+              {result[0] && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDownloadPDF(result[0])}
+                  disabled={pdfLoading}
+                  className="gap-2"
+                >
+                  {pdfLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  {pdfLoading ? "Generating…" : "Download PDF Report"}
+                </Button>
+              )}
+            </div>
           </div>
           {result.map((uc, i) => <UseCaseCard key={i} uc={uc} index={i} />)}
         </div>
