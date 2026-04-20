@@ -412,70 +412,91 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
               </Button>
             </div>
 
-            {/* Visual flowchart */}
-            <div className="flex flex-col items-stretch gap-0">
-              {(uc.n8n_workflow?.nodes ?? []).map((node, i) => {
-                const style = nodeStyle(node.node_type);
-                const CategoryIcon =
-                  style.category === "trigger" ? Play
-                  : style.category === "ai"      ? Bot
-                  : style.category === "logic"   ? GitBranch
-                  : style.category === "http"    ? Globe
-                  : style.category === "db"      ? Database
-                  : style.category === "comms"   ? Mail
-                  : style.category === "crm"     ? Link2
-                  : Braces;
-                return (
-                  <div key={i} className="flex flex-col items-center w-full">
-                    {/* Node card */}
-                    <div className={cn("w-full rounded-xl border p-4 space-y-2.5", style.bg, style.border)}>
-                      {/* Top row: icon + name + category badge + step */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border", style.bg, style.border)}>
-                            <CategoryIcon className="h-3.5 w-3.5 text-foreground" />
+            {/* Visual flowchart — horizontal canvas */}
+            <div className="overflow-x-auto pb-4">
+              <div className="flex items-start gap-0 min-w-max py-2">
+                {(uc.n8n_workflow?.nodes ?? []).map((node, i) => {
+                  const style = nodeStyle(node.node_type);
+                  const CategoryIcon =
+                    style.category === "trigger" ? Play
+                    : style.category === "ai"      ? Bot
+                    : style.category === "logic"   ? GitBranch
+                    : style.category === "http"    ? Globe
+                    : style.category === "db"      ? Database
+                    : style.category === "comms"   ? Mail
+                    : style.category === "crm"     ? Link2
+                    : Braces;
+                  const isLast = i === (uc.n8n_workflow?.nodes ?? []).length - 1;
+                  const paramKeys = Object.keys(node.parameters ?? {});
+                  return (
+                    <div key={i} className="flex items-start gap-0">
+                      {/* Node card */}
+                      <div className={cn("rounded-xl border p-4 w-52 shrink-0 space-y-2", style.bg, style.border)}>
+                        {/* Header: icon + category */}
+                        <div className="flex items-center gap-2">
+                          <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-lg", style.bg, style.border, "border")}>
+                            <CategoryIcon className="h-3 w-3 text-foreground" />
                           </div>
-                          <span className="font-semibold text-sm text-foreground truncate">
-                            {node.name || `Step ${node.step}`}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Badge variant="outline" className={cn("text-xs border", style.border)}>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-0 font-mono", style.border)}>
                             {style.label}
                           </Badge>
-                          <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
-                            #{node.step}
-                          </span>
+                          <span className="ml-auto text-[10px] text-muted-foreground font-mono">#{node.step}</span>
                         </div>
+                        {/* Name */}
+                        <p className="text-xs font-bold text-foreground leading-tight">
+                          {node.name || `Step ${node.step}`}
+                        </p>
+                        {/* node type */}
+                        <div className="font-mono text-[9px] text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border truncate">
+                          {node.node_type}
+                        </div>
+                        {/* Description */}
+                        <p className="text-[10px] text-muted-foreground leading-snug line-clamp-3">
+                          {node.description}
+                        </p>
+                        {/* Parameters */}
+                        {paramKeys.length > 0 && (
+                          <div className="pt-1 border-t border-border space-y-1">
+                            {paramKeys.slice(0, 3).map((k) => (
+                              <div key={k} className="flex flex-col">
+                                <span className="text-[9px] font-mono text-muted-foreground">{k}</span>
+                                <span className="text-[9px] text-foreground truncate">{String((node.parameters ?? {})[k]).slice(0, 35)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {/* node_type pill */}
-                      <div className="font-mono text-xs text-muted-foreground bg-background/60 px-2 py-1 rounded border border-border break-all">
-                        {node.node_type}
-                      </div>
-                      {/* Description */}
-                      <p className="text-sm text-foreground leading-relaxed">{node.description}</p>
-                      {/* Key parameters */}
-                      {node.parameters && Object.keys(node.parameters).length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pt-0.5">
-                          {Object.entries(node.parameters).slice(0, 5).map(([k, v]) => (
-                            <span
-                              key={k}
-                              className="text-xs bg-background/80 border border-border rounded px-2 py-0.5 font-mono"
-                            >
-                              <span className="text-muted-foreground">{k}:</span>{" "}
-                              <span className="text-foreground">{String(v).slice(0, 45)}</span>
-                            </span>
-                          ))}
+                      {/* Right-pointing arrow connector */}
+                      {!isLast && (
+                        <div className="flex items-center self-center shrink-0 mx-1">
+                          <div className="w-5 h-px bg-border" />
+                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground -ml-1" />
                         </div>
                       )}
                     </div>
-                    {/* Downward arrow connector */}
-                    {i < (uc.n8n_workflow?.nodes ?? []).length - 1 && (
-                      <div className="flex flex-col items-center py-0.5">
-                        <div className="w-px h-4 bg-border" />
-                        <ArrowDown className="h-4 w-4 text-muted-foreground -mt-1" />
-                      </div>
-                    )}
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
+              {[
+                { cat: "trigger", Icon: Play,       label: "Trigger" },
+                { cat: "ai",      Icon: Bot,        label: "AI / LLM" },
+                { cat: "logic",   Icon: GitBranch,  label: "Logic" },
+                { cat: "http",    Icon: Globe,      label: "HTTP" },
+                { cat: "db",      Icon: Database,   label: "Database" },
+                { cat: "comms",   Icon: Mail,       label: "Comms" },
+                { cat: "data",    Icon: Braces,     label: "Data" },
+              ].map(({ cat, Icon, label }) => {
+                const s = nodeStyle(cat === "trigger" ? "webhook" : cat === "ai" ? "langchain.agent" : cat === "logic" ? ".if" : cat === "http" ? "httpRequest" : cat === "db" ? "postgres" : cat === "comms" ? "email" : "code");
+                return (
+                  <div key={cat} className="flex items-center gap-1.5 text-xs">
+                    <div className={cn("p-1 rounded", s.bg)}>
+                      <Icon className="h-3 w-3 text-foreground" />
+                    </div>
+                    <span className="text-muted-foreground">{label}</span>
                   </div>
                 );
               })}
