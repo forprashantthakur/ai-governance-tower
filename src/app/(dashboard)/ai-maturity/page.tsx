@@ -24,15 +24,16 @@ import {
   RefreshCw,
   ArrowRight,
   Download,
-  ArrowDown,
   GitBranch,
   Globe,
   Mail,
   MessageSquare,
   Play,
-  Filter,
   Braces,
   Link2,
+  ShieldCheck,
+  DollarSign,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,18 @@ interface Phase {
 
 interface UseCase {
   use_case_name: string;
+  priority_score?: number;
+  priority_tier?: string;
+  score_breakdown?: {
+    business_impact: number;
+    data_readiness: number;
+    decision_complexity: number;
+    monetization: number;
+    tech_feasibility: number;
+    risk_compliance: number;
+    org_readiness: number;
+    rationale: string;
+  };
   business_problem: string;
   ai_solution: string;
   expected_business_impact: string;
@@ -114,28 +127,7 @@ const INDUSTRIES = [
   "Media & Entertainment",
   "Pharmaceuticals",
   "Agriculture",
-];
-
-const FUNCTIONS = [
-  "Customer Service", "Sales & CRM", "Marketing", "Finance & Accounting",
-  "HR & Talent", "Supply Chain", "Operations", "Risk & Compliance",
-  "Legal", "IT & Infrastructure", "Product Development", "Quality Assurance",
-  "Data Analytics", "Procurement", "Research & Development",
-];
-
-const MATURITY_LEVELS = [
-  { score: 1, label: "Ad Hoc", desc: "No formal AI processes. Experimental only.", color: "text-red-400" },
-  { score: 2, label: "Developing", desc: "Some pilots running, no governance framework.", color: "text-orange-400" },
-  { score: 3, label: "Defined", desc: "AI policies exist but limited enforcement.", color: "text-yellow-400" },
-  { score: 4, label: "Managed", desc: "Metrics-driven, models tracked and monitored.", color: "text-blue-400" },
-  { score: 5, label: "Optimized", desc: "AI-first org with continuous improvement.", color: "text-green-400" },
-];
-
-const COMMON_DATA_SOURCES = [
-  "CRM Data", "ERP Data", "Transaction Logs", "Customer Feedback",
-  "IoT Sensors", "Social Media", "Email", "Documents & PDFs",
-  "API Data", "Database Records", "Excel/CSV Files", "Web Analytics",
-  "Sensor Data", "Financial Reports", "HR Records",
+  "Hospitality",
 ];
 
 const COMMON_SYSTEMS = [
@@ -144,6 +136,62 @@ const COMMON_SYSTEMS = [
   "Tableau", "AWS", "Azure", "Google Cloud", "PostgreSQL",
   "MySQL", "MongoDB", "Snowflake", "Databricks",
 ];
+
+// ── Helper UI Components ──────────────────────────────────────────────────────
+
+/** Radio-style card button (single select) */
+function OptionCard({
+  label, desc, selected, onClick,
+}: {
+  label: string; desc?: string; selected: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "w-full text-left p-3 rounded-xl border transition-colors flex items-start gap-2.5",
+        selected
+          ? "border-primary bg-primary/10 text-primary"
+          : "border-border hover:border-primary/50 hover:bg-muted/30 text-foreground"
+      )}
+    >
+      <div className={cn(
+        "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2",
+        selected ? "border-primary" : "border-muted-foreground/50"
+      )}>
+        {selected && <div className="h-2 w-2 rounded-full bg-primary" />}
+      </div>
+      <div>
+        <p className={cn("text-sm font-medium", selected ? "text-primary" : "text-foreground")}>{label}</p>
+        {desc && <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>}
+      </div>
+    </button>
+  );
+}
+
+/** Multi-select chip */
+function MultiChip({
+  label, selected, onClick,
+}: {
+  label: string; selected: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-colors",
+        selected
+          ? "border-primary bg-primary/10 text-primary font-medium"
+          : "border-border hover:border-primary/50 hover:bg-muted/30 text-muted-foreground"
+      )}
+    >
+      {selected && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+      {label}
+    </button>
+  );
+}
 
 // ── Tag Input Component ────────────────────────────────────────────────────────
 function TagInput({
@@ -174,7 +222,6 @@ function TagInput({
         />
         <Button type="button" variant="outline" size="sm" onClick={() => add(input)}><Plus className="h-4 w-4" /></Button>
       </div>
-      {/* Selected tags — solid primary style, clearly "added" */}
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1">
           {tags.map((t) => (
@@ -194,7 +241,6 @@ function TagInput({
           ))}
         </div>
       )}
-      {/* Suggestion chips — ghost style, clearly "available to add" */}
       {suggestions && (
         <div className="flex flex-wrap gap-1 mt-1">
           {suggestions.filter((s) => !tags.includes(s)).slice(0, 10).map((s) => (
@@ -254,16 +300,13 @@ function buildN8nJson(wf: UseCase["n8n_workflow"], useCaseName: string): object 
     notes: node.description,
   }));
 
-  // Build connections: sequential by default, augmented by explicit connections field
   const connections: Record<string, { main: Array<Array<{ node: string; type: string; index: number }>> }> = {};
   if (wf.connections && wf.connections.length > 0) {
-    // Use explicit connections from Claude
     for (const conn of wf.connections) {
       if (!connections[conn.from]) connections[conn.from] = { main: [[]] };
       connections[conn.from].main[0].push({ node: conn.to, type: "main", index: 0 });
     }
   } else {
-    // Fall back to sequential
     nodes.slice(0, -1).forEach((n, i) => {
       connections[n.name] = { main: [[{ node: nodes[i + 1].name, type: "main", index: 0 }]] };
     });
@@ -317,6 +360,33 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
         </div>
       </div>
 
+      {/* Priority Score badge */}
+      {uc.priority_score !== undefined && (
+        <div className="flex items-center gap-3 px-6 py-3 bg-muted/30 border-b border-border">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Priority Score:</span>
+            <span className={cn(
+              "text-2xl font-bold tabular-nums",
+              uc.priority_score >= 80 ? "text-green-400" :
+              uc.priority_score >= 60 ? "text-yellow-400" :
+              uc.priority_score >= 40 ? "text-orange-400" : "text-red-400"
+            )}>{uc.priority_score}</span>
+            <span className="text-xs text-muted-foreground">/ 100</span>
+          </div>
+          {uc.priority_tier && (
+            <Badge variant="outline" className={cn(
+              "text-xs",
+              uc.priority_score >= 80 ? "border-green-500/40 text-green-400" :
+              uc.priority_score >= 60 ? "border-yellow-500/40 text-yellow-400" :
+              "border-orange-500/40 text-orange-400"
+            )}>{uc.priority_tier}</Badge>
+          )}
+          {uc.score_breakdown?.rationale && (
+            <span className="text-xs text-muted-foreground ml-auto hidden md:block">{uc.score_breakdown.rationale}</span>
+          )}
+        </div>
+      )}
+
       {/* Tab bar */}
       <div className="flex border-b border-border bg-muted/30 overflow-x-auto">
         {tabs.map(({ id, label, icon: Icon }) => (
@@ -352,6 +422,35 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                 <p className="text-sm text-foreground leading-relaxed">{uc.expected_business_impact}</p>
               </div>
             </div>
+
+            {/* Score breakdown mini-table */}
+            {uc.score_breakdown && (
+              <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-4 py-2 bg-muted/40 border-b border-border">
+                  Priority Score Breakdown
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-border">
+                  {[
+                    { key: "business_impact", label: "Business Impact", val: uc.score_breakdown.business_impact },
+                    { key: "data_readiness", label: "Data Readiness", val: uc.score_breakdown.data_readiness },
+                    { key: "decision_complexity", label: "Decision Complexity", val: uc.score_breakdown.decision_complexity },
+                    { key: "monetization", label: "Monetization", val: uc.score_breakdown.monetization },
+                    { key: "tech_feasibility", label: "Tech Feasibility", val: uc.score_breakdown.tech_feasibility },
+                    { key: "risk_compliance", label: "Risk & Compliance", val: uc.score_breakdown.risk_compliance },
+                    { key: "org_readiness", label: "Org Readiness", val: uc.score_breakdown.org_readiness },
+                  ].map(({ key, label, val }) => (
+                    <div key={key} className="px-3 py-2 text-center">
+                      <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
+                      <p className={cn(
+                        "text-lg font-bold tabular-nums",
+                        val >= 4 ? "text-green-400" : val >= 3 ? "text-yellow-400" : "text-orange-400"
+                      )}>{val}<span className="text-xs text-muted-foreground font-normal">/5</span></p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">Decision Flow</p>
               <p className="text-sm text-foreground leading-relaxed">{uc.agentic_ai_design.decision_flow}</p>
@@ -384,7 +483,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
 
         {tab === "workflow" && (
           <div className="space-y-5">
-            {/* Header row: workflow name + trigger + Download button */}
+            {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-4 text-sm">
                 <div>
@@ -412,7 +511,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
               </Button>
             </div>
 
-            {/* Visual flowchart — horizontal canvas */}
+            {/* Visual flowchart */}
             <div className="overflow-x-auto pb-4">
               <div className="flex items-start gap-0 min-w-max py-2">
                 {(Array.isArray(uc.n8n_workflow?.nodes) ? uc.n8n_workflow.nodes : []).map((node, i) => {
@@ -430,9 +529,7 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                   const paramKeys = Object.keys(node.parameters ?? {});
                   return (
                     <div key={i} className="flex items-start gap-0">
-                      {/* Node card */}
                       <div className={cn("rounded-xl border p-4 w-52 shrink-0 space-y-2", style.bg, style.border)}>
-                        {/* Header: icon + category */}
                         <div className="flex items-center gap-2">
                           <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-lg", style.bg, style.border, "border")}>
                             <CategoryIcon className="h-3 w-3 text-foreground" />
@@ -442,19 +539,15 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                           </Badge>
                           <span className="ml-auto text-[10px] text-muted-foreground font-mono">#{node.step}</span>
                         </div>
-                        {/* Name */}
                         <p className="text-xs font-bold text-foreground leading-tight">
                           {node.name || `Step ${node.step}`}
                         </p>
-                        {/* node type */}
                         <div className="font-mono text-[9px] text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border truncate">
                           {node.node_type}
                         </div>
-                        {/* Description */}
                         <p className="text-[10px] text-muted-foreground leading-snug line-clamp-3">
                           {node.description}
                         </p>
-                        {/* Parameters */}
                         {paramKeys.length > 0 && (
                           <div className="pt-1 border-t border-border space-y-1">
                             {paramKeys.slice(0, 3).map((k) => (
@@ -466,7 +559,6 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                           </div>
                         )}
                       </div>
-                      {/* Right-pointing arrow connector */}
                       {!isLast && (
                         <div className="flex items-center self-center shrink-0 mx-1">
                           <div className="w-5 h-px bg-border" />
@@ -563,7 +655,6 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
 
           return (
             <div className="space-y-5">
-              {/* Visual architecture diagram */}
               {systems.length > 0 && (
                 <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -594,7 +685,6 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                 </div>
               )}
 
-              {/* Data flow */}
               {dataFlow && (
                 <div className="rounded-lg border border-border bg-muted/30 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
@@ -604,7 +694,6 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
                 </div>
               )}
 
-              {/* API Requirements */}
               {apis.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -634,6 +723,117 @@ function UseCaseCard({ uc, index }: { uc: UseCase; index: number }) {
   );
 }
 
+// ── Industry Metrics Fields ───────────────────────────────────────────────────
+function IndustryMetricsSection({
+  industry,
+  industryMetrics,
+  setIndustryMetrics,
+}: {
+  industry: string;
+  industryMetrics: Record<string, string>;
+  setIndustryMetrics: (m: Record<string, string>) => void;
+}) {
+  const setField = (key: string, val: string) =>
+    setIndustryMetrics({ ...industryMetrics, [key]: val });
+
+  const isBFSI = industry.toLowerCase().includes("bank") || industry.toLowerCase().includes("financial");
+  const isInsurance = industry.toLowerCase().includes("insurance");
+  const isHealthcare = industry.toLowerCase().includes("health");
+  const isRetail = industry.toLowerCase().includes("retail") || industry.toLowerCase().includes("e-commerce");
+  const isManufacturing = industry.toLowerCase().includes("manufactur");
+  const isHospitality = industry.toLowerCase().includes("hospital");
+  const isTelecom = industry.toLowerCase().includes("telecom");
+  const isEducation = industry.toLowerCase().includes("education");
+  const isLogistics = industry.toLowerCase().includes("logistic") || industry.toLowerCase().includes("supply");
+
+  let fields: { key: string; label: string; placeholder: string }[] = [];
+
+  if (isBFSI) {
+    fields = [
+      { key: "fraudRate", label: "Fraud Rate (%)", placeholder: "e.g. 0.8%" },
+      { key: "nplRate", label: "Non-Performing Loan (NPL) Rate (%)", placeholder: "e.g. 3.2%" },
+      { key: "defaultRate", label: "Default Rate (%)", placeholder: "e.g. 1.5%" },
+      { key: "regulatoryClassification", label: "Regulatory Classification", placeholder: "e.g. RBI Category-A NBFC" },
+    ];
+  } else if (isInsurance) {
+    fields = [
+      { key: "claimsProcessingTime", label: "Claims Processing Time", placeholder: "e.g. 14 days" },
+      { key: "lossRatio", label: "Loss Ratio (%)", placeholder: "e.g. 62%" },
+      { key: "policyRenewalRate", label: "Policy Renewal Rate (%)", placeholder: "e.g. 75%" },
+    ];
+  } else if (isHealthcare) {
+    fields = [
+      { key: "patientWaitTime", label: "Patient Wait Time (minutes)", placeholder: "e.g. 45 min" },
+      { key: "bedOccupancy", label: "Bed Occupancy (%)", placeholder: "e.g. 82%" },
+      { key: "diagnosticAccuracy", label: "Diagnostic Accuracy (%)", placeholder: "e.g. 91%" },
+    ];
+  } else if (isRetail) {
+    fields = [
+      { key: "cartAbandonmentRate", label: "Cart Abandonment Rate (%)", placeholder: "e.g. 68%" },
+      { key: "skuCount", label: "SKU Count", placeholder: "e.g. 12,000 SKUs" },
+      { key: "monthlyOrders", label: "Monthly Orders", placeholder: "e.g. 80,000" },
+    ];
+  } else if (isManufacturing) {
+    fields = [
+      { key: "equipmentDowntime", label: "Equipment Downtime (%)", placeholder: "e.g. 12%" },
+      { key: "defectRate", label: "Defect Rate (%)", placeholder: "e.g. 2.3%" },
+      { key: "oee", label: "OEE (%)", placeholder: "e.g. 74%" },
+    ];
+  } else if (isHospitality) {
+    fields = [
+      { key: "occupancyRate", label: "Occupancy Rate (%)", placeholder: "e.g. 71%" },
+      { key: "revpar", label: "RevPAR (₹)", placeholder: "e.g. ₹4,200" },
+      { key: "adr", label: "Average Daily Rate (₹)", placeholder: "e.g. ₹6,500" },
+      { key: "guestNps", label: "Guest NPS", placeholder: "e.g. 52" },
+    ];
+  } else if (isTelecom) {
+    fields = [
+      { key: "churnRate", label: "Churn Rate (%)", placeholder: "e.g. 2.1% monthly" },
+      { key: "arpu", label: "ARPU (₹)", placeholder: "e.g. ₹280" },
+      { key: "npsScore", label: "NPS Score", placeholder: "e.g. 38" },
+    ];
+  } else if (isEducation) {
+    fields = [
+      { key: "studentRetentionRate", label: "Student Retention Rate (%)", placeholder: "e.g. 85%" },
+      { key: "courseCompletionRate", label: "Course Completion (%)", placeholder: "e.g. 63%" },
+      { key: "dropoutRate", label: "Dropout Rate (%)", placeholder: "e.g. 15%" },
+    ];
+  } else if (isLogistics) {
+    fields = [
+      { key: "onTimeDelivery", label: "On-Time Delivery (%)", placeholder: "e.g. 87%" },
+      { key: "shipmentVolume", label: "Shipment Volume/month", placeholder: "e.g. 50,000 shipments" },
+      { key: "costPerDelivery", label: "Cost per Delivery (₹)", placeholder: "e.g. ₹85" },
+    ];
+  }
+
+  if (fields.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <BarChart3 className="h-4 w-4 text-primary" />
+        <Label className="text-sm font-semibold">
+          {industry} — Industry KPIs
+          <span className="text-muted-foreground font-normal ml-1">(helps AI generate precise benchmarks)</span>
+        </Label>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
+        {fields.map(({ key, label, placeholder }) => (
+          <div key={key} className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{label}</Label>
+            <Input
+              placeholder={placeholder}
+              value={industryMetrics[key] ?? ""}
+              onChange={(e) => setField(key, e.target.value)}
+              className="h-8 text-sm"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AIMaturityPage() {
   const { addNotification } = useUIStore();
@@ -641,26 +841,66 @@ export default function AIMaturityPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UseCase[] | null>(null);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
-  const [history, setHistory] = useState<{ id: string; label: string }[]>([]);
 
-  // Form state
+  // Core
   const [orgProfile, setOrgProfile] = useState("");
   const [industry, setIndustry] = useState("");
-  const [functions, setFunctions] = useState<string[]>([]);
-  const [maturityScore, setMaturityScore] = useState(2);
+
+  // Step 1: Business Context
+  const [primaryObjective, setPrimaryObjective] = useState("");
+  const [targetKPI, setTargetKPI] = useState("");
+  const [kpiBaseline, setKpiBaseline] = useState("");
+  const [kpiTarget, setKpiTarget] = useState("");
+  const [timeHorizon, setTimeHorizon] = useState("3-6 months");
+
+  // Step 2: Process & Decisions
+  const [valueChainStage, setValueChainStage] = useState("");
+  const [painPoints, setPainPoints] = useState<string[]>([]);
+  const [processType, setProcessType] = useState("");
+  const [keyDecisions, setKeyDecisions] = useState<string[]>([]);
+  const [decisionFrequency, setDecisionFrequency] = useState("");
+  const [isDecisionSubjective, setIsDecisionSubjective] = useState(false);
+
+  // Step 3: Data Readiness
+  const [dataAvailability, setDataAvailability] = useState<string[]>([]);
+  const [dataVolume, setDataVolume] = useState("");
+  const [dataQuality, setDataQuality] = useState("");
+  const [dataFreshness, setDataFreshness] = useState("");
+  const [dataAccess, setDataAccess] = useState("");
   const [dataSources, setDataSources] = useState<string[]>([]);
+
+  // Step 4: Customer & Monetization
+  const [customerTouchpoints, setCustomerTouchpoints] = useState<string[]>([]);
+  const [journeyStage, setJourneyStage] = useState("");
+  const [personalizationRequired, setPersonalizationRequired] = useState(false);
+  const [revenueLevers, setRevenueLevers] = useState<string[]>([]);
+  const [estimatedRevenueImpact, setEstimatedRevenueImpact] = useState("");
+  const [estimatedCostSaving, setEstimatedCostSaving] = useState("");
+  const [transactionVolume, setTransactionVolume] = useState("");
+
+  // Step 5: Technology, Governance & Business Goals
   const [existingSystems, setExistingSystems] = useState<string[]>([]);
+  const [integrationComplexity, setIntegrationComplexity] = useState("");
+  const [cloudReadiness, setCloudReadiness] = useState("");
+  const [regulatoryImpact, setRegulatoryImpact] = useState("");
+  const [explainabilityRequired, setExplainabilityRequired] = useState(false);
+  const [biasRisk, setBiasRisk] = useState("");
+  const [skillAvailability, setSkillAvailability] = useState<string[]>([]);
+  const [changeImpact, setChangeImpact] = useState("");
+  const [industryMetrics, setIndustryMetrics] = useState<Record<string, string>>({});
   const [businessGoals, setBusinessGoals] = useState<string[]>([]);
 
-  const toggleFunction = (fn: string) =>
-    setFunctions((prev) => prev.includes(fn) ? prev.filter((f) => f !== fn) : [...prev, fn]);
+  const toggleArr = (arr: string[], setArr: (v: string[]) => void, val: string) =>
+    setArr(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]);
 
   const canGoNext = useCallback(() => {
-    if (step === 1) return orgProfile.trim().length >= 20 && !!industry;
-    if (step === 2) return functions.length >= 1 && maturityScore >= 1;
-    if (step === 3) return true; // Data & Systems are optional — always allow continue
+    if (step === 1) return orgProfile.trim().length >= 20 && !!industry && !!primaryObjective;
+    if (step === 2) return painPoints.length >= 1 && !!valueChainStage;
+    if (step === 3) return true;
+    if (step === 4) return true;
+    if (step === 5) return businessGoals.length >= 1;
     return true;
-  }, [step, orgProfile, industry, functions, maturityScore]);
+  }, [step, orgProfile, industry, primaryObjective, painPoints, valueChainStage, businessGoals]);
 
   async function handleSubmit() {
     setLoading(true);
@@ -672,11 +912,43 @@ export default function AIMaturityPage() {
         body: JSON.stringify({
           organizationProfile: orgProfile,
           industry,
-          functions,
-          maturityScore,
+          primaryObjective,
+          targetKPI,
+          kpiBaseline,
+          kpiTarget,
+          timeHorizon,
+          valueChainStage,
+          painPoints,
+          processType,
+          keyDecisions,
+          decisionFrequency,
+          isDecisionSubjective,
+          dataAvailability,
+          dataVolume,
+          dataQuality,
+          dataFreshness,
+          dataAccess,
           dataSources,
+          customerTouchpoints,
+          journeyStage,
+          personalizationRequired,
+          revenueLevers,
+          estimatedRevenueImpact,
+          estimatedCostSaving,
+          transactionVolume,
           existingSystems,
+          integrationComplexity,
+          cloudReadiness,
+          regulatoryImpact,
+          explainabilityRequired,
+          biasRisk,
+          skillAvailability,
+          changeImpact,
+          industryMetrics,
           businessGoals,
+          // Legacy compatibility
+          functions: [],
+          maturityScore: 2,
         }),
       });
       let json: { success: boolean; error?: string; data?: { id: string; status: string; useCases: UseCase[] } };
@@ -693,8 +965,7 @@ export default function AIMaturityPage() {
       const useCases = (data.useCases ?? []) as UseCase[];
       setResult(useCases);
       setAssessmentId(data.id);
-      setHistory((h) => [{ id: data.id, label: `${industry} — Level ${maturityScore}` }, ...h]);
-      setStep(5);
+      setStep(6);
     } catch {
       addNotification({ type: "error", title: "Network error", message: "Please try again." });
     } finally {
@@ -702,8 +973,16 @@ export default function AIMaturityPage() {
     }
   }
 
-  const totalSteps = 4;
-  const progress = ((step - 1) / totalSteps) * 100;
+  const totalSteps = 5;
+  const progress = Math.min(((step - 1) / totalSteps) * 100, 100);
+
+  const stepLabels = [
+    "Business Context",
+    "Process & Decisions",
+    "Data Readiness",
+    "Customer & Monetization",
+    "Technology & Governance",
+  ];
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -715,7 +994,7 @@ export default function AIMaturityPage() {
             AI Use Case Finder
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Generate high-impact AI use cases with n8n workflows tailored to your organization
+            Deep-discovery framework to surface your highest-priority, production-ready AI use case
           </p>
         </div>
         {result && (
@@ -727,17 +1006,16 @@ export default function AIMaturityPage() {
       </div>
 
       {/* Results */}
-      {step === 5 && result && (
+      {step === 6 && result && (
         <div className="space-y-6">
-          {/* Summary banner */}
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Sparkles className="h-8 w-8 text-primary shrink-0" />
             <div className="flex-1">
               <p className="font-semibold text-foreground">
-                {result.length} High-Impact AI Use Cases Generated
+                {result.length} High-Impact AI Use {result.length === 1 ? "Case" : "Cases"} Generated
               </p>
               <p className="text-sm text-muted-foreground">
-                For {industry} · Maturity Level {maturityScore} · {functions.slice(0, 3).join(", ")}{functions.length > 3 ? ` +${functions.length - 3}` : ""}
+                For {industry} · {primaryObjective} · {timeHorizon}
               </p>
             </div>
             {assessmentId && (
@@ -746,13 +1024,12 @@ export default function AIMaturityPage() {
               </Badge>
             )}
           </div>
-
           {result.map((uc, i) => <UseCaseCard key={i} uc={uc} index={i} />)}
         </div>
       )}
 
       {/* Multi-step form */}
-      {step < 5 && (
+      {step < 6 && (
         <Card>
           {/* Progress bar */}
           <div className="h-1 bg-muted">
@@ -766,31 +1043,32 @@ export default function AIMaturityPage() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <span>Step {step} of {totalSteps}</span>
               <span>·</span>
-              {step === 1 && <span>Organization Profile</span>}
-              {step === 2 && <span>Business Functions & Maturity</span>}
-              {step === 3 && <span>Data & Systems</span>}
-              {step === 4 && <span>Business Goals</span>}
+              <span>{stepLabels[step - 1]}</span>
             </div>
             <CardTitle className="text-xl">
-              {step === 1 && "Tell us about your organization"}
-              {step === 2 && "What does your organization do with AI today?"}
-              {step === 3 && "What data and systems do you work with?"}
-              {step === 4 && "What are your top business goals?"}
+              {step === 1 && "Business Context & Objectives"}
+              {step === 2 && "Process & Decision Intelligence"}
+              {step === 3 && "Data Readiness Assessment"}
+              {step === 4 && "Customer & Monetization Potential"}
+              {step === 5 && "Technology, Governance & Business Goals"}
             </CardTitle>
             <CardDescription>
-              {step === 1 && "Provide context so the AI can generate highly relevant recommendations."}
-              {step === 2 && "Select all functions involved in AI initiatives and your current maturity level."}
-              {step === 3 && "These help us design realistic integration architectures."}
-              {step === 4 && "Specific goals lead to specific, actionable use cases."}
+              {step === 1 && "Define the specific business problem and KPIs — this drives the AI's prioritization engine."}
+              {step === 2 && "Map the process, pain points and decisions where AI can intervene."}
+              {step === 3 && "Assess data availability and quality — the AI scores your readiness to deploy."}
+              {step === 4 && "Quantify revenue and cost impact so the use case has a clear business case."}
+              {step === 5 && "Capture technology landscape, governance constraints, and define your AI objectives."}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* ── Step 1: Org Profile ──────────────────────────────────────── */}
+
+            {/* ── Step 1: Business Context ──────────────────────────────────── */}
             {step === 1 && (
-              <div className="space-y-5">
+              <div className="space-y-6">
+                {/* Industry */}
                 <div className="space-y-2">
-                  <Label htmlFor="industry">
+                  <Label>
                     <Building2 className="h-4 w-4 inline mr-1" />
                     Industry *
                   </Label>
@@ -820,6 +1098,7 @@ export default function AIMaturityPage() {
                   )}
                 </div>
 
+                {/* Org Profile */}
                 <div className="space-y-2">
                   <Label htmlFor="orgProfile">
                     Organization Profile *
@@ -827,72 +1106,207 @@ export default function AIMaturityPage() {
                   </Label>
                   <Textarea
                     id="orgProfile"
-                    rows={5}
+                    rows={4}
                     placeholder="Describe your organization — size, what you do, key products/services, geographies, number of employees, annual revenue range, key challenges..."
                     value={orgProfile}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setOrgProfile(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground text-right">{orgProfile.length} chars</p>
                 </div>
+
+                {/* Primary Objective */}
+                <div className="space-y-2">
+                  <Label>Primary AI Objective *</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { label: "Revenue Increase", desc: "Grow top-line through upsell, cross-sell, or new products" },
+                      { label: "Cost Reduction", desc: "Automate manual work and eliminate operational waste" },
+                      { label: "Risk Mitigation", desc: "Detect fraud, defaults, compliance gaps earlier" },
+                      { label: "CX Improvement", desc: "Personalize and accelerate the customer experience" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={primaryObjective === label}
+                        onClick={() => setPrimaryObjective(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Target KPI */}
+                <div className="space-y-2">
+                  <Label htmlFor="targetKPI">
+                    Target KPI
+                    <span className="text-muted-foreground font-normal ml-1">(e.g. "Reduce loan approval time")</span>
+                  </Label>
+                  <Input
+                    id="targetKPI"
+                    placeholder="What specific metric do you want to move?"
+                    value={targetKPI}
+                    onChange={(e) => setTargetKPI(e.target.value)}
+                  />
+                </div>
+
+                {/* KPI Baseline + Target */}
+                <div className="space-y-2">
+                  <Label>KPI Baseline → Target</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Current value (baseline)</p>
+                      <Input
+                        placeholder="e.g. 5 days"
+                        value={kpiBaseline}
+                        onChange={(e) => setKpiBaseline(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Target value (goal)</p>
+                      <Input
+                        placeholder="e.g. 1 day"
+                        value={kpiTarget}
+                        onChange={(e) => setKpiTarget(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time Horizon */}
+                <div className="space-y-2">
+                  <Label>Time Horizon</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {["0-3 months", "3-6 months", "6-12 months"].map((t) => (
+                      <OptionCard
+                        key={t}
+                        label={t}
+                        selected={timeHorizon === t}
+                        onClick={() => setTimeHorizon(t)}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* ── Step 2: Functions + Maturity ─────────────────────────────── */}
+            {/* ── Step 2: Process & Decisions ───────────────────────────────── */}
             {step === 2 && (
               <div className="space-y-6">
+                {/* Value Chain Stage */}
                 <div className="space-y-2">
-                  <Label>
-                    Business Functions Involved in AI *
-                    <span className="text-muted-foreground font-normal ml-1">({functions.length} selected)</span>
-                  </Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {FUNCTIONS.map((fn) => (
-                      <button
-                        key={fn}
-                        type="button"
-                        onClick={() => toggleFunction(fn)}
-                        className={cn(
-                          "text-left text-sm px-3 py-2 rounded-lg border transition-colors",
-                          functions.includes(fn)
-                            ? "border-primary bg-primary/10 text-primary font-medium"
-                            : "border-border hover:border-primary/50 hover:bg-muted/50"
-                        )}
-                      >
-                        {functions.includes(fn) && <CheckCircle2 className="h-3.5 w-3.5 inline mr-1 text-primary" />}
-                        {fn}
-                      </button>
+                  <Label>Value Chain Stage *</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Acquisition", "Onboarding", "Operations", "Support", "Retention"].map((s) => (
+                      <MultiChip
+                        key={s}
+                        label={s}
+                        selected={valueChainStage === s}
+                        onClick={() => setValueChainStage(s)}
+                      />
                     ))}
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                {/* Pain Points */}
+                <div className="space-y-2">
                   <Label>
-                    <BarChart3 className="h-4 w-4 inline mr-1" />
-                    AI Maturity Level *
+                    Current Pain Points *
+                    <span className="text-muted-foreground font-normal ml-1">(select all that apply)</span>
                   </Label>
-                  <div className="space-y-2">
-                    {MATURITY_LEVELS.map((lvl) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      "High manual effort",
+                      "Low conversion",
+                      "Delays & SLA breaches",
+                      "Errors & inconsistencies",
+                      "High cost",
+                      "Poor customer experience",
+                    ].map((p) => (
+                      <MultiChip
+                        key={p}
+                        label={p}
+                        selected={painPoints.includes(p)}
+                        onClick={() => toggleArr(painPoints, setPainPoints, p)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Process Type */}
+                <div className="space-y-2">
+                  <Label>Current Process Type</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Manual", desc: "Humans do everything" },
+                      { label: "Rule-based", desc: "Automated with rigid rules" },
+                      { label: "Semi-automated", desc: "Mix of rules + human judgment" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={processType === label}
+                        onClick={() => setProcessType(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Key Decisions */}
+                <div className="space-y-2">
+                  <Label>Key Decisions Involved</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {["Pricing", "Approval", "Recommendation", "Routing", "Forecasting", "Risk Assessment"].map((d) => (
+                      <MultiChip
+                        key={d}
+                        label={d}
+                        selected={keyDecisions.includes(d)}
+                        onClick={() => toggleArr(keyDecisions, setKeyDecisions, d)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Decision Frequency */}
+                <div className="space-y-2">
+                  <Label>Decision Frequency</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Per transaction", desc: "Real-time / event-driven" },
+                      { label: "Daily batch", desc: "End-of-day processing" },
+                      { label: "Weekly/Monthly", desc: "Periodic reviews" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={decisionFrequency === label}
+                        onClick={() => setDecisionFrequency(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subjective decision toggle */}
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                  <div>
+                    <p className="text-sm font-medium">Is this decision subjective?</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Human judgment is currently required to make this call</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {[{ label: "Yes", val: true }, { label: "No", val: false }].map(({ label, val }) => (
                       <button
-                        key={lvl.score}
+                        key={label}
                         type="button"
-                        onClick={() => setMaturityScore(lvl.score)}
+                        onClick={() => setIsDecisionSubjective(val)}
                         className={cn(
-                          "w-full text-left p-4 rounded-xl border transition-colors flex items-start gap-3",
-                          maturityScore === lvl.score
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:border-primary/50 hover:bg-muted/30"
+                          "px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                          isDecisionSubjective === val
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/50"
                         )}
                       >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-sm font-bold">{lvl.score}</div>
-                        <div>
-                          <p className={cn("font-semibold text-sm", maturityScore === lvl.score ? "text-primary" : "text-foreground")}>
-                            Level {lvl.score} — {lvl.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{lvl.desc}</p>
-                        </div>
-                        {maturityScore === lvl.score && (
-                          <CheckCircle2 className="h-4 w-4 text-primary ml-auto shrink-0 mt-1" />
-                        )}
+                        {label}
                       </button>
                     ))}
                   </div>
@@ -900,37 +1314,403 @@ export default function AIMaturityPage() {
               </div>
             )}
 
-            {/* ── Step 3: Data Sources + Systems ───────────────────────────── */}
+            {/* ── Step 3: Data Readiness ────────────────────────────────────── */}
             {step === 3 && (
               <div className="space-y-6">
+                {/* Data Availability */}
+                <div className="space-y-2">
+                  <Label>Data Availability Types</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "Structured (DB/CSV)",
+                      "Unstructured (text, voice, image)",
+                      "Behavioral (clickstream, logs)",
+                    ].map((d) => (
+                      <MultiChip
+                        key={d}
+                        label={d}
+                        selected={dataAvailability.includes(d)}
+                        onClick={() => toggleArr(dataAvailability, setDataAvailability, d)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Data Volume */}
+                <div className="space-y-2">
+                  <Label>Data Volume</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Low", desc: "<10k records" },
+                      { label: "Medium", desc: "10k – 1M records" },
+                      { label: "High", desc: ">1M records" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={dataVolume === label}
+                        onClick={() => setDataVolume(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Data Quality */}
+                <div className="space-y-2">
+                  <Label>Data Quality</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Poor", desc: "Many gaps & errors" },
+                      { label: "Moderate", desc: "Usable with cleanup" },
+                      { label: "High", desc: "Clean & labelled" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={dataQuality === label}
+                        onClick={() => setDataQuality(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Data Freshness */}
+                <div className="space-y-2">
+                  <Label>Data Freshness</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Batch", desc: "Daily / weekly" },
+                      { label: "Near real-time", desc: "<5 min latency" },
+                      { label: "Real-time streaming", desc: "Sub-second" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={dataFreshness === label}
+                        onClick={() => setDataFreshness(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Data Access */}
+                <div className="space-y-2">
+                  <Label>Data Access Level</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Siloed", desc: "Manual extracts required" },
+                      { label: "Partially integrated", desc: "Some pipelines exist" },
+                      { label: "Fully accessible", desc: "APIs available" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={dataAccess === label}
+                        onClick={() => setDataAccess(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Data Sources */}
                 <TagInput
-                  label="Data Sources (optional but recommended)"
-                  placeholder="Type a data source and press Enter..."
+                  label="Known Data Sources (optional)"
+                  placeholder="e.g. Loan Origination System, CRM..."
                   tags={dataSources}
                   setTags={setDataSources}
-                  suggestions={COMMON_DATA_SOURCES}
+                  suggestions={[
+                    "CRM Data", "ERP Data", "Transaction Logs", "Customer Feedback",
+                    "IoT Sensors", "Social Media", "Email", "Documents & PDFs",
+                    "API Data", "Database Records", "Excel/CSV Files", "Web Analytics",
+                  ]}
                 />
+              </div>
+            )}
+
+            {/* ── Step 4: Customer & Monetization ──────────────────────────── */}
+            {step === 4 && (
+              <div className="space-y-6">
+                {/* Customer Touchpoints */}
+                <div className="space-y-2">
+                  <Label>Customer Touchpoints</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Mobile App", "Web Portal", "Call Center", "Field Agent", "Physical Branch"].map((t) => (
+                      <MultiChip
+                        key={t}
+                        label={t}
+                        selected={customerTouchpoints.includes(t)}
+                        onClick={() => toggleArr(customerTouchpoints, setCustomerTouchpoints, t)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Customer Journey Stage */}
+                <div className="space-y-2">
+                  <Label>Customer Journey Stage</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Awareness", "Consideration", "Purchase", "Usage", "Loyalty"].map((s) => (
+                      <MultiChip
+                        key={s}
+                        label={s}
+                        selected={journeyStage === s}
+                        onClick={() => setJourneyStage(s)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Personalization toggle */}
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                  <div>
+                    <p className="text-sm font-medium">Personalization Required?</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Does the solution need to tailor output per individual customer?</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {[{ label: "Yes", val: true }, { label: "No", val: false }].map(({ label, val }) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => setPersonalizationRequired(val)}
+                        className={cn(
+                          "px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                          personalizationRequired === val
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/50"
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Revenue Levers */}
+                <div className="space-y-2">
+                  <Label>Revenue Levers</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Upsell", "Cross-sell", "Pricing Optimization", "New Product/Subscription"].map((l) => (
+                      <MultiChip
+                        key={l}
+                        label={l}
+                        selected={revenueLevers.includes(l)}
+                        onClick={() => toggleArr(revenueLevers, setRevenueLevers, l)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Financial estimates */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Estimated Revenue Impact</Label>
+                    <div className="relative">
+                      <Input
+                        placeholder="e.g. 15"
+                        value={estimatedRevenueImpact}
+                        onChange={(e) => setEstimatedRevenueImpact(e.target.value)}
+                        className="pr-7"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Estimated Cost Saving</Label>
+                    <div className="relative">
+                      <Input
+                        placeholder="e.g. 30"
+                        value={estimatedCostSaving}
+                        onChange={(e) => setEstimatedCostSaving(e.target.value)}
+                        className="pr-7"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Monthly Transaction Volume</Label>
+                    <Input
+                      placeholder="e.g. 50,000 transactions"
+                      value={transactionVolume}
+                      onChange={(e) => setTransactionVolume(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Step 5: Technology, Governance & Business Goals ───────────── */}
+            {step === 5 && (
+              <div className="space-y-6">
+                {/* Industry-specific KPIs */}
+                <IndustryMetricsSection
+                  industry={industry}
+                  industryMetrics={industryMetrics}
+                  setIndustryMetrics={setIndustryMetrics}
+                />
+
+                {/* Integration Complexity */}
+                <div className="space-y-2">
+                  <Label>Integration Complexity</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Low", desc: "Plug & play APIs" },
+                      { label: "Medium", desc: "Some custom work" },
+                      { label: "High", desc: "Major integration effort" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={integrationComplexity === label}
+                        onClick={() => setIntegrationComplexity(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Cloud Readiness */}
+                <div className="space-y-2">
+                  <Label>Cloud Readiness</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "On-prem", desc: "All systems on-site" },
+                      { label: "Hybrid", desc: "Mix of cloud and on-prem" },
+                      { label: "Cloud-native", desc: "Fully cloud deployed" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={cloudReadiness === label}
+                        onClick={() => setCloudReadiness(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Regulatory Impact */}
+                <div className="space-y-2">
+                  <Label>
+                    <ShieldCheck className="h-4 w-4 inline mr-1" />
+                    Regulatory Impact
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "None", desc: "No regulatory constraints" },
+                      { label: "Moderate", desc: "Partial compliance needed" },
+                      { label: "High", desc: "DPDP / GDPR / Basel / HIPAA" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={regulatoryImpact === label}
+                        onClick={() => setRegulatoryImpact(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Explainability toggle */}
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                  <div>
+                    <p className="text-sm font-medium">Explainability Required?</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Model decisions must be auditable and explainable to regulators or customers</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {[{ label: "Yes", val: true }, { label: "No", val: false }].map(({ label, val }) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => setExplainabilityRequired(val)}
+                        className={cn(
+                          "px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                          explainabilityRequired === val
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/50"
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bias Risk */}
+                <div className="space-y-2">
+                  <Label>Bias Risk</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Low", desc: "Minimal bias exposure" },
+                      { label: "Medium", desc: "Monitoring required" },
+                      { label: "High", desc: "Critical audit needed" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={biasRisk === label}
+                        onClick={() => setBiasRisk(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Skill Availability */}
+                <div className="space-y-2">
+                  <Label>
+                    <Users className="h-4 w-4 inline mr-1" />
+                    Internal Skill Availability
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Data Science", "Data Engineering", "MLOps"].map((s) => (
+                      <MultiChip
+                        key={s}
+                        label={s}
+                        selected={skillAvailability.includes(s)}
+                        onClick={() => toggleArr(skillAvailability, setSkillAvailability, s)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Change Management Impact */}
+                <div className="space-y-2">
+                  <Label>Change Management Impact</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Low", desc: "Minimal process change" },
+                      { label: "Medium", desc: "Training & comms needed" },
+                      { label: "High", desc: "Major org redesign" },
+                    ].map(({ label, desc }) => (
+                      <OptionCard
+                        key={label}
+                        label={label}
+                        desc={desc}
+                        selected={changeImpact === label}
+                        onClick={() => setChangeImpact(label)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Existing Systems */}
                 <TagInput
-                  label="Existing Systems / Tools (optional but recommended)"
-                  placeholder="Type a system name and press Enter..."
+                  label="Existing Systems / Tools"
+                  placeholder="e.g. Salesforce, SAP, Oracle..."
                   tags={existingSystems}
                   setTags={setExistingSystems}
                   suggestions={COMMON_SYSTEMS}
                 />
-                <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-                  <Sparkles className="h-4 w-4 inline mr-1.5 text-primary" />
-                  The more context you provide, the more specific and implementable the AI recommendations will be.
-                  These are optional — Claude will infer from your industry if not provided.
-                </div>
-              </div>
-            )}
 
-            {/* ── Step 4: Business Goals ────────────────────────────────────── */}
-            {step === 4 && (
-              <div className="space-y-5">
+                {/* Business Goals — required */}
                 <TagInput
-                  label="Business Goals *"
-                  placeholder="e.g. Reduce loan processing time by 50%..."
+                  label="Business Goals / AI Objectives *"
+                  placeholder="e.g. Reduce loan approval time by 80%..."
                   tags={businessGoals}
                   setTags={setBusinessGoals}
                   suggestions={[
@@ -939,35 +1719,41 @@ export default function AIMaturityPage() {
                     "Automate manual compliance processes",
                     "Reduce fraud losses",
                     "Accelerate product development cycle",
-                    "Improve employee productivity",
                     "Scale without adding headcount",
-                    "Achieve ISO 42001 certification",
                     "Reduce loan processing time",
                     "Improve risk prediction accuracy",
                     "Automate customer onboarding",
                     "Reduce churn rate",
                   ]}
                 />
+                {businessGoals.length === 0 && (
+                  <p className="text-xs text-orange-400">Add at least one business goal to continue.</p>
+                )}
 
                 {/* Review summary */}
                 <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-3 text-sm">
-                  <p className="font-semibold text-foreground">Assessment Summary</p>
+                  <p className="font-semibold text-foreground flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-primary" />
+                    Discovery Summary
+                  </p>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><span className="text-muted-foreground">Industry: </span><span className="font-medium">{industry}</span></div>
-                    <div><span className="text-muted-foreground">Maturity: </span><span className="font-medium">Level {maturityScore} — {MATURITY_LEVELS[maturityScore - 1]?.label}</span></div>
-                    <div><span className="text-muted-foreground">Functions: </span><span className="font-medium">{functions.length} selected</span></div>
+                    <div><span className="text-muted-foreground">Industry: </span><span className="font-medium">{industry || "—"}</span></div>
+                    <div><span className="text-muted-foreground">Objective: </span><span className="font-medium">{primaryObjective || "—"}</span></div>
+                    <div><span className="text-muted-foreground">KPI: </span><span className="font-medium">{targetKPI ? `${kpiBaseline} → ${kpiTarget}` : "—"}</span></div>
+                    <div><span className="text-muted-foreground">Timeline: </span><span className="font-medium">{timeHorizon}</span></div>
+                    <div><span className="text-muted-foreground">Pain Points: </span><span className="font-medium">{painPoints.length} selected</span></div>
+                    <div><span className="text-muted-foreground">Data Quality: </span><span className="font-medium">{dataQuality || "Not set"}</span></div>
+                    <div><span className="text-muted-foreground">Revenue Impact: </span><span className="font-medium">{estimatedRevenueImpact ? `${estimatedRevenueImpact}%` : "—"}</span></div>
                     <div><span className="text-muted-foreground">Goals: </span><span className="font-medium">{businessGoals.length} defined</span></div>
-                    <div><span className="text-muted-foreground">Data sources: </span><span className="font-medium">{dataSources.length || "Auto-detected"}</span></div>
-                    <div><span className="text-muted-foreground">Systems: </span><span className="font-medium">{existingSystems.length || "Auto-detected"}</span></div>
                   </div>
                 </div>
 
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-start gap-3 text-sm">
-                  <Brain className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-foreground">Claude will generate up to 3 AI use cases</p>
+                    <p className="font-medium text-foreground">Claude will generate the single highest-priority AI use case</p>
                     <p className="text-muted-foreground mt-0.5">
-                      Each includes an agentic AI design, n8n automation workflow, implementation plan, and integration architecture.
+                      Scored across 7 dimensions — with exact KPI references, agentic design, n8n workflow, and implementation plan.
                     </p>
                   </div>
                 </div>
@@ -985,7 +1771,7 @@ export default function AIMaturityPage() {
                 Back
               </Button>
 
-              {step < 4 ? (
+              {step < 5 ? (
                 <Button
                   onClick={() => setStep((s) => s + 1)}
                   disabled={!canGoNext()}
@@ -997,7 +1783,7 @@ export default function AIMaturityPage() {
                 <Button
                   onClick={handleSubmit}
                   disabled={loading || businessGoals.length === 0}
-                  className="min-w-[160px]"
+                  className="min-w-[180px]"
                 >
                   {loading ? (
                     <>
@@ -1007,7 +1793,7 @@ export default function AIMaturityPage() {
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      Generate AI Use Cases
+                      Generate AI Use Case
                     </>
                   )}
                 </Button>
@@ -1017,14 +1803,14 @@ export default function AIMaturityPage() {
         </Card>
       )}
 
-      {/* Loading overlay when generating */}
+      {/* Loading overlay */}
       {loading && (
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-8 text-center space-y-3">
           <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
-          <p className="font-semibold text-foreground">Claude is analyzing your organization...</p>
+          <p className="font-semibold text-foreground">Claude is running the discovery analysis...</p>
           <p className="text-sm text-muted-foreground">
-            Generating personalized AI use cases with agentic designs, n8n workflows, and implementation plans.
-            This takes 15–30 seconds.
+            Scoring across 7 dimensions and generating a hyper-specific use case with agentic design,
+            n8n workflow, and implementation plan. This takes 15–30 seconds.
           </p>
         </div>
       )}
