@@ -905,7 +905,11 @@ export default function AIMaturityPage() {
   async function handleSubmit() {
     setLoading(true);
     try {
-      const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
+      let token = "";
+      try {
+        const raw = localStorage.getItem("ai-governance-auth");
+        token = raw ? (JSON.parse(raw)?.state?.token ?? "") : "";
+      } catch { token = ""; }
       const res = await fetch("/api/maturity-assessment", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -955,19 +959,25 @@ export default function AIMaturityPage() {
       try {
         json = await res.json();
       } catch {
-        throw new Error(`HTTP ${res.status} — response was not JSON`);
-      }
-      if (!res.ok || !json.success) {
-        addNotification({ type: "error", title: "Assessment failed", message: `[${res.status}] ${json.error ?? "Unknown error"}` });
+        addNotification({ type: "error", title: "Server error", message: `HTTP ${res.status} — server returned a non-JSON response. Check Vercel logs.` });
         return;
       }
-      const data = json.data!;
-      const useCases = (data.useCases ?? []) as UseCase[];
+      if (!res.ok || !json.success) {
+        addNotification({ type: "error", title: "Generation failed", message: json.error ?? `HTTP ${res.status}` });
+        return;
+      }
+      const data = json.data;
+      if (!data) {
+        addNotification({ type: "error", title: "Unexpected response", message: "Server returned success but no data. Please try again." });
+        return;
+      }
+      const useCases = Array.isArray(data.useCases) ? data.useCases as UseCase[] : [];
       setResult(useCases);
       setAssessmentId(data.id);
       setStep(6);
-    } catch {
-      addNotification({ type: "error", title: "Network error", message: "Please try again." });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unexpected error — please try again";
+      addNotification({ type: "error", title: "Error", message: msg });
     } finally {
       setLoading(false);
     }
