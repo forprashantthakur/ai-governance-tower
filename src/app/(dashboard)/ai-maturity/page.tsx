@@ -42,6 +42,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUIStore } from "@/store/ui.store";
+import { useApi } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -837,6 +838,7 @@ function IndustryMetricsSection({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AIMaturityPage() {
   const { addNotification } = useUIStore();
+  const api = useApi();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UseCase[] | null>(null);
@@ -905,15 +907,9 @@ export default function AIMaturityPage() {
   async function handleSubmit() {
     setLoading(true);
     try {
-      let token = "";
-      try {
-        const raw = localStorage.getItem("ai-governance-auth");
-        token = raw ? (JSON.parse(raw)?.state?.token ?? "") : "";
-      } catch { token = ""; }
-      const res = await fetch("/api/maturity-assessment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+      const result = await api.post<{ id: string; status: string; useCases: UseCase[] }>(
+        "/maturity-assessment",
+        {
           organizationProfile: orgProfile,
           industry,
           primaryObjective,
@@ -950,34 +946,18 @@ export default function AIMaturityPage() {
           changeImpact,
           industryMetrics,
           businessGoals,
-          // Legacy compatibility
           functions: [],
           maturityScore: 2,
-        }),
-      });
-      let json: { success: boolean; error?: string; data?: { id: string; status: string; useCases: UseCase[] } };
-      try {
-        json = await res.json();
-      } catch {
-        addNotification({ type: "error", title: "Server error", message: `HTTP ${res.status} — server returned a non-JSON response. Check Vercel logs.` });
-        return;
-      }
-      if (!res.ok || !json.success) {
-        addNotification({ type: "error", title: "Generation failed", message: json.error ?? `HTTP ${res.status}` });
-        return;
-      }
-      const data = json.data;
-      if (!data) {
-        addNotification({ type: "error", title: "Unexpected response", message: "Server returned success but no data. Please try again." });
-        return;
-      }
-      const useCases = Array.isArray(data.useCases) ? data.useCases as UseCase[] : [];
+        }
+      );
+      // api.post already shows error notifications on failure and throws —
+      // so if we get here the call succeeded
+      const useCases = Array.isArray(result?.useCases) ? result.useCases : [];
       setResult(useCases);
-      setAssessmentId(data.id);
+      setAssessmentId(result?.id ?? null);
       setStep(6);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unexpected error — please try again";
-      addNotification({ type: "error", title: "Error", message: msg });
+    } catch {
+      // api.post already showed the error notification — nothing to do here
     } finally {
       setLoading(false);
     }
