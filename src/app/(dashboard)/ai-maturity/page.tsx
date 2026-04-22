@@ -1543,18 +1543,161 @@ export default function AIMaturityPage() {
                 </div>
 
                 {/* Revenue Levers */}
-                <div className="space-y-2">
-                  <Label>Revenue Levers</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {["Upsell", "Cross-sell", "Pricing Optimization", "New Product/Subscription"].map((l) => (
-                      <MultiChip
-                        key={l}
-                        label={l}
-                        selected={revenueLevers.includes(l)}
-                        onClick={() => toggleArr(revenueLevers, setRevenueLevers, l)}
-                      />
-                    ))}
+                <div className="space-y-3">
+                  <div>
+                    <Label>Revenue Levers <span className="text-destructive">*</span></Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Which mechanisms will this AI use case activate to generate or protect revenue? Select all that apply and add custom ones below.
+                    </p>
                   </div>
+
+                  {/* Growth */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                      <TrendingUp className="h-3 w-3" /> Growth
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "Upsell to higher tier",
+                        "Cross-sell adjacent products",
+                        "Reduce churn / improve retention",
+                        "Win-back lapsed customers",
+                        "Increase conversion rate",
+                        "Expand wallet share",
+                      ].map((l) => (
+                        <MultiChip
+                          key={l}
+                          label={l}
+                          selected={revenueLevers.includes(l)}
+                          onClick={() => toggleArr(revenueLevers, setRevenueLevers, l)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                      <DollarSign className="h-3 w-3" /> Pricing
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "Dynamic pricing optimisation",
+                        "Price segmentation / personalisation",
+                        "Discount targeting (reduce blanket discounts)",
+                        "Yield management",
+                        "Premium tier creation",
+                      ].map((l) => (
+                        <MultiChip
+                          key={l}
+                          label={l}
+                          selected={revenueLevers.includes(l)}
+                          onClick={() => toggleArr(revenueLevers, setRevenueLevers, l)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Velocity */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                      <Zap className="h-3 w-3" /> Velocity
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "Faster time-to-revenue (speed up approvals/onboarding)",
+                        "Increase throughput / capacity",
+                        "Reduce lead-to-close cycle",
+                        "Automate lead scoring / prioritisation",
+                        "Reduce returns & claims cost",
+                      ].map((l) => (
+                        <MultiChip
+                          key={l}
+                          label={l}
+                          selected={revenueLevers.includes(l)}
+                          onClick={() => toggleArr(revenueLevers, setRevenueLevers, l)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* New Revenue Streams */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                      <Sparkles className="h-3 w-3" /> New Revenue Streams
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "New product / subscription line",
+                        "New customer segments / geographies",
+                        "Data monetisation",
+                        "API / platform revenue",
+                        "Marketplace / ecosystem revenue",
+                      ].map((l) => (
+                        <MultiChip
+                          key={l}
+                          label={l}
+                          selected={revenueLevers.includes(l)}
+                          onClick={() => toggleArr(revenueLevers, setRevenueLevers, l)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom input */}
+                  <TagInput
+                    label="Add Custom Revenue Lever"
+                    placeholder='e.g. "Reduce NPA rate from 4% to 2.5%"'
+                    tags={revenueLevers.filter((l) => ![
+                      "Upsell to higher tier","Cross-sell adjacent products","Reduce churn / improve retention",
+                      "Win-back lapsed customers","Increase conversion rate","Expand wallet share",
+                      "Dynamic pricing optimisation","Price segmentation / personalisation",
+                      "Discount targeting (reduce blanket discounts)","Yield management","Premium tier creation",
+                      "Faster time-to-revenue (speed up approvals/onboarding)","Increase throughput / capacity",
+                      "Reduce lead-to-close cycle","Automate lead scoring / prioritisation","Reduce returns & claims cost",
+                      "New product / subscription line","New customer segments / geographies",
+                      "Data monetisation","API / platform revenue","Marketplace / ecosystem revenue",
+                    ].includes(l))}
+                    setTags={(customTags) => {
+                      const presets = revenueLevers.filter((l) => [
+                        "Upsell to higher tier","Cross-sell adjacent products","Reduce churn / improve retention",
+                        "Win-back lapsed customers","Increase conversion rate","Expand wallet share",
+                        "Dynamic pricing optimisation","Price segmentation / personalisation",
+                        "Discount targeting (reduce blanket discounts)","Yield management","Premium tier creation",
+                        "Faster time-to-revenue (speed up approvals/onboarding)","Increase throughput / capacity",
+                        "Reduce lead-to-close cycle","Automate lead scoring / prioritisation","Reduce returns & claims cost",
+                        "New product / subscription line","New customer segments / geographies",
+                        "Data monetisation","API / platform revenue","Marketplace / ecosystem revenue",
+                      ].includes(l));
+                      setRevenueLevers([...presets, ...customTags]);
+                    }}
+                  />
+
+                  {/* Selection summary */}
+                  {revenueLevers.length > 0 && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                      <p className="text-xs font-medium text-primary mb-1.5">
+                        {revenueLevers.length} lever{revenueLevers.length !== 1 ? "s" : ""} selected — Claude will optimise the use case to activate these
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {revenueLevers.map((l) => (
+                          <span
+                            key={l}
+                            className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
+                          >
+                            {l}
+                            <button
+                              type="button"
+                              onClick={() => toggleArr(revenueLevers, setRevenueLevers, l)}
+                              className="hover:text-destructive transition-colors"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Financial estimates */}
