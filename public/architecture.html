@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AI Governance Control Tower — Architecture Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0a2342;--blue:#2563eb;--cyan:#06b6d4;--green:#10b981;
+  --amber:#f59e0b;--red:#ef4444;--dark:#060f1e;
+  --gray-400:#94a3b8;--gray-600:#475569;
+}
+html,body{font-family:'Inter',sans-serif;background:#060f1e;color:#fff;-webkit-font-smoothing:antialiased;}
+body{padding:2rem 1.5rem 4rem;}
+
+/* ── PAGE HEADER ── */
+.page-header{text-align:center;margin-bottom:3rem;padding:2.5rem 1rem;}
+.page-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);color:#60a5fa;padding:.3rem 1rem;border-radius:100px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem;}
+.bdot{width:6px;height:6px;border-radius:50%;background:#60a5fa;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+.page-title{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.75rem;}
+.page-title span{background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.page-sub{color:rgba(255,255,255,.5);font-size:.95rem;max-width:560px;margin:0 auto;}
+
+/* ── INTRO GRID ── */
+.intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2.5rem;}
+.intro-card{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem;}
+.intro-card-num{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
+.intro-card-title{font-size:1.05rem;font-weight:700;line-height:1.3;margin-bottom:.25rem;}
+.intro-point{display:flex;align-items:flex-start;gap:.6rem;font-size:.8rem;color:rgba(255,255,255,.75);line-height:1.55;}
+.intro-point-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:.45rem;}
+
+/* ── SECTION ── */
+.section{margin-bottom:2.5rem;}
+.section-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;}
+.section-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;}
+.section-title{font-size:1.15rem;font-weight:700;color:#fff;}
+.section-desc{font-size:.8rem;color:var(--gray-400);margin-bottom:1.25rem;margin-left:2.4rem;}
+
+/* ── DIAGRAM WRAPPER ── */
+.diagram{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:1.5rem;}
+
+/* ── BIZ ARCH ── */
+.biz-arch{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:1.25rem;align-items:start;}
+.biz-col{display:flex;flex-direction:column;gap:.5rem;}
+.biz-stakeholder{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.85rem 1rem;}
+.biz-stakeholder-icon{font-size:1.25rem;margin-bottom:.25rem;}
+.biz-stakeholder-title{font-size:.82rem;font-weight:700;margin-bottom:.2rem;}
+.biz-stakeholder-sub{font-size:.68rem;color:var(--gray-400);line-height:1.4;}
+.biz-arrow{text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;letter-spacing:.1em;padding:.1rem 0;}
+
+.biz-center{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:14px;padding:1.25rem;}
+.biz-center-title{font-size:.95rem;font-weight:800;text-align:center;margin-bottom:1rem;color:#fff;}
+.biz-modules{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem;}
+.biz-module{font-size:.7rem;font-weight:600;padding:.35rem .65rem;border-radius:6px;border:1px solid rgba(255,255,255,.1);}
+
+.biz-fw{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;}
+.biz-fw-tag{font-size:.65rem;font-weight:600;padding:.25rem .6rem;border-radius:100px;}
+
+/* ── BIZ OUTCOME ── */
+.biz-outcome{display:flex;align-items:flex-start;gap:.75rem;border:1px solid;border-radius:10px;padding:.75rem .9rem;}
+.biz-outcome-icon{font-size:1.1rem;flex-shrink:0;margin-top:.05rem;}
+.biz-outcome-text{font-size:.78rem;color:rgba(255,255,255,.8);line-height:1.5;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){
+  .intro-grid{grid-template-columns:1fr;max-width:700px;margin-left:auto;margin-right:auto;}
+  .biz-arch{grid-template-columns:1fr;}
+  .biz-col .biz-arrow{transform:rotate(90deg);}
+}
+
+/* ── FOOTER ── */
+.arch-footer{text-align:center;margin-top:3rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.07);color:var(--gray-400);font-size:.75rem;}
+.arch-footer a{color:#60a5fa;text-decoration:none;}
+.arch-footer a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div><div class="page-badge"><span class="bdot"></span>Architecture Overview · v2.0 · April 2026</div></div>
+  <div class="page-title">AI Governance <span>Control Tower</span></div>
+  <p class="page-sub">End-to-end platform for AI risk, compliance, data governance, and strategy — purpose-built for regulated industries</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     INTRO: PROBLEM · VISION · BUSINESS ARCHITECTURE
+════════════════════════════════════════════════════════════ -->
+<div class="intro-grid">
+
+  <!-- 1. PROBLEM STATEMENT -->
+  <div class="intro-card" style="background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.25);">
+    <div class="intro-card-num" style="color:#f87171;">01 — Problem Statement</div>
+    <div class="intro-card-title" style="color:#fca5a5;">Why Does This Problem Exist?</div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Enterprises deploy dozens of AI models with <strong style="color:#fff;">no unified view</strong> of their risk exposure — each team manages its own models in isolation</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Compliance with <strong style="color:#fff;">DPDP, ISO 42001, GDPR, and EU AI Act</strong> requires structured evidence — today this is tracked in spreadsheets and emails</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span><strong style="color:#fff;">No tool connects</strong> AI project execution (who is building what) with governance (is it safe to deploy?)</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Data lineage, PII tracking, and consent for AI training data is <strong style="color:#fff;">manual and fragmented</strong> — a major regulatory liability</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span><strong style="color:#fff;">High-risk AI models</strong> (fraud detection, credit scoring, clinical AI) can be deployed to production with no formal sign-off process</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>When regulators ask "who approved this AI decision?" — most organisations <strong style="color:#fff;">cannot answer</strong> with evidence</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>AI agent behaviour (LLM prompts, tool calls, token spend) is <strong style="color:#fff;">invisible</strong> to risk and compliance teams</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Organisations have <strong style="color:#fff;">no structured framework</strong> to prioritise which AI use cases to build first — decisions are intuition-driven, not scored across business impact, data readiness, and ROI</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Translating governance requirements into <strong style="color:#fff;">automated workflows</strong> (Slack alerts, approval gates, audit trails) requires expert n8n knowledge most teams lack</span></div>
+  </div>
+
+  <!-- 2. VISION -->
+  <div class="intro-card" style="background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.3);">
+    <div class="intro-card-num" style="color:#60a5fa;">02 — Vision of the Solution</div>
+    <div class="intro-card-title" style="color:#93c5fd;">One Platform for the Entire AI Governance Lifecycle</div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Single source of truth</strong> — every AI model, its risk score, compliance status, data lineage, and project history in one place</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Governance built into delivery</strong> — compliance gates and ethics checklists are embedded inside AI project phases, not bolted on at the end</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Risk-gated deployments</strong> — HIGH and CRITICAL risk models are automatically blocked from production until a Risk Officer formally approves</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Regulator-ready at any time</strong> — audit trail, compliance evidence, and framework mapping are always current, not assembled before audits</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Purpose-built for regulated industries</strong> — Banking, Insurance, Healthcare, Fintech — where AI decisions have legal consequences</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">AI-powered strategy layer</strong> — 5-step deep-discovery framework surfaces the single highest-priority AI use case, scored across 7 dimensions with ROI, n8n workflow, implementation roadmap, and PDF report — all AI-generated</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">No-code workflow automation</strong> — n8n Workflow Builder generates production-ready automation workflows from plain-English descriptions, instantly importable into n8n</span></div>
+    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span>Replaces <strong style="color:#fff;">5–7 disconnected tools</strong> (Jira + Excel + email + MLflow + SharePoint + manual audit) with a single governed workflow</span></div>
+  </div>
+
+  <!-- 3. OUTCOMES -->
+  <div class="intro-card" style="background:rgba(16,185,129,0.07);border-color:rgba(16,185,129,0.25);">
+    <div class="intro-card-num" style="color:#34d399;">03 — Expected Outcomes</div>
+    <div class="intro-card-title" style="color:#6ee7b7;">What Changes for the Business</div>
+    <div style="display:flex;flex-direction:column;gap:0.6rem;">
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">📉</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">60–70% reduction</strong> in time spent preparing compliance evidence for audits</div>
+      </div>
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">🛡</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">Zero unreviewed deployments</strong> of HIGH or CRITICAL risk AI models</div>
+      </div>
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">⚖️</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">Continuous compliance</strong> against DPDP, ISO 42001, GDPR, and EU AI Act — not point-in-time</div>
+      </div>
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">👁</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">Full explainability</strong> of every AI decision — who approved it, what data it used, what risk score it carried</div>
+      </div>
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">🎯</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">AI use case prioritisation</strong> in minutes — 7-dimension scoring surfaces the single highest-ROI opportunity with a full implementation plan and PDF report</div>
+      </div>
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">🔄</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">Governance workflows automated</strong> — production-ready n8n automation generated from plain English, covering alerts, approvals, audit events, and integrations</div>
+      </div>
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">🚀</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">Faster AI delivery</strong> — governance friction removed by embedding it into the build process, not adding it after</div>
+      </div>
+      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+        <div class="biz-outcome-icon">🏆</div>
+        <div class="biz-outcome-text"><strong style="color:#fff;">Board-level confidence</strong> — real-time risk dashboard for CRO, CDO, and CISO with no manual reporting</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── HIGH LEVEL BUSINESS ARCHITECTURE ── -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num" style="background:rgba(6,182,212,0.2);color:#67e8f9;">0</div>
+    <div class="section-title">High Level Business Architecture</div>
+  </div>
+  <div class="section-desc">Five stakeholder groups interact with the platform — each getting a role-specific view of the same governed AI portfolio</div>
+
+  <div class="diagram">
+    <div class="biz-arch">
+
+      <!-- LEFT: STAKEHOLDERS -->
+      <div class="biz-col">
+        <div style="font-size:0.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem;text-align:center;font-weight:700;">Who Uses It</div>
+
+        <div class="biz-stakeholder" style="background:rgba(37,99,235,0.1);border-color:rgba(37,99,235,0.3);">
+          <div class="biz-stakeholder-icon">🤖</div>
+          <div class="biz-stakeholder-title" style="color:#93c5fd;">AI / ML Teams</div>
+          <div class="biz-stakeholder-sub">Data Scientists · MLOps · Prompt Engineers</div>
+        </div>
+        <div class="biz-arrow">→ → →</div>
+
+        <div class="biz-stakeholder" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);">
+          <div class="biz-stakeholder-icon">⚠️</div>
+          <div class="biz-stakeholder-title" style="color:#fca5a5;">Risk Officers</div>
+          <div class="biz-stakeholder-sub">CRO · Model Risk · AI Risk Team</div>
+        </div>
+        <div class="biz-arrow">→ → →</div>
+
+        <div class="biz-stakeholder" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);">
+          <div class="biz-stakeholder-icon">📋</div>
+          <div class="biz-stakeholder-title" style="color:#fcd34d;">Compliance &amp; Audit</div>
+          <div class="biz-stakeholder-sub">DPO · Internal Audit · Legal · Regulator</div>
+        </div>
+        <div class="biz-arrow">→ → →</div>
+
+        <div class="biz-stakeholder" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);">
+          <div class="biz-stakeholder-icon">🏆</div>
+          <div class="biz-stakeholder-title" style="color:#6ee7b7;">Business Leaders</div>
+          <div class="biz-stakeholder-sub">CEO · CDO · CISO · Board</div>
+        </div>
+        <div class="biz-arrow">→ → →</div>
+
+        <div class="biz-stakeholder" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3);">
+          <div class="biz-stakeholder-icon">🎯</div>
+          <div class="biz-stakeholder-title" style="color:#c4b5fd;">Strategy &amp; Innovation</div>
+          <div class="biz-stakeholder-sub">Head of AI · Strategy Teams · Consultants</div>
+        </div>
+      </div>
+
+      <!-- CENTER: PLATFORM -->
+      <div class="biz-center">
+        <div class="biz-center-title">🛡 AI Governance Control Tower</div>
+
+        <div style="font-size:0.55rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;text-align:center;">Core Governance Modules</div>
+        <div class="biz-modules">
+          <div class="biz-module" style="background:rgba(37,99,235,0.15);border-color:rgba(37,99,235,0.3);color:#93c5fd;">🤖 AI Model Inventory</div>
+          <div class="biz-module" style="background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#c4b5fd;">📋 AI Projects &amp; Kanban</div>
+          <div class="biz-module" style="background:rgba(236,72,153,0.12);border-color:rgba(236,72,153,0.3);color:#f9a8d4;">🧠 Agent Governance</div>
+          <div class="biz-module" style="background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:#fca5a5;">⚠️ Risk Assessment</div>
+          <div class="biz-module" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#6ee7b7;">✅ Compliance Controls</div>
+          <div class="biz-module" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:#fcd34d;">🗺 Regulation Mapping</div>
+          <div class="biz-module" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#67e8f9;">🔍 ISO 42001 Assessment</div>
+          <div class="biz-module" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#6ee7b7;">✍️ Approval Workflows</div>
+          <div class="biz-module" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#67e8f9;">🗄 Data Governance &amp; PII</div>
+          <div class="biz-module" style="background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#c4b5fd;">🔐 Consent Management</div>
+          <div class="biz-module" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#6ee7b7;">📡 Real-time Monitoring</div>
+          <div class="biz-module" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:#fcd34d;">📜 Immutable Audit Trail</div>
+          <div class="biz-module" style="background:rgba(37,99,235,0.12);border-color:rgba(37,99,235,0.3);color:#93c5fd;">📊 Reports &amp; Exports</div>
+          <div class="biz-module" style="background:rgba(37,99,235,0.12);border-color:rgba(37,99,235,0.3);color:#93c5fd;">🔐 Role-Based Access</div>
+        </div>
+
+        <!-- AI Strategy Layer -->
+        <div style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid rgba(139,92,246,0.3);">
+          <div style="font-size:0.55rem;color:#c4b5fd;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.45rem;text-align:center;font-weight:700;">✨ AI Strategy Layer — Claude-Powered</div>
+          <div class="biz-modules">
+            <div class="biz-module" style="background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.5);color:#c4b5fd;">🎯 AI Use Case Finder</div>
+            <div class="biz-module" style="background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.5);color:#c4b5fd;">🔄 n8n Workflow Builder</div>
+            <div class="biz-module" style="background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.5);color:#c4b5fd;">📄 PDF Report Generator</div>
+          </div>
+        </div>
+
+        <!-- Frameworks -->
+        <div style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid rgba(255,255,255,0.07);">
+          <div style="font-size:0.55rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;text-align:center;">Regulatory Frameworks Supported</div>
+          <div class="biz-fw">
+            <span class="biz-fw-tag" style="background:rgba(37,99,235,0.2);color:#93c5fd;">DPDP Act 2023</span>
+            <span class="biz-fw-tag" style="background:rgba(16,185,129,0.2);color:#6ee7b7;">ISO 42001</span>
+            <span class="biz-fw-tag" style="background:rgba(245,158,11,0.2);color:#fcd34d;">EU AI Act</span>
+            <span class="biz-fw-tag" style="background:rgba(139,92,246,0.2);color:#c4b5fd;">GDPR</span>
+            <span class="biz-fw-tag" style="background:rgba(239,68,68,0.2);color:#fca5a5;">ISO 27001</span>
+            <span class="biz-fw-tag" style="background:rgba(6,182,212,0.2);color:#67e8f9;">NIST AI RMF</span>
+            <span class="biz-fw-tag" style="background:rgba(245,158,11,0.2);color:#fcd34d;">RBI AI Framework</span>
+            <span class="biz-fw-tag" style="background:rgba(16,185,129,0.2);color:#6ee7b7;">SEBI Guidelines</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: WHAT THEY GET -->
+      <div class="biz-col">
+        <div style="font-size:0.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem;text-align:center;font-weight:700;">What They Get</div>
+
+        <div class="biz-stakeholder" style="background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.2);">
+          <div class="biz-stakeholder-title" style="color:#93c5fd;">Build &amp; Experiment</div>
+          <div class="biz-stakeholder-sub">Kanban · Gantt · Experiments · Model registry · Workflow canvas · Agent monitoring · n8n Workflow Builder</div>
+        </div>
+        <div class="biz-arrow">← ← ←</div>
+
+        <div class="biz-stakeholder" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2);">
+          <div class="biz-stakeholder-title" style="color:#fca5a5;">Assess &amp; Gate</div>
+          <div class="biz-stakeholder-sub">Risk heatmap · 6-dimension scoring · PII scanner · Deployment block · Override with justification · Approval workflows</div>
+        </div>
+        <div class="biz-arrow">← ← ←</div>
+
+        <div class="biz-stakeholder" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);">
+          <div class="biz-stakeholder-title" style="color:#fcd34d;">Audit &amp; Evidence</div>
+          <div class="biz-stakeholder-sub">Compliance controls · ISO 42001 assessment · Regulation mapping · Consent records · Immutable audit log · CSV export for regulators</div>
+        </div>
+        <div class="biz-arrow">← ← ←</div>
+
+        <div class="biz-stakeholder" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
+          <div class="biz-stakeholder-title" style="color:#6ee7b7;">Oversee &amp; Report</div>
+          <div class="biz-stakeholder-sub">Portfolio dashboard · Compliance score · Risk distribution · Active alerts · Scheduled reports · Real-time KPIs</div>
+        </div>
+        <div class="biz-arrow">← ← ←</div>
+
+        <div class="biz-stakeholder" style="background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.2);">
+          <div class="biz-stakeholder-title" style="color:#c4b5fd;">Discover &amp; Automate</div>
+          <div class="biz-stakeholder-sub">AI Use Case Finder · 7-dimension priority scoring · Revenue lever analysis · n8n workflow generation · 8-page PDF report · Implementation roadmap</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- INTEGRATION ROW -->
+    <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.06);">
+      <div style="font-size:0.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;font-weight:700;">External Integrations &amp; Infrastructure</div>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+        <div class="biz-module" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.35);color:#c4b5fd;flex:1;min-width:200px;padding:0.5rem 0.75rem;">🤖 Anthropic Claude API — AI Use Case Finder · n8n Workflow Builder · 8-page PDF report generation</div>
+        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">🔄 n8n — Workflow automation · Slack · Jira · MS Teams · Webhook triggers</div>
+        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">📧 Formspree — Contact Sales · Lead capture → enquiry@aigovernancetower.com</div>
+        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">▲ Vercel — Cloud hosting · Auto-deploy from GitHub · Global CDN · 60s function timeout</div>
+        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">🐘 Neon DB — Serverless PostgreSQL · Auto-scale · Branch per environment</div>
+        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">📄 jsPDF + autoTable — Client-side PDF generation · No server dependency · Auto-download</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="arch-footer">
+  <p>AI Governance Control Tower &nbsp;·&nbsp; <a href="https://aigovernancetower.com">aigovernancetower.com</a> &nbsp;·&nbsp; Architecture v2.0 &nbsp;·&nbsp; April 2026</p>
+  <p style="margin-top:0.4rem;color:rgba(255,255,255,0.25);">CONFIDENTIAL — For internal use only</p>
+</div>
+
+</body>
+</html>
