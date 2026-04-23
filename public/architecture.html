@@ -3,320 +3,1115 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>AI Governance Control Tower — Architecture Diagram</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<title>AI Governance Control Tower — Full Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0a2342;--blue:#2563eb;--cyan:#06b6d4;--green:#10b981;
-  --amber:#f59e0b;--red:#ef4444;--dark:#060f1e;
-  --gray-400:#94a3b8;--gray-600:#475569;
+  --amber:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--pink:#ec4899;
+  --dark:#060f1e;--gray-400:#94a3b8;--gray-600:#475569;
+  --font-mono:'JetBrains Mono',monospace;
 }
-html,body{font-family:'Inter',sans-serif;background:#060f1e;color:#fff;-webkit-font-smoothing:antialiased;}
-body{padding:2rem 1.5rem 4rem;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:#060f1e;color:#fff;-webkit-font-smoothing:antialiased;padding:0 0 5rem;}
+
+/* ── NAV ── */
+.top-nav{position:sticky;top:0;z-index:100;background:rgba(6,15,30,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.07);padding:.75rem 2rem;display:flex;align-items:center;gap:2rem;flex-wrap:wrap;}
+.nav-logo{font-size:.85rem;font-weight:800;color:#fff;white-space:nowrap;}
+.nav-logo span{color:#60a5fa;}
+.nav-links{display:flex;gap:.25rem;flex-wrap:wrap;}
+.nav-link{font-size:.75rem;font-weight:600;padding:.35rem .85rem;border-radius:6px;border:1px solid transparent;color:var(--gray-400);cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;}
+.nav-link:hover,.nav-link.active{background:rgba(37,99,235,.15);border-color:rgba(37,99,235,.35);color:#93c5fd;}
+.nav-badge{margin-left:auto;font-size:.65rem;color:var(--gray-400);white-space:nowrap;}
 
 /* ── PAGE HEADER ── */
-.page-header{text-align:center;margin-bottom:3rem;padding:2.5rem 1rem;}
-.page-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);color:#60a5fa;padding:.3rem 1rem;border-radius:100px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem;}
+.page-hero{padding:4rem 2rem 2.5rem;text-align:center;background:linear-gradient(180deg,rgba(37,99,235,.07) 0%,transparent 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.35);color:#60a5fa;padding:.3rem 1rem;border-radius:100px;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem;}
 .bdot{width:6px;height:6px;border-radius:50%;background:#60a5fa;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
-.page-title{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:.75rem;}
-.page-title span{background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.page-sub{color:rgba(255,255,255,.5);font-size:.95rem;max-width:560px;margin:0 auto;}
+.hero-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.6rem;}
+.hero-title span{background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{color:rgba(255,255,255,.5);font-size:.9rem;max-width:600px;margin:0 auto;}
 
-/* ── INTRO GRID ── */
-.intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2.5rem;}
-.intro-card{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem;}
-.intro-card-num{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
-.intro-card-title{font-size:1.05rem;font-weight:700;line-height:1.3;margin-bottom:.25rem;}
-.intro-point{display:flex;align-items:flex-start;gap:.6rem;font-size:.8rem;color:rgba(255,255,255,.75);line-height:1.55;}
-.intro-point-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:.45rem;}
+/* ── SECTION WRAPPER ── */
+.arch-section{padding:2.5rem 2rem;max-width:1400px;margin:0 auto;}
+.arch-section-header{display:flex;align-items:center;gap:1rem;margin-bottom:.6rem;padding-bottom:.75rem;border-bottom:1px solid rgba(255,255,255,.06);}
+.arch-section-num{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;flex-shrink:0;}
+.arch-section-title{font-size:1.3rem;font-weight:800;}
+.arch-section-desc{font-size:.8rem;color:var(--gray-400);margin-bottom:1.5rem;margin-left:3rem;line-height:1.6;}
 
-/* ── SECTION ── */
-.section{margin-bottom:2.5rem;}
-.section-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;}
-.section-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;}
-.section-title{font-size:1.15rem;font-weight:700;color:#fff;}
-.section-desc{font-size:.8rem;color:var(--gray-400);margin-bottom:1.25rem;margin-left:2.4rem;}
+/* ── DIAGRAM CARD ── */
+.dcard{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;}
+.dcard-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gray-400);margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem;}
+.dcard-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06);}
 
-/* ── DIAGRAM WRAPPER ── */
-.diagram{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:1.5rem;}
+/* ── CHIP / TAG ── */
+.chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.7rem;font-weight:600;padding:.3rem .65rem;border-radius:6px;border:1px solid rgba(255,255,255,.1);white-space:nowrap;}
+.tag-row{display:flex;flex-wrap:wrap;gap:.4rem;}
 
-/* ── BIZ ARCH ── */
-.biz-arch{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:1.25rem;align-items:start;}
-.biz-col{display:flex;flex-direction:column;gap:.5rem;}
-.biz-stakeholder{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.85rem 1rem;}
-.biz-stakeholder-icon{font-size:1.25rem;margin-bottom:.25rem;}
-.biz-stakeholder-title{font-size:.82rem;font-weight:700;margin-bottom:.2rem;}
-.biz-stakeholder-sub{font-size:.68rem;color:var(--gray-400);line-height:1.4;}
-.biz-arrow{text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;letter-spacing:.1em;padding:.1rem 0;}
+/* ── LAYER DIAGRAM ── */
+.layer-stack{display:flex;flex-direction:column;gap:.5rem;}
+.layer{border-radius:10px;border:1px solid rgba(255,255,255,.1);overflow:hidden;}
+.layer-header{padding:.6rem 1rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:.6rem;}
+.layer-body{padding:.75rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem;background:rgba(0,0,0,.15);}
 
-.biz-center{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:14px;padding:1.25rem;}
-.biz-center-title{font-size:.95rem;font-weight:800;text-align:center;margin-bottom:1rem;color:#fff;}
-.biz-modules{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem;}
-.biz-module{font-size:.7rem;font-weight:600;padding:.35rem .65rem;border-radius:6px;border:1px solid rgba(255,255,255,.1);}
+/* ── FLOW DIAGRAM ── */
+.flow-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;}
+.flow-box{border-radius:8px;border:1px solid;padding:.5rem .85rem;font-size:.75rem;font-weight:600;text-align:center;white-space:nowrap;}
+.flow-arrow{color:var(--gray-400);font-size:.9rem;flex-shrink:0;}
+.flow-desc{font-size:.68rem;color:var(--gray-400);margin-top:.2rem;}
 
-.biz-fw{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;}
-.biz-fw-tag{font-size:.65rem;font-weight:600;padding:.25rem .6rem;border-radius:100px;}
+/* ── GRID LAYOUTS ── */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;}
 
-/* ── BIZ OUTCOME ── */
-.biz-outcome{display:flex;align-items:flex-start;gap:.75rem;border:1px solid;border-radius:10px;padding:.75rem .9rem;}
-.biz-outcome-icon{font-size:1.1rem;flex-shrink:0;margin-top:.05rem;}
-.biz-outcome-text{font-size:.78rem;color:rgba(255,255,255,.8);line-height:1.5;}
+/* ── INFO CARD ── */
+.info-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1rem 1.1rem;}
+.info-card-title{font-size:.75rem;font-weight:700;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem;}
+.info-card-body{font-size:.72rem;color:rgba(255,255,255,.65);line-height:1.6;}
+.info-card-body strong{color:#fff;}
+.info-row{display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.35rem;font-size:.72rem;color:rgba(255,255,255,.65);}
+.info-row .k{color:var(--gray-400);font-weight:600;min-width:110px;flex-shrink:0;font-family:var(--font-mono);font-size:.66rem;}
+.info-row .v{color:#e2e8f0;}
+
+/* ── MODEL TABLE ── */
+.model-table{width:100%;border-collapse:collapse;font-size:.72rem;}
+.model-table th{background:rgba(37,99,235,.12);color:#93c5fd;font-weight:700;font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;padding:.5rem .75rem;text-align:left;border-bottom:1px solid rgba(37,99,235,.2);}
+.model-table td{padding:.45rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.75);vertical-align:top;}
+.model-table tr:hover td{background:rgba(255,255,255,.02);}
+.model-table td:first-child{font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;font-weight:600;}
+.model-table td:last-child{color:var(--gray-400);font-size:.66rem;}
+
+/* ── ROUTE TABLE ── */
+.route-table{width:100%;border-collapse:collapse;font-size:.71rem;}
+.route-table th{background:rgba(16,185,129,.1);color:#6ee7b7;font-weight:700;font-size:.63rem;text-transform:uppercase;letter-spacing:.07em;padding:.45rem .7rem;text-align:left;border-bottom:1px solid rgba(16,185,129,.2);}
+.route-table td{padding:.4rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.7);vertical-align:top;}
+.route-table tr:hover td{background:rgba(255,255,255,.02);}
+.route-table td:first-child{font-family:var(--font-mono);color:#fb923c;font-size:.65rem;white-space:nowrap;}
+.route-table td:nth-child(2){font-family:var(--font-mono);color:#67e8f9;font-size:.65rem;}
+.route-table td:last-child{color:var(--gray-400);}
+
+/* ── ENV TABLE ── */
+.env-table{width:100%;border-collapse:collapse;font-size:.71rem;}
+.env-table th{background:rgba(245,158,11,.1);color:#fcd34d;font-weight:700;font-size:.63rem;text-transform:uppercase;letter-spacing:.07em;padding:.45rem .7rem;text-align:left;border-bottom:1px solid rgba(245,158,11,.2);}
+.env-table td{padding:.4rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top;}
+.env-table td:first-child{font-family:var(--font-mono);color:#fbbf24;font-size:.65rem;}
+.env-table td:nth-child(2){color:rgba(255,255,255,.65);font-size:.69rem;}
+.env-table td:last-child{color:var(--gray-400);font-size:.67rem;}
+.req-badge{display:inline-block;font-size:.6rem;font-weight:700;padding:.15rem .4rem;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;}
+
+/* ── INFRA NODE ── */
+.infra-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;}
+.infra-node{border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;}
+.infra-node-header{padding:.7rem 1rem;font-size:.75rem;font-weight:700;display:flex;align-items:center;gap:.6rem;}
+.infra-node-body{padding:.75rem 1rem;font-size:.71rem;color:rgba(255,255,255,.65);line-height:1.65;}
+.infra-node-body strong{color:#fff;}
+
+/* ── INTEGRATION CARD ── */
+.int-card{border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;margin-bottom:1rem;}
+.int-card-header{padding:.8rem 1.1rem;display:flex;align-items:center;gap:.75rem;}
+.int-card-icon{font-size:1.5rem;}
+.int-card-title{font-size:.9rem;font-weight:700;}
+.int-card-subtitle{font-size:.68rem;color:rgba(255,255,255,.5);margin-top:.1rem;}
+.int-card-body{padding:.9rem 1.1rem;background:rgba(0,0,0,.2);font-size:.75rem;color:rgba(255,255,255,.7);line-height:1.7;}
+.int-card-body strong{color:#fff;}
+.int-flow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;}
+.int-step{font-size:.68rem;padding:.25rem .6rem;border-radius:5px;font-weight:600;white-space:nowrap;}
+
+/* ── ENUM BADGE ── */
+.enum-group{margin-bottom:.85rem;}
+.enum-name{font-size:.65rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem;font-family:var(--font-mono);}
+.enum-vals{display:flex;flex-wrap:wrap;gap:.3rem;}
+.enum-val{font-size:.65rem;font-family:var(--font-mono);padding:.2rem .5rem;border-radius:4px;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+
+/* ── DATA FLOW ── */
+.df-row{display:flex;align-items:stretch;gap:0;margin-bottom:.5rem;border-radius:8px;overflow:hidden;}
+.df-step{flex:1;padding:.55rem .7rem;font-size:.69rem;text-align:center;font-weight:600;}
+.df-arrow-box{display:flex;align-items:center;padding:0 .25rem;background:rgba(0,0,0,.25);color:var(--gray-400);font-size:.75rem;}
+
+/* ── AUTH FLOW ── */
+.auth-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;font-size:.73rem;}
+.auth-num{width:20px;height:20px;border-radius:50%;background:rgba(37,99,235,.3);color:#93c5fd;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.auth-text{color:rgba(255,255,255,.75);}
+.auth-text code{font-family:var(--font-mono);font-size:.63rem;color:#67e8f9;background:rgba(6,182,212,.1);padding:.1rem .3rem;border-radius:3px;}
+
+/* ── DIVIDER ── */
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(37,99,235,.3),transparent);margin:1rem 0;}
 
 /* ── RESPONSIVE ── */
-@media(max-width:1100px){
-  .intro-grid{grid-template-columns:1fr;max-width:700px;margin-left:auto;margin-right:auto;}
-  .biz-arch{grid-template-columns:1fr;}
-  .biz-col .biz-arrow{transform:rotate(90deg);}
-}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}.infra-grid{grid-template-columns:1fr;}.flow-row{gap:.3rem;}}
+
+/* ── SCROLL ANCHOR ── */
+section[id]{scroll-margin-top:60px;}
 
 /* ── FOOTER ── */
-.arch-footer{text-align:center;margin-top:3rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.07);color:var(--gray-400);font-size:.75rem;}
+.arch-footer{text-align:center;padding:2rem;border-top:1px solid rgba(255,255,255,.06);color:var(--gray-400);font-size:.75rem;margin-top:2rem;}
 .arch-footer a{color:#60a5fa;text-decoration:none;}
-.arch-footer a:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
 
-<!-- PAGE HEADER -->
-<div class="page-header">
-  <div><div class="page-badge"><span class="bdot"></span>Architecture Overview · v2.0 · April 2026</div></div>
-  <div class="page-title">AI Governance <span>Control Tower</span></div>
-  <p class="page-sub">End-to-end platform for AI risk, compliance, data governance, and strategy — purpose-built for regulated industries</p>
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="nav-logo">🛡 AI Governance <span>Control Tower</span></div>
+  <div class="nav-links">
+    <a class="nav-link" href="#business">Business Architecture</a>
+    <a class="nav-link" href="#application">Application Architecture</a>
+    <a class="nav-link" href="#data">Data Architecture</a>
+    <a class="nav-link" href="#infrastructure">Infrastructure</a>
+    <a class="nav-link" href="#integration">Integration Architecture</a>
+  </div>
+  <div class="nav-badge">v2.0 · April 2026 · CONFIDENTIAL</div>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <div><div class="hero-badge"><span class="bdot"></span>Full Technical Architecture · April 2026</div></div>
+  <div class="hero-title">AI Governance <span>Control Tower</span></div>
+  <p class="hero-sub">5 architecture views — Business, Application, Data, Infrastructure, and Integration — derived from the live production codebase</p>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     INTRO: PROBLEM · VISION · BUSINESS ARCHITECTURE
-════════════════════════════════════════════════════════════ -->
-<div class="intro-grid">
-
-  <!-- 1. PROBLEM STATEMENT -->
-  <div class="intro-card" style="background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.25);">
-    <div class="intro-card-num" style="color:#f87171;">01 — Problem Statement</div>
-    <div class="intro-card-title" style="color:#fca5a5;">Why Does This Problem Exist?</div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Enterprises deploy dozens of AI models with <strong style="color:#fff;">no unified view</strong> of their risk exposure — each team manages its own models in isolation</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Compliance with <strong style="color:#fff;">DPDP, ISO 42001, GDPR, and EU AI Act</strong> requires structured evidence — today this is tracked in spreadsheets and emails</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span><strong style="color:#fff;">No tool connects</strong> AI project execution (who is building what) with governance (is it safe to deploy?)</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Data lineage, PII tracking, and consent for AI training data is <strong style="color:#fff;">manual and fragmented</strong> — a major regulatory liability</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span><strong style="color:#fff;">High-risk AI models</strong> (fraud detection, credit scoring, clinical AI) can be deployed to production with no formal sign-off process</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>When regulators ask "who approved this AI decision?" — most organisations <strong style="color:#fff;">cannot answer</strong> with evidence</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>AI agent behaviour (LLM prompts, tool calls, token spend) is <strong style="color:#fff;">invisible</strong> to risk and compliance teams</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Organisations have <strong style="color:#fff;">no structured framework</strong> to prioritise which AI use cases to build first — decisions are intuition-driven, not scored across business impact, data readiness, and ROI</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#ef4444;"></div><span>Translating governance requirements into <strong style="color:#fff;">automated workflows</strong> (Slack alerts, approval gates, audit trails) requires expert n8n knowledge most teams lack</span></div>
+<!-- ═══════════════════════════════════════════
+     0. BUSINESS ARCHITECTURE
+══════════════════════════════════════════════ -->
+<section id="business">
+<div class="arch-section">
+  <div class="arch-section-header">
+    <div class="arch-section-num" style="background:rgba(6,182,212,.2);color:#67e8f9;">0</div>
+    <div class="arch-section-title" style="color:#67e8f9;">Business Architecture</div>
   </div>
+  <div class="arch-section-desc">Five stakeholder groups · 14 core governance modules + 3-module Claude-powered strategy layer · 8 regulatory frameworks</div>
 
-  <!-- 2. VISION -->
-  <div class="intro-card" style="background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.3);">
-    <div class="intro-card-num" style="color:#60a5fa;">02 — Vision of the Solution</div>
-    <div class="intro-card-title" style="color:#93c5fd;">One Platform for the Entire AI Governance Lifecycle</div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Single source of truth</strong> — every AI model, its risk score, compliance status, data lineage, and project history in one place</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Governance built into delivery</strong> — compliance gates and ethics checklists are embedded inside AI project phases, not bolted on at the end</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Risk-gated deployments</strong> — HIGH and CRITICAL risk models are automatically blocked from production until a Risk Officer formally approves</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Regulator-ready at any time</strong> — audit trail, compliance evidence, and framework mapping are always current, not assembled before audits</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">Purpose-built for regulated industries</strong> — Banking, Insurance, Healthcare, Fintech — where AI decisions have legal consequences</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">AI-powered strategy layer</strong> — 5-step deep-discovery framework surfaces the single highest-priority AI use case, scored across 7 dimensions with ROI, n8n workflow, implementation roadmap, and PDF report — all AI-generated</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span><strong style="color:#fff;">No-code workflow automation</strong> — n8n Workflow Builder generates production-ready automation workflows from plain-English descriptions, instantly importable into n8n</span></div>
-    <div class="intro-point"><div class="intro-point-dot" style="background:#2563eb;"></div><span>Replaces <strong style="color:#fff;">5–7 disconnected tools</strong> (Jira + Excel + email + MLflow + SharePoint + manual audit) with a single governed workflow</span></div>
-  </div>
+  <div class="dcard">
+    <div class="dcard-title">Stakeholder → Platform → Outcome</div>
+    <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:1.25rem;align-items:start;">
 
-  <!-- 3. OUTCOMES -->
-  <div class="intro-card" style="background:rgba(16,185,129,0.07);border-color:rgba(16,185,129,0.25);">
-    <div class="intro-card-num" style="color:#34d399;">03 — Expected Outcomes</div>
-    <div class="intro-card-title" style="color:#6ee7b7;">What Changes for the Business</div>
-    <div style="display:flex;flex-direction:column;gap:0.6rem;">
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">📉</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">60–70% reduction</strong> in time spent preparing compliance evidence for audits</div>
-      </div>
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">🛡</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">Zero unreviewed deployments</strong> of HIGH or CRITICAL risk AI models</div>
-      </div>
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">⚖️</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">Continuous compliance</strong> against DPDP, ISO 42001, GDPR, and EU AI Act — not point-in-time</div>
-      </div>
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">👁</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">Full explainability</strong> of every AI decision — who approved it, what data it used, what risk score it carried</div>
-      </div>
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">🎯</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">AI use case prioritisation</strong> in minutes — 7-dimension scoring surfaces the single highest-ROI opportunity with a full implementation plan and PDF report</div>
-      </div>
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">🔄</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">Governance workflows automated</strong> — production-ready n8n automation generated from plain English, covering alerts, approvals, audit events, and integrations</div>
-      </div>
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">🚀</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">Faster AI delivery</strong> — governance friction removed by embedding it into the build process, not adding it after</div>
-      </div>
-      <div class="biz-outcome" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-        <div class="biz-outcome-icon">🏆</div>
-        <div class="biz-outcome-text"><strong style="color:#fff;">Board-level confidence</strong> — real-time risk dashboard for CRO, CDO, and CISO with no manual reporting</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ── HIGH LEVEL BUSINESS ARCHITECTURE ── -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-num" style="background:rgba(6,182,212,0.2);color:#67e8f9;">0</div>
-    <div class="section-title">High Level Business Architecture</div>
-  </div>
-  <div class="section-desc">Five stakeholder groups interact with the platform — each getting a role-specific view of the same governed AI portfolio</div>
-
-  <div class="diagram">
-    <div class="biz-arch">
-
-      <!-- LEFT: STAKEHOLDERS -->
-      <div class="biz-col">
-        <div style="font-size:0.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem;text-align:center;font-weight:700;">Who Uses It</div>
-
-        <div class="biz-stakeholder" style="background:rgba(37,99,235,0.1);border-color:rgba(37,99,235,0.3);">
-          <div class="biz-stakeholder-icon">🤖</div>
-          <div class="biz-stakeholder-title" style="color:#93c5fd;">AI / ML Teams</div>
-          <div class="biz-stakeholder-sub">Data Scientists · MLOps · Prompt Engineers</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <div style="font-size:.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:.1em;text-align:center;font-weight:700;margin-bottom:.25rem;">Who Uses It</div>
+        <div style="background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.3);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:1.1rem;margin-bottom:.2rem;">🤖</div>
+          <div style="font-size:.8rem;font-weight:700;color:#93c5fd;">AI / ML Teams</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">Data Scientists · MLOps · Prompt Engineers</div>
         </div>
-        <div class="biz-arrow">→ → →</div>
-
-        <div class="biz-stakeholder" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);">
-          <div class="biz-stakeholder-icon">⚠️</div>
-          <div class="biz-stakeholder-title" style="color:#fca5a5;">Risk Officers</div>
-          <div class="biz-stakeholder-sub">CRO · Model Risk · AI Risk Team</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">→ → →</div>
+        <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:1.1rem;margin-bottom:.2rem;">⚠️</div>
+          <div style="font-size:.8rem;font-weight:700;color:#fca5a5;">Risk Officers</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">CRO · Model Risk · AI Risk Team</div>
         </div>
-        <div class="biz-arrow">→ → →</div>
-
-        <div class="biz-stakeholder" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);">
-          <div class="biz-stakeholder-icon">📋</div>
-          <div class="biz-stakeholder-title" style="color:#fcd34d;">Compliance &amp; Audit</div>
-          <div class="biz-stakeholder-sub">DPO · Internal Audit · Legal · Regulator</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">→ → →</div>
+        <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:1.1rem;margin-bottom:.2rem;">📋</div>
+          <div style="font-size:.8rem;font-weight:700;color:#fcd34d;">Compliance &amp; Audit</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">DPO · Internal Audit · Legal · Regulator</div>
         </div>
-        <div class="biz-arrow">→ → →</div>
-
-        <div class="biz-stakeholder" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);">
-          <div class="biz-stakeholder-icon">🏆</div>
-          <div class="biz-stakeholder-title" style="color:#6ee7b7;">Business Leaders</div>
-          <div class="biz-stakeholder-sub">CEO · CDO · CISO · Board</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">→ → →</div>
+        <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:1.1rem;margin-bottom:.2rem;">🏆</div>
+          <div style="font-size:.8rem;font-weight:700;color:#6ee7b7;">Business Leaders</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">CEO · CDO · CISO · Board</div>
         </div>
-        <div class="biz-arrow">→ → →</div>
-
-        <div class="biz-stakeholder" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.3);">
-          <div class="biz-stakeholder-icon">🎯</div>
-          <div class="biz-stakeholder-title" style="color:#c4b5fd;">Strategy &amp; Innovation</div>
-          <div class="biz-stakeholder-sub">Head of AI · Strategy Teams · Consultants</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">→ → →</div>
+        <div style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:1.1rem;margin-bottom:.2rem;">🎯</div>
+          <div style="font-size:.8rem;font-weight:700;color:#c4b5fd;">Strategy &amp; Innovation</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">Head of AI · Strategy Teams · Consultants</div>
         </div>
       </div>
 
-      <!-- CENTER: PLATFORM -->
-      <div class="biz-center">
-        <div class="biz-center-title">🛡 AI Governance Control Tower</div>
-
-        <div style="font-size:0.55rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;text-align:center;">Core Governance Modules</div>
-        <div class="biz-modules">
-          <div class="biz-module" style="background:rgba(37,99,235,0.15);border-color:rgba(37,99,235,0.3);color:#93c5fd;">🤖 AI Model Inventory</div>
-          <div class="biz-module" style="background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#c4b5fd;">📋 AI Projects &amp; Kanban</div>
-          <div class="biz-module" style="background:rgba(236,72,153,0.12);border-color:rgba(236,72,153,0.3);color:#f9a8d4;">🧠 Agent Governance</div>
-          <div class="biz-module" style="background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:#fca5a5;">⚠️ Risk Assessment</div>
-          <div class="biz-module" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#6ee7b7;">✅ Compliance Controls</div>
-          <div class="biz-module" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:#fcd34d;">🗺 Regulation Mapping</div>
-          <div class="biz-module" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#67e8f9;">🔍 ISO 42001 Assessment</div>
-          <div class="biz-module" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#6ee7b7;">✍️ Approval Workflows</div>
-          <div class="biz-module" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#67e8f9;">🗄 Data Governance &amp; PII</div>
-          <div class="biz-module" style="background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#c4b5fd;">🔐 Consent Management</div>
-          <div class="biz-module" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#6ee7b7;">📡 Real-time Monitoring</div>
-          <div class="biz-module" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:#fcd34d;">📜 Immutable Audit Trail</div>
-          <div class="biz-module" style="background:rgba(37,99,235,0.12);border-color:rgba(37,99,235,0.3);color:#93c5fd;">📊 Reports &amp; Exports</div>
-          <div class="biz-module" style="background:rgba(37,99,235,0.12);border-color:rgba(37,99,235,0.3);color:#93c5fd;">🔐 Role-Based Access</div>
+      <div style="background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:14px;padding:1.25rem;">
+        <div style="font-size:.95rem;font-weight:800;text-align:center;margin-bottom:1rem;">🛡 AI Governance Control Tower</div>
+        <div style="font-size:.55rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;text-align:center;">Core Governance Modules</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.85rem;">
+          <span class="chip" style="background:rgba(37,99,235,.15);border-color:rgba(37,99,235,.3);color:#93c5fd;">🤖 AI Model Inventory</span>
+          <span class="chip" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#c4b5fd;">📋 AI Projects &amp; Kanban</span>
+          <span class="chip" style="background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3);color:#f9a8d4;">🧠 Agent Governance</span>
+          <span class="chip" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5;">⚠️ Risk Assessment</span>
+          <span class="chip" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#6ee7b7;">✅ Compliance Controls</span>
+          <span class="chip" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fcd34d;">🗺 Regulation Mapping</span>
+          <span class="chip" style="background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:#67e8f9;">🔍 ISO 42001 Assessment</span>
+          <span class="chip" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#6ee7b7;">✍️ Approval Workflows</span>
+          <span class="chip" style="background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:#67e8f9;">🗄 Data Governance &amp; PII</span>
+          <span class="chip" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#c4b5fd;">🔐 Consent Management</span>
+          <span class="chip" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#6ee7b7;">📡 Real-time Monitoring</span>
+          <span class="chip" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fcd34d;">📜 Immutable Audit Trail</span>
+          <span class="chip" style="background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3);color:#93c5fd;">📊 Reports &amp; Exports</span>
+          <span class="chip" style="background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3);color:#93c5fd;">🔐 Role-Based Access</span>
         </div>
-
-        <!-- AI Strategy Layer -->
-        <div style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid rgba(139,92,246,0.3);">
-          <div style="font-size:0.55rem;color:#c4b5fd;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.45rem;text-align:center;font-weight:700;">✨ AI Strategy Layer — Claude-Powered</div>
-          <div class="biz-modules">
-            <div class="biz-module" style="background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.5);color:#c4b5fd;">🎯 AI Use Case Finder</div>
-            <div class="biz-module" style="background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.5);color:#c4b5fd;">🔄 n8n Workflow Builder</div>
-            <div class="biz-module" style="background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.5);color:#c4b5fd;">📄 PDF Report Generator</div>
+        <div style="border-top:1px solid rgba(139,92,246,.3);padding-top:.75rem;margin-bottom:.75rem;">
+          <div style="font-size:.55rem;color:#c4b5fd;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;text-align:center;font-weight:700;">✨ AI Strategy Layer — Claude-Powered</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.35rem;">
+            <span class="chip" style="background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.5);color:#c4b5fd;">🎯 AI Use Case Finder</span>
+            <span class="chip" style="background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.5);color:#c4b5fd;">🔄 n8n Workflow Builder</span>
+            <span class="chip" style="background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.5);color:#c4b5fd;">📄 PDF Report Generator</span>
           </div>
         </div>
-
-        <!-- Frameworks -->
-        <div style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid rgba(255,255,255,0.07);">
-          <div style="font-size:0.55rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;text-align:center;">Regulatory Frameworks Supported</div>
-          <div class="biz-fw">
-            <span class="biz-fw-tag" style="background:rgba(37,99,235,0.2);color:#93c5fd;">DPDP Act 2023</span>
-            <span class="biz-fw-tag" style="background:rgba(16,185,129,0.2);color:#6ee7b7;">ISO 42001</span>
-            <span class="biz-fw-tag" style="background:rgba(245,158,11,0.2);color:#fcd34d;">EU AI Act</span>
-            <span class="biz-fw-tag" style="background:rgba(139,92,246,0.2);color:#c4b5fd;">GDPR</span>
-            <span class="biz-fw-tag" style="background:rgba(239,68,68,0.2);color:#fca5a5;">ISO 27001</span>
-            <span class="biz-fw-tag" style="background:rgba(6,182,212,0.2);color:#67e8f9;">NIST AI RMF</span>
-            <span class="biz-fw-tag" style="background:rgba(245,158,11,0.2);color:#fcd34d;">RBI AI Framework</span>
-            <span class="biz-fw-tag" style="background:rgba(16,185,129,0.2);color:#6ee7b7;">SEBI Guidelines</span>
+        <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.75rem;">
+          <div style="font-size:.55rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;text-align:center;">Regulatory Frameworks</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;">
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(37,99,235,.2);color:#93c5fd;">DPDP Act 2023</span>
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(16,185,129,.2);color:#6ee7b7;">ISO 42001</span>
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(245,158,11,.2);color:#fcd34d;">EU AI Act</span>
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(139,92,246,.2);color:#c4b5fd;">GDPR</span>
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(239,68,68,.2);color:#fca5a5;">ISO 27001</span>
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(6,182,212,.2);color:#67e8f9;">NIST AI RMF</span>
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(245,158,11,.2);color:#fcd34d;">RBI AI Framework</span>
+            <span style="font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:100px;background:rgba(16,185,129,.2);color:#6ee7b7;">SEBI Guidelines</span>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT: WHAT THEY GET -->
-      <div class="biz-col">
-        <div style="font-size:0.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem;text-align:center;font-weight:700;">What They Get</div>
-
-        <div class="biz-stakeholder" style="background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.2);">
-          <div class="biz-stakeholder-title" style="color:#93c5fd;">Build &amp; Experiment</div>
-          <div class="biz-stakeholder-sub">Kanban · Gantt · Experiments · Model registry · Workflow canvas · Agent monitoring · n8n Workflow Builder</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <div style="font-size:.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:.1em;text-align:center;font-weight:700;margin-bottom:.25rem;">What They Get</div>
+        <div style="background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:.8rem;font-weight:700;color:#93c5fd;margin-bottom:.2rem;">Build &amp; Experiment</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">Kanban · Gantt · Experiments · Model registry · Workflow canvas · Agent monitoring · n8n Workflow Builder</div>
         </div>
-        <div class="biz-arrow">← ← ←</div>
-
-        <div class="biz-stakeholder" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2);">
-          <div class="biz-stakeholder-title" style="color:#fca5a5;">Assess &amp; Gate</div>
-          <div class="biz-stakeholder-sub">Risk heatmap · 6-dimension scoring · PII scanner · Deployment block · Override with justification · Approval workflows</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">← ← ←</div>
+        <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:.8rem;font-weight:700;color:#fca5a5;margin-bottom:.2rem;">Assess &amp; Gate</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">Risk heatmap · 6-dimension scoring · PII scanner · Deployment block · Approval workflows</div>
         </div>
-        <div class="biz-arrow">← ← ←</div>
-
-        <div class="biz-stakeholder" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);">
-          <div class="biz-stakeholder-title" style="color:#fcd34d;">Audit &amp; Evidence</div>
-          <div class="biz-stakeholder-sub">Compliance controls · ISO 42001 assessment · Regulation mapping · Consent records · Immutable audit log · CSV export for regulators</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">← ← ←</div>
+        <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:.8rem;font-weight:700;color:#fcd34d;margin-bottom:.2rem;">Audit &amp; Evidence</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">Compliance controls · ISO 42001 assessment · Regulation mapping · Consent records · Immutable audit log</div>
         </div>
-        <div class="biz-arrow">← ← ←</div>
-
-        <div class="biz-stakeholder" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);">
-          <div class="biz-stakeholder-title" style="color:#6ee7b7;">Oversee &amp; Report</div>
-          <div class="biz-stakeholder-sub">Portfolio dashboard · Compliance score · Risk distribution · Active alerts · Scheduled reports · Real-time KPIs</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">← ← ←</div>
+        <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:.8rem;font-weight:700;color:#6ee7b7;margin-bottom:.2rem;">Oversee &amp; Report</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">Portfolio dashboard · Compliance score · Risk distribution · Active alerts · Scheduled reports</div>
         </div>
-        <div class="biz-arrow">← ← ←</div>
-
-        <div class="biz-stakeholder" style="background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.2);">
-          <div class="biz-stakeholder-title" style="color:#c4b5fd;">Discover &amp; Automate</div>
-          <div class="biz-stakeholder-sub">AI Use Case Finder · 7-dimension priority scoring · Revenue lever analysis · n8n workflow generation · 8-page PDF report · Implementation roadmap</div>
+        <div style="text-align:center;color:rgba(37,99,235,.6);font-size:.85rem;">← ← ←</div>
+        <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:.85rem 1rem;">
+          <div style="font-size:.8rem;font-weight:700;color:#c4b5fd;margin-bottom:.2rem;">Discover &amp; Automate</div>
+          <div style="font-size:.67rem;color:var(--gray-400);">AI Use Case Finder · 7-dimension priority scoring · Revenue lever analysis · n8n workflow generation · 8-page PDF</div>
         </div>
       </div>
-
     </div>
-
-    <!-- INTEGRATION ROW -->
-    <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.06);">
-      <div style="font-size:0.6rem;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;font-weight:700;">External Integrations &amp; Infrastructure</div>
-      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
-        <div class="biz-module" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.35);color:#c4b5fd;flex:1;min-width:200px;padding:0.5rem 0.75rem;">🤖 Anthropic Claude API — AI Use Case Finder · n8n Workflow Builder · 8-page PDF report generation</div>
-        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">🔄 n8n — Workflow automation · Slack · Jira · MS Teams · Webhook triggers</div>
-        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">📧 Formspree — Contact Sales · Lead capture → enquiry@aigovernancetower.com</div>
-        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">▲ Vercel — Cloud hosting · Auto-deploy from GitHub · Global CDN · 60s function timeout</div>
-        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">🐘 Neon DB — Serverless PostgreSQL · Auto-scale · Branch per environment</div>
-        <div class="biz-module" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);flex:1;min-width:200px;padding:0.5rem 0.75rem;">📄 jsPDF + autoTable — Client-side PDF generation · No server dependency · Auto-download</div>
-      </div>
-    </div>
-
   </div>
 </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     1. APPLICATION ARCHITECTURE
+══════════════════════════════════════════════ -->
+<section id="application">
+<div class="arch-section">
+  <div class="arch-section-header">
+    <div class="arch-section-num" style="background:rgba(37,99,235,.2);color:#93c5fd;">1</div>
+    <div class="arch-section-title" style="color:#93c5fd;">Application Architecture</div>
+  </div>
+  <div class="arch-section-desc">Next.js 14 App Router · 30 page routes · 65+ API routes · Hybrid SSR + Client rendering · JWT auth · 3 Zustand stores</div>
+
+  <!-- Layer Stack -->
+  <div class="dcard">
+    <div class="dcard-title">Full Application Layer Stack</div>
+    <div class="layer-stack">
+      <div class="layer" style="background:rgba(37,99,235,.05);border-color:rgba(37,99,235,.25);">
+        <div class="layer-header" style="background:rgba(37,99,235,.12);color:#93c5fd;">🌐 Browser / Client Layer</div>
+        <div class="layer-body">
+          <span class="chip" style="background:rgba(37,99,235,.1);color:#93c5fd;border-color:rgba(37,99,235,.25);">React 18 (Client Components)</span>
+          <span class="chip" style="background:rgba(37,99,235,.1);color:#93c5fd;border-color:rgba(37,99,235,.25);">Zustand — Auth / UI / Project stores</span>
+          <span class="chip" style="background:rgba(37,99,235,.1);color:#93c5fd;border-color:rgba(37,99,235,.25);">Radix UI + Tailwind CSS</span>
+          <span class="chip" style="background:rgba(37,99,235,.1);color:#93c5fd;border-color:rgba(37,99,235,.25);">Recharts (data viz)</span>
+          <span class="chip" style="background:rgba(37,99,235,.1);color:#93c5fd;border-color:rgba(37,99,235,.25);">jsPDF + autoTable (PDF export)</span>
+          <span class="chip" style="background:rgba(37,99,235,.1);color:#93c5fd;border-color:rgba(37,99,235,.25);">useApi() hook (Zustand-auth fetch)</span>
+          <span class="chip" style="background:rgba(37,99,235,.1);color:#93c5fd;border-color:rgba(37,99,235,.25);">localStorage (JWT persist)</span>
+        </div>
+      </div>
+      <div class="layer" style="background:rgba(139,92,246,.05);border-color:rgba(139,92,246,.25);">
+        <div class="layer-header" style="background:rgba(139,92,246,.12);color:#c4b5fd;">⚙️ Next.js App Router (Edge + Node.js)</div>
+        <div class="layer-body">
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Route Group: (auth)</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Route Group: (dashboard)</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Layout: Root → Dashboard → Page</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Middleware: Rate limit + token refresh</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Security headers (CSP, HSTS, X-Frame)</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">maxDuration: 60s (AI routes)</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">force-dynamic on AI endpoints</span>
+        </div>
+      </div>
+      <div class="layer" style="background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.25);">
+        <div class="layer-header" style="background:rgba(16,185,129,.12);color:#6ee7b7;">🔐 API Middleware Layer (withAuth)</div>
+        <div class="layer-body">
+          <span class="chip" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.25);">Bearer token extraction</span>
+          <span class="chip" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.25);">JWT verify (HS256, jose)</span>
+          <span class="chip" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.25);">Role hierarchy (OWNER→ADMIN→RISK_OFFICER→AUDITOR→VIEWER)</span>
+          <span class="chip" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.25);">Plan tier check (TRIAL/STARTER/PROFESSIONAL/ENTERPRISE)</span>
+          <span class="chip" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.25);">OrgId injection into route context</span>
+          <span class="chip" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.25);">401 / 403 / 402 guard responses</span>
+          <span class="chip" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.25);">Zod request validation</span>
+        </div>
+      </div>
+      <div class="layer" style="background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.25);">
+        <div class="layer-header" style="background:rgba(245,158,11,.12);color:#fcd34d;">🗄 Service / Data Layer</div>
+        <div class="layer-body">
+          <span class="chip" style="background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);">Prisma ORM v5.14 (37 models)</span>
+          <span class="chip" style="background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);">PostgreSQL (Neon Serverless)</span>
+          <span class="chip" style="background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);">Redis cache (ioredis, 5-min TTL)</span>
+          <span class="chip" style="background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);">Vercel Blob (evidence files)</span>
+          <span class="chip" style="background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);">AuditLogger (every write action)</span>
+          <span class="chip" style="background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);">Multi-tenant (orgId row scoping)</span>
+        </div>
+      </div>
+      <div class="layer" style="background:rgba(139,92,246,.05);border-color:rgba(139,92,246,.25);">
+        <div class="layer-header" style="background:rgba(139,92,246,.12);color:#c4b5fd;">🤖 External AI &amp; Services Layer</div>
+        <div class="layer-body">
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Anthropic Claude Haiku 4.5 (AI routes)</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">n8n Webhooks (5 trigger events)</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Resend Email (verify / invite / reports)</span>
+          <span class="chip" style="background:rgba(139,92,246,.1);color:#c4b5fd;border-color:rgba(139,92,246,.25);">Langfuse (LLM observability, optional)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:1rem;margin-bottom:1rem;">
+    <!-- Auth Flow -->
+    <div class="dcard">
+      <div class="dcard-title">JWT Auth Flow</div>
+      <div class="auth-row"><div class="auth-num">1</div><div class="auth-text">Client POSTs credentials to <code>/api/auth/login</code></div></div>
+      <div class="auth-row"><div class="auth-num">2</div><div class="auth-text">Server verifies bcrypt hash, issues HS256 JWT (24h TTL) with <code>userId, orgId, orgRole, plan</code></div></div>
+      <div class="auth-row"><div class="auth-num">3</div><div class="auth-text">Token stored in Zustand <code>ai-governance-auth</code> → persisted to <code>localStorage</code></div></div>
+      <div class="auth-row"><div class="auth-num">4</div><div class="auth-text"><code>useApi()</code> hook reads live Zustand token, attaches <code>Authorization: Bearer &lt;token&gt;</code> to every request</div></div>
+      <div class="auth-row"><div class="auth-num">5</div><div class="auth-text"><code>withAuth()</code> wrapper on every API route verifies token, checks role hierarchy, injects <code>user + organizationId</code></div></div>
+      <div class="auth-row"><div class="auth-num">6</div><div class="auth-text">Returns <code>401</code> (no/bad token), <code>403</code> (insufficient role), <code>402</code> (plan limit exceeded)</div></div>
+      <div class="auth-row"><div class="auth-num">7</div><div class="auth-text">Logout clears Zustand store + <code>localStorage</code> + <code>auth_token</code> cookie</div></div>
+    </div>
+
+    <!-- Zustand Stores -->
+    <div class="dcard">
+      <div class="dcard-title">Zustand State Stores</div>
+      <div style="margin-bottom:.85rem;">
+        <div style="font-size:.7rem;font-weight:700;color:#93c5fd;margin-bottom:.35rem;">useAuthStore <span style="font-weight:400;color:var(--gray-400);font-size:.65rem;font-family:var(--font-mono);">(persisted → localStorage)</span></div>
+        <div class="tag-row">
+          <span class="chip" style="color:#93c5fd;border-color:rgba(37,99,235,.3);">user: AuthUser | null</span>
+          <span class="chip" style="color:#93c5fd;border-color:rgba(37,99,235,.3);">token: string | null</span>
+          <span class="chip" style="color:#93c5fd;border-color:rgba(37,99,235,.3);">isAuthenticated: boolean</span>
+          <span class="chip" style="color:#93c5fd;border-color:rgba(37,99,235,.3);">setAuth() · clearAuth()</span>
+        </div>
+      </div>
+      <div style="margin-bottom:.85rem;">
+        <div style="font-size:.7rem;font-weight:700;color:#6ee7b7;margin-bottom:.35rem;">useUIStore <span style="font-weight:400;color:var(--gray-400);font-size:.65rem;font-family:var(--font-mono);">(session only)</span></div>
+        <div class="tag-row">
+          <span class="chip" style="color:#6ee7b7;border-color:rgba(16,185,129,.3);">sidebarCollapsed: boolean</span>
+          <span class="chip" style="color:#6ee7b7;border-color:rgba(16,185,129,.3);">notifications: Notification[]</span>
+          <span class="chip" style="color:#6ee7b7;border-color:rgba(16,185,129,.3);">toggleSidebar() · addNotification()</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;font-weight:700;color:#fcd34d;margin-bottom:.35rem;">useProjectStore <span style="font-weight:400;color:var(--gray-400);font-size:.65rem;font-family:var(--font-mono);">(session only)</span></div>
+        <div class="tag-row">
+          <span class="chip" style="color:#fcd34d;border-color:rgba(245,158,11,.3);">activeProjectId: string | null</span>
+          <span class="chip" style="color:#fcd34d;border-color:rgba(245,158,11,.3);">kanbanTasks: ProjectTask[]</span>
+          <span class="chip" style="color:#fcd34d;border-color:rgba(245,158,11,.3);">ganttZoom: day|week|month</span>
+          <span class="chip" style="color:#fcd34d;border-color:rgba(245,158,11,.3);">updateTaskStatus()</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Routes -->
+  <div class="dcard">
+    <div class="dcard-title">Page Routes — 30 Total</div>
+    <div class="grid-3" style="gap:.75rem;">
+      <div>
+        <div style="font-size:.65rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">(auth) Group</div>
+        <div class="tag-row">
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#fb923c;">/login</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#fb923c;">/register</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#fb923c;">/verify-email</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#fb923c;">/invite/[token]</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.65rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">(dashboard) — Governance</div>
+        <div class="tag-row">
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/models</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/risk</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/compliance-map</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/agents</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/data-governance</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/consent</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/monitoring</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/audit</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/reports</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/approvals</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/iso42005</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">/settings</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.65rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">(dashboard) — Projects + Strategy</div>
+        <div class="tag-row">
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/projects</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/projects/[id]/kanban</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/projects/[id]/gantt</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/projects/[id]/workflow</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/projects/[id]/experiments</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/projects/[id]/resources</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/ai-maturity</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/n8n-builder</span>
+          <span class="chip" style="font-family:var(--font-mono);font-size:.65rem;color:#c4b5fd;">/landing</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Routes Summary -->
+  <div class="dcard">
+    <div class="dcard-title">API Route Groups — 65+ Endpoints</div>
+    <div class="grid-4">
+      <div class="info-card">
+        <div class="info-card-title" style="color:#93c5fd;">🔐 Auth &amp; Org</div>
+        <div class="info-card-body">POST login · POST register · GET me · POST verify-email · POST invite · GET invite-info · POST /organizations · GET /organizations · POST invites</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" style="color:#fca5a5;">⚠️ Risk &amp; Compliance</div>
+        <div class="info-card-body">GET/POST /risk/[modelId] · GET/POST /compliance · GET/POST /iso42005 · POST /iso42005/parties · GET/POST/PUT /misuse-scenarios</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" style="color:#6ee7b7;">🗄 Data &amp; Consent</div>
+        <div class="info-card-body">CRUD /data-assets · CRUD /data-assets/[id] · GET/POST/PUT /consent · POST /pii-scanner · POST /upload (Vercel Blob)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" style="color:#fcd34d;">📋 Projects</div>
+        <div class="info-card-body">CRUD /projects · tasks · phases · milestones · resources · experiments · runs · workflows · webhooks · webhook/trigger · linked models</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" style="color:#f9a8d4;">🧠 Agents &amp; Monitoring</div>
+        <div class="info-card-body">GET/POST /agents · GET /agents/[id]/logs · GET /monitoring · GET /dashboard · GET /audit</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" style="color:#67e8f9;">📊 Reports &amp; Approvals</div>
+        <div class="info-card-body">CRUD /reports · POST /reports/[id]/generate · POST /reports/[id]/schedule · CRUD /approvals · PUT /approvals/[id]/steps/[stepId]</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" style="color:#c4b5fd;">🤖 AI Routes</div>
+        <div class="info-card-body">POST /maturity-assessment (Claude, 8000 tok) · GET /maturity-assessment · POST /n8n-workflow (Claude, 6000 tok) · GET /models</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" style="color:#fbbf24;">🔧 Admin &amp; Seed</div>
+        <div class="info-card-body">GET /health · POST /seed · POST /seed/full · POST /seed/monitoring · POST /admin/list-users · POST /admin/migrate-to-org · GET /users</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     2. DATA ARCHITECTURE
+══════════════════════════════════════════════ -->
+<section id="data">
+<div class="arch-section">
+  <div class="arch-section-header">
+    <div class="arch-section-num" style="background:rgba(16,185,129,.2);color:#6ee7b7;">2</div>
+    <div class="arch-section-title" style="color:#6ee7b7;">Data Architecture</div>
+  </div>
+  <div class="arch-section-desc">PostgreSQL (Neon) · 37 Prisma models · Multi-tenant (orgId row-level isolation) · Redis cache (5-min TTL) · Vercel Blob (evidence files)</div>
+
+  <!-- Data flow -->
+  <div class="dcard">
+    <div class="dcard-title">Data Flow — Client to Persistence</div>
+    <div class="df-row">
+      <div class="df-step" style="background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.3);color:#93c5fd;border-radius:8px;">🌐 Browser<br/><span style="font-weight:400;font-size:.62rem;">Zustand + useApi()</span></div>
+      <div class="df-arrow-box">→</div>
+      <div class="df-step" style="background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);color:#c4b5fd;border-radius:8px;">⚙️ Next.js API Route<br/><span style="font-weight:400;font-size:.62rem;">withAuth + Zod validate</span></div>
+      <div class="df-arrow-box">→</div>
+      <div class="df-step" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#fcd34d;border-radius:8px;">⚡ Redis Cache<br/><span style="font-weight:400;font-size:.62rem;">org-scoped, 5-min TTL</span></div>
+      <div class="df-arrow-box">→ miss →</div>
+      <div class="df-step" style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;border-radius:8px;">🐘 Prisma ORM<br/><span style="font-weight:400;font-size:.62rem;">Type-safe queries</span></div>
+      <div class="df-arrow-box">→</div>
+      <div class="df-step" style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);color:#67e8f9;border-radius:8px;">🗄 Neon PostgreSQL<br/><span style="font-weight:400;font-size:.62rem;">37 tables, orgId scoped</span></div>
+    </div>
+    <div class="df-row" style="margin-top:.5rem;">
+      <div class="df-step" style="background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.3);color:#93c5fd;border-radius:8px;">Write action</div>
+      <div class="df-arrow-box">→</div>
+      <div class="df-step" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5;border-radius:8px;">📜 AuditLogger<br/><span style="font-weight:400;font-size:.62rem;">before/after snapshot</span></div>
+      <div class="df-arrow-box">→</div>
+      <div class="df-step" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#fcd34d;border-radius:8px;">🔄 Cache Invalidate<br/><span style="font-weight:400;font-size:.62rem;">deleteCachePattern(org:*)</span></div>
+      <div class="df-arrow-box">→</div>
+      <div class="df-step" style="background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);color:#c4b5fd;border-radius:8px;">🔔 n8n Webhook<br/><span style="font-weight:400;font-size:.62rem;">async, non-blocking</span></div>
+      <div class="df-arrow-box">→</div>
+      <div class="df-step" style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;border-radius:8px;">✅ 201 / 200 Response</div>
+    </div>
+  </div>
+
+  <!-- Model groups -->
+  <div class="dcard">
+    <div class="dcard-title">37 Prisma Models — Grouped by Domain</div>
+    <div class="grid-3" style="gap:.85rem;">
+
+      <div class="info-card" style="border-color:rgba(37,99,235,.25);">
+        <div class="info-card-title" style="color:#93c5fd;">🔐 Identity &amp; Access (5 models)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>User</td><td>id, email, passwordHash, role, dept, emailVerified</td></tr>
+          <tr><td>Organization</td><td>id, name, plan (PlanTier), maxUsers, maxModels</td></tr>
+          <tr><td>OrganizationMember</td><td>orgId+userId PK, role (OrgMemberRole)</td></tr>
+          <tr><td>OrganizationInvite</td><td>token, email, role, status (InviteStatus)</td></tr>
+          <tr><td>ApiKey</td><td>keyHash, keyPrefix, permissions[], expiresAt</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(239,68,68,.25);">
+        <div class="info-card-title" style="color:#fca5a5;">🤖 AI Model Registry (1 + 5 linked)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>AIModel</td><td>type (ModelType), status (ModelStatus), riskLevel, explainability (0-100), isPiiProcessing, isFinancial, isCritical</td></tr>
+          <tr><td>RiskAssessment</td><td>overallScore, 5 sub-scores, riskLevel, harmCategories[]</td></tr>
+          <tr><td>ComplianceControl</td><td>framework, controlId, status (ComplianceStatus), evidence</td></tr>
+          <tr><td>ImpactAssessment</td><td>ISO 42001 — intendedUses, fairness, privacy, explainabilityDoc</td></tr>
+          <tr><td>InterestedParty</td><td>role (InterestedPartyRole), interest, consulted</td></tr>
+          <tr><td>MisuseScenario</td><td>likelihood, severity, harmCategory (HarmCategory), mitigations</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(6,182,212,.25);">
+        <div class="info-card-title" style="color:#67e8f9;">🗄 Data Governance (3 models)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>DataAsset</td><td>sensitivity (DataSensitivity), hasPii, piiFields[], source, format</td></tr>
+          <tr><td>ModelDataAsset</td><td>modelId+assetId PK, role (input|output|training)</td></tr>
+          <tr><td>ConsentRecord</td><td>subjectId, consentType (ConsentType), status (ConsentStatus), grantedAt, revokedAt, expiresAt</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(236,72,153,.25);">
+        <div class="info-card-title" style="color:#f9a8d4;">🧠 Agent Governance (2 models)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>Agent</td><td>status (AgentStatus), systemPrompt, tools[], maxTokens, temperature</td></tr>
+          <tr><td>PromptLog</td><td>prompt, response, inputTokens, outputTokens, latencyMs, toxicityScore, biasScore, flagged, isPolicyViolation</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(245,158,11,.25);">
+        <div class="info-card-title" style="color:#fcd34d;">📡 Monitoring &amp; Audit (3 models)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>Alert</td><td>severity (AlertSeverity), isRead, modelId, resolvedAt</td></tr>
+          <tr><td>AlertRule</td><td>metric, threshold, condition (gt|lt|eq), severity</td></tr>
+          <tr><td>AuditLog</td><td>action (AuditAction), resource, resourceId, before (JSON), after (JSON)</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(139,92,246,.25);">
+        <div class="info-card-title" style="color:#c4b5fd;">📋 Project Management (10 models)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>Project</td><td>status (ProjectStatus), currentPhase (ProjectPhase), healthScore, budget</td></tr>
+          <tr><td>ProjectPhaseRecord</td><td>phase+projectId unique, progress (0-100), plannedDays, actualDays</td></tr>
+          <tr><td>ProjectTask</td><td>status (TaskStatus), priority (TaskPriority), assigneeId, estimatedHrs</td></tr>
+          <tr><td>Milestone</td><td>isGate (boolean), targetDate, completedAt</td></tr>
+          <tr><td>ProjectResource</td><td>role (ResourceRole), allocationPct, hourlyRate</td></tr>
+          <tr><td>Experiment</td><td>hyperparams (JSON), metrics (JSON), artifacts (JSON), status</td></tr>
+          <tr><td>ExperimentRun</td><td>runNumber, metrics (JSON), duration</td></tr>
+          <tr><td>WorkflowCanvas</td><td>canvasData (JSON), version, isActive</td></tr>
+          <tr><td>N8nWebhook</td><td>triggerEvent (N8nTriggerEvent), lastStatus, lastResponse (JSON)</td></tr>
+          <tr><td>ProjectTemplate</td><td>scaffold (JSON), isBuiltIn</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(16,185,129,.25);">
+        <div class="info-card-title" style="color:#6ee7b7;">📊 Reporting &amp; Approvals (4 models)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>Report</td><td>type (ReportType), filters (JSON), sections[]</td></tr>
+          <tr><td>ReportSchedule</td><td>frequency (ReportFrequency), recipients[], nextRunAt</td></tr>
+          <tr><td>ApprovalWorkflow</td><td>status (ApprovalStatus), requestedBy, dueDate</td></tr>
+          <tr><td>ApprovalStep</td><td>stepType (ApprovalStepType), stepOrder, assigneeId, decidedAt</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(6,182,212,.25);">
+        <div class="info-card-title" style="color:#67e8f9;">🗂 Supporting (4 models)</div>
+        <table class="model-table">
+          <tr><th>Model</th><th>Key Fields</th></tr>
+          <tr><td>EvidenceFile</td><td>url (Vercel Blob), mimeType, section, polymorphic FKs (controlId | riskId | modelId | dataAssetId)</td></tr>
+          <tr><td>MaturityAssessment</td><td>industry, maturityScore, useCases (JSON — Claude output), status (MaturityStatus)</td></tr>
+          <tr><td>PolicyConfig</td><td>key, value (JSON) — org-level config store</td></tr>
+          <tr><td>ProjectAIModel</td><td>projectId+modelId PK, role, notes</td></tr>
+        </table>
+      </div>
+
+      <div class="info-card" style="border-color:rgba(245,158,11,.25);">
+        <div class="info-card-title" style="color:#fcd34d;">⚡ Redis Cache Pattern</div>
+        <div class="info-card-body">
+          <strong>Key pattern:</strong> <code style="font-family:var(--font-mono);font-size:.65rem;color:#fbbf24;">org:{orgId}:{resource}</code><br/><br/>
+          <strong>Default TTL:</strong> 300 seconds (5 min)<br/>
+          <strong>Miss fallback:</strong> Prisma query (non-blocking)<br/>
+          <strong>Invalidation:</strong> deleteCachePattern on writes<br/><br/>
+          <strong>Helpers:</strong><br/>
+          <code style="font-family:var(--font-mono);font-size:.63rem;color:#67e8f9;">getCache&lt;T&gt;(key)</code> — deserialize or null<br/>
+          <code style="font-family:var(--font-mono);font-size:.63rem;color:#67e8f9;">setCache(key, val, ttl)</code><br/>
+          <code style="font-family:var(--font-mono);font-size:.63rem;color:#67e8f9;">deleteCachePattern(pattern)</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Enums -->
+  <div class="dcard">
+    <div class="dcard-title">Key Enums (32 Total)</div>
+    <div class="grid-3">
+      <div>
+        <div class="enum-group">
+          <div class="enum-name">PlanTier</div>
+          <div class="enum-vals"><span class="enum-val">TRIAL</span><span class="enum-val">STARTER</span><span class="enum-val">PROFESSIONAL</span><span class="enum-val">ENTERPRISE</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">OrgMemberRole</div>
+          <div class="enum-vals"><span class="enum-val">OWNER</span><span class="enum-val">ADMIN</span><span class="enum-val">RISK_OFFICER</span><span class="enum-val">AUDITOR</span><span class="enum-val">VIEWER</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">ModelType</div>
+          <div class="enum-vals"><span class="enum-val">LLM</span><span class="enum-val">ML</span><span class="enum-val">AGENT</span><span class="enum-val">COMPUTER_VISION</span><span class="enum-val">NLP</span><span class="enum-val">RECOMMENDATION</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">RiskLevel</div>
+          <div class="enum-vals"><span class="enum-val" style="color:#6ee7b7;">LOW</span><span class="enum-val" style="color:#fbbf24;">MEDIUM</span><span class="enum-val" style="color:#fb923c;">HIGH</span><span class="enum-val" style="color:#ef4444;">CRITICAL</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="enum-group">
+          <div class="enum-name">ModelStatus</div>
+          <div class="enum-vals"><span class="enum-val">ACTIVE</span><span class="enum-val">INACTIVE</span><span class="enum-val">DEPRECATED</span><span class="enum-val">UNDER_REVIEW</span><span class="enum-val">SUSPENDED</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">ComplianceStatus</div>
+          <div class="enum-vals"><span class="enum-val" style="color:#6ee7b7;">PASS</span><span class="enum-val" style="color:#ef4444;">FAIL</span><span class="enum-val" style="color:#fbbf24;">PARTIAL</span><span class="enum-val">NOT_APPLICABLE</span><span class="enum-val">PENDING_REVIEW</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">DataSensitivity</div>
+          <div class="enum-vals"><span class="enum-val">PUBLIC</span><span class="enum-val">INTERNAL</span><span class="enum-val">CONFIDENTIAL</span><span class="enum-val">RESTRICTED</span><span class="enum-val" style="color:#ef4444;">PII</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">AuditAction</div>
+          <div class="enum-vals"><span class="enum-val">CREATE</span><span class="enum-val">READ</span><span class="enum-val">UPDATE</span><span class="enum-val">DELETE</span><span class="enum-val">LOGIN</span><span class="enum-val">LOGOUT</span><span class="enum-val">EXPORT</span><span class="enum-val">APPROVE</span><span class="enum-val">REJECT</span><span class="enum-val">AI_MATURITY_ASSESSMENT_COMPLETED</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="enum-group">
+          <div class="enum-name">ProjectPhase</div>
+          <div class="enum-vals"><span class="enum-val">BUSINESS_CASE</span><span class="enum-val">DATA_DISCOVERY</span><span class="enum-val">MODEL_DEVELOPMENT</span><span class="enum-val">TESTING_VALIDATION</span><span class="enum-val">DEPLOYMENT</span><span class="enum-val">MONITORING</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">HarmCategory</div>
+          <div class="enum-vals"><span class="enum-val">DISCRIMINATION</span><span class="enum-val">PRIVACY_VIOLATION</span><span class="enum-val">FINANCIAL_HARM</span><span class="enum-val">PHYSICAL_HARM</span><span class="enum-val">REPUTATIONAL_HARM</span><span class="enum-val">SECURITY_HARM</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">N8nTriggerEvent</div>
+          <div class="enum-vals"><span class="enum-val">PHASE_COMPLETE</span><span class="enum-val">MILESTONE_REACHED</span><span class="enum-val">TASK_DONE</span><span class="enum-val">RISK_THRESHOLD</span><span class="enum-val">EXPERIMENT_LOGGED</span></div>
+        </div>
+        <div class="enum-group">
+          <div class="enum-name">ApprovalStepType</div>
+          <div class="enum-vals"><span class="enum-val">RISK_OFFICER</span><span class="enum-val">LEGAL</span><span class="enum-val">ETHICS</span><span class="enum-val">DATA_PROTECTION</span><span class="enum-val">EXECUTIVE</span><span class="enum-val">CUSTOM</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     3. INFRASTRUCTURE ARCHITECTURE
+══════════════════════════════════════════════ -->
+<section id="infrastructure">
+<div class="arch-section">
+  <div class="arch-section-header">
+    <div class="arch-section-num" style="background:rgba(245,158,11,.2);color:#fcd34d;">3</div>
+    <div class="arch-section-title" style="color:#fcd34d;">Infrastructure Architecture</div>
+  </div>
+  <div class="arch-section-desc">Vercel (hosting + CDN) · Neon Serverless PostgreSQL · Redis · Vercel Blob (files) · Resend (email) · GitHub CI/CD</div>
+
+  <!-- Infra nodes -->
+  <div class="dcard">
+    <div class="dcard-title">Infrastructure Components</div>
+    <div class="infra-grid">
+
+      <div class="infra-node" style="border-color:rgba(37,99,235,.35);">
+        <div class="infra-node-header" style="background:rgba(37,99,235,.15);color:#93c5fd;">▲ Vercel — Hosting &amp; CDN</div>
+        <div class="infra-node-body">
+          <strong>Runtime:</strong> Node.js (serverless functions)<br/>
+          <strong>Build:</strong> prisma generate → prisma db push → next build<br/>
+          <strong>Max Duration:</strong> 60s (AI routes), 10s (standard)<br/>
+          <strong>Deploy trigger:</strong> Git push to main → auto-deploy<br/>
+          <strong>CDN:</strong> Global edge network<br/>
+          <strong>Domain:</strong> aigovernancetower.com<br/>
+          <strong>Public static:</strong> /public/ (demo.html, architecture.html)
+        </div>
+      </div>
+
+      <div class="infra-node" style="border-color:rgba(6,182,212,.35);">
+        <div class="infra-node-header" style="background:rgba(6,182,212,.15);color:#67e8f9;">🐘 Neon — Serverless PostgreSQL</div>
+        <div class="infra-node-body">
+          <strong>Provider:</strong> Neon (serverless Postgres)<br/>
+          <strong>Connection:</strong> <code style="font-family:var(--font-mono);font-size:.63rem;color:#fbbf24;">DATABASE_URL</code><br/>
+          <strong>ORM:</strong> Prisma v5.14 (type-safe, compiled)<br/>
+          <strong>Binary targets:</strong> native + rhel-openssl-1.0.x + rhel-openssl-3.0.x<br/>
+          <strong>Scale:</strong> Serverless, auto-scale to zero<br/>
+          <strong>Tables:</strong> 37 models, multi-tenant (orgId row-level)<br/>
+          <strong>Migrations:</strong> prisma db push (schema-first)
+        </div>
+      </div>
+
+      <div class="infra-node" style="border-color:rgba(239,68,68,.35);">
+        <div class="infra-node-header" style="background:rgba(239,68,68,.15);color:#fca5a5;">⚡ Redis — Cache Layer</div>
+        <div class="infra-node-body">
+          <strong>Library:</strong> ioredis v5.4.1<br/>
+          <strong>Connection:</strong> <code style="font-family:var(--font-mono);font-size:.63rem;color:#fbbf24;">REDIS_URL</code><br/>
+          <strong>Config:</strong> maxRetries=3, lazyConnect, no readyCheck<br/>
+          <strong>TTL default:</strong> 300 seconds (5 minutes)<br/>
+          <strong>Key pattern:</strong> <code style="font-family:var(--font-mono);font-size:.63rem;color:#67e8f9;">org:{orgId}:{key}</code><br/>
+          <strong>Degradation:</strong> Non-fatal; cache miss → DB fallback<br/>
+          <strong>Rate limiting:</strong> RATE_LIMIT_MAX / RATE_LIMIT_WINDOW_MS
+        </div>
+      </div>
+
+      <div class="infra-node" style="border-color:rgba(16,185,129,.35);">
+        <div class="infra-node-header" style="background:rgba(16,185,129,.15);color:#6ee7b7;">📦 Vercel Blob — File Storage</div>
+        <div class="infra-node-body">
+          <strong>Package:</strong> @vercel/blob v2.3.3<br/>
+          <strong>Usage:</strong> Evidence file uploads (ISO 42001 controls, risk assessments, data assets)<br/>
+          <strong>Model:</strong> EvidenceFile.url → Blob URL<br/>
+          <strong>API route:</strong> POST /api/upload (multipart form)<br/>
+          <strong>Polymorphic:</strong> controlId | riskId | modelId | dataAssetId<br/>
+          <strong>Access:</strong> Public CDN URLs, no auth required on file
+        </div>
+      </div>
+
+      <div class="infra-node" style="border-color:rgba(245,158,11,.35);">
+        <div class="infra-node-header" style="background:rgba(245,158,11,.15);color:#fcd34d;">📧 Resend — Email Service</div>
+        <div class="infra-node-body">
+          <strong>Package:</strong> resend v6.12.0<br/>
+          <strong>API Key:</strong> <code style="font-family:var(--font-mono);font-size:.63rem;color:#fbbf24;">RESEND_API_KEY</code><br/>
+          <strong>Base URL:</strong> <code style="font-family:var(--font-mono);font-size:.63rem;color:#fbbf24;">NEXT_PUBLIC_APP_URL</code><br/>
+          <strong>Use cases:</strong> Email verification, org invitations, scheduled report delivery<br/>
+          <strong>From:</strong> enquiry@aigovernancetower.com
+        </div>
+      </div>
+
+      <div class="infra-node" style="border-color:rgba(139,92,246,.35);">
+        <div class="infra-node-header" style="background:rgba(139,92,246,.15);color:#c4b5fd;">🔒 Security Layer</div>
+        <div class="infra-node-body">
+          <strong>Auth:</strong> JWT HS256 (jose), 24h TTL<br/>
+          <strong>Passwords:</strong> bcryptjs hash<br/>
+          <strong>CORS:</strong> Next.js default (same-origin)<br/>
+          <strong>Headers:</strong> CSP, HSTS, X-Frame-Options: DENY, X-XSS-Protection, X-Content-Type-Options<br/>
+          <strong>Rate limit:</strong> Middleware (Redis-backed)<br/>
+          <strong>Multi-tenant isolation:</strong> orgId on every DB query
+        </div>
+      </div>
+
+      <div class="infra-node" style="border-color:rgba(6,182,212,.35);">
+        <div class="infra-node-header" style="background:rgba(6,182,212,.15);color:#67e8f9;">📡 GitHub → CI/CD Pipeline</div>
+        <div class="infra-node-body">
+          <strong>Repo:</strong> github.com/forprashantthakur/ai-governance-tower<br/>
+          <strong>Branch:</strong> main → auto-deploy to Vercel<br/>
+          <strong>Build cmd:</strong> prisma generate &amp;&amp; prisma db push --accept-data-loss &amp;&amp; next build<br/>
+          <strong>Type check:</strong> tsc --noEmit (pre-commit)<br/>
+          <strong>Deploy time:</strong> ~60–90 seconds
+        </div>
+      </div>
+
+      <div class="infra-node" style="border-color:rgba(245,158,11,.35);">
+        <div class="infra-node-header" style="background:rgba(245,158,11,.15);color:#fcd34d;">📊 Observability (Optional)</div>
+        <div class="infra-node-body">
+          <strong>LLM tracing:</strong> Langfuse (cloud.langfuse.com)<br/>
+          <strong>Keys:</strong> LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST<br/>
+          <strong>Tracks:</strong> AI prompt logs, token usage, latency, toxicity scores<br/>
+          <strong>Health:</strong> GET /api/health endpoint
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Environment Variables -->
+  <div class="dcard">
+    <div class="dcard-title">Environment Variables — All Production</div>
+    <table class="env-table">
+      <tr><th>Variable</th><th>Purpose</th><th>Required</th></tr>
+      <tr><td>DATABASE_URL</td><td>Neon PostgreSQL connection string</td><td><span class="req-badge" style="background:rgba(239,68,68,.2);color:#fca5a5;">REQUIRED</span></td></tr>
+      <tr><td>JWT_SECRET</td><td>JWT signing key (min 32 chars, HS256)</td><td><span class="req-badge" style="background:rgba(239,68,68,.2);color:#fca5a5;">REQUIRED</span></td></tr>
+      <tr><td>ANTHROPIC_API_KEY</td><td>Claude API — AI Use Case Finder + n8n Workflow Builder</td><td><span class="req-badge" style="background:rgba(239,68,68,.2);color:#fca5a5;">REQUIRED</span></td></tr>
+      <tr><td>REDIS_URL</td><td>Redis connection (default: redis://localhost:6379)</td><td><span class="req-badge" style="background:rgba(245,158,11,.2);color:#fcd34d;">RECOMMENDED</span></td></tr>
+      <tr><td>RESEND_API_KEY</td><td>Email delivery — verification, invites, reports</td><td><span class="req-badge" style="background:rgba(245,158,11,.2);color:#fcd34d;">RECOMMENDED</span></td></tr>
+      <tr><td>NEXT_PUBLIC_APP_URL</td><td>Public URL (default: https://aigovernancetower.com)</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>JWT_EXPIRES_IN</td><td>Token TTL (default: 24h)</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>RATE_LIMIT_MAX</td><td>Max requests per window (default: 100)</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>RATE_LIMIT_WINDOW_MS</td><td>Rate limit window in ms (default: 60000)</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>LANGFUSE_SECRET_KEY</td><td>LLM observability — Langfuse auth</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>LANGFUSE_PUBLIC_KEY</td><td>LLM observability — Langfuse auth</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>LANGFUSE_HOST</td><td>Langfuse endpoint (default: https://cloud.langfuse.com)</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>MIGRATE_SECRET</td><td>Admin migrate endpoint secret</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+      <tr><td>OPENAI_API_KEY</td><td>OpenAI (for optional LLM logging)</td><td><span class="req-badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;">OPTIONAL</span></td></tr>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     4. INTEGRATION ARCHITECTURE
+══════════════════════════════════════════════ -->
+<section id="integration">
+<div class="arch-section">
+  <div class="arch-section-header">
+    <div class="arch-section-num" style="background:rgba(139,92,246,.2);color:#c4b5fd;">4</div>
+    <div class="arch-section-title" style="color:#c4b5fd;">Integration Architecture</div>
+  </div>
+  <div class="arch-section-desc">Anthropic Claude API · n8n Webhooks · Resend Email · Vercel Blob · Langfuse (optional) · JWT Auth</div>
+
+  <!-- Anthropic -->
+  <div class="int-card" style="border-color:rgba(139,92,246,.3);">
+    <div class="int-card-header" style="background:rgba(139,92,246,.12);">
+      <div class="int-card-icon">🤖</div>
+      <div>
+        <div class="int-card-title" style="color:#c4b5fd;">Anthropic Claude API</div>
+        <div class="int-card-subtitle">Model: claude-haiku-4-5-20251001 · SDK: @anthropic-ai/sdk ^0.90.0</div>
+      </div>
+    </div>
+    <div class="int-card-body">
+      <div class="grid-2" style="gap:1rem;">
+        <div>
+          <strong>Integration 1 — AI Use Case Finder</strong> <code style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">POST /api/maturity-assessment</code><br/>
+          <strong>Max tokens:</strong> 8,000 · <strong>Role:</strong> "Principal AI Strategy Consultant"<br/>
+          <strong>Input:</strong> 30+ discovery fields (org profile, industry, KPI baseline/target, pain points, data readiness, revenue levers, existing systems, regulatory context, business goals)<br/>
+          <strong>Output:</strong> JSON — use_case_name, priority_score (0–100), priority_tier, score_breakdown (7 dimensions), business_problem, ai_solution, expected_business_impact, agentic_ai_design (agents + decision_flow), n8n_workflow (nodes, connections, integrations), implementation_plan (phases + timeline), integration_architecture (systems, data_flow, API requirements)<br/>
+          <strong>Stored in:</strong> MaturityAssessment.useCases (JSON column)<br/>
+          <strong>Audit action:</strong> AI_MATURITY_ASSESSMENT_COMPLETED
+          <div class="int-flow">
+            <span class="int-step" style="background:rgba(139,92,246,.2);color:#c4b5fd;">Client 5-step form</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(37,99,235,.15);color:#93c5fd;">withAuth + Zod validate</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(139,92,246,.2);color:#c4b5fd;">buildPrompt()</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(239,68,68,.15);color:#fca5a5;">Claude API (60s max)</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(16,185,129,.15);color:#6ee7b7;">Parse JSON</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(245,158,11,.15);color:#fcd34d;">Save + Audit</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(37,99,235,.15);color:#93c5fd;">201 Response</span>
+          </div>
+        </div>
+        <div>
+          <strong>Integration 2 — n8n Workflow Builder</strong> <code style="font-family:var(--font-mono);font-size:.65rem;color:#67e8f9;">POST /api/n8n-workflow</code><br/>
+          <strong>Max tokens:</strong> 6,000 · <strong>Role:</strong> "Expert n8n workflow engineer"<br/>
+          <strong>Input:</strong> description, triggerType (webhook|schedule|manual), integrations[], complexity (simple|medium|complex)<br/>
+          <strong>Output:</strong> Full n8n-compatible export JSON — nodes (with typeVersions for n8n 1.x), connections map, credentials_required, setup_steps, test_instructions<br/>
+          <strong>Node types supported:</strong> 40+ — manualTrigger, webhook, scheduleTrigger, httpRequest, if, switch, set, code, emailSend, slack, postgres, mongo, redis, salesforce, hubspot, @n8n/langchain.agent, lmChatAnthropic, lmChatOpenAi, awsS3, googleDrive…<br/>
+          <strong>Import:</strong> n8n_export JSON is directly importable into n8n instance
+          <div class="int-flow">
+            <span class="int-step" style="background:rgba(139,92,246,.2);color:#c4b5fd;">Builder form</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(139,92,246,.2);color:#c4b5fd;">buildPrompt()</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(239,68,68,.15);color:#fca5a5;">Claude API (60s)</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(16,185,129,.15);color:#6ee7b7;">Strip markdown fences</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(245,158,11,.15);color:#fcd34d;">Build n8nExport</span>
+            <span style="color:var(--gray-400);">→</span>
+            <span class="int-step" style="background:rgba(37,99,235,.15);color:#93c5fd;">200 + Download</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- n8n Webhooks -->
+  <div class="int-card" style="border-color:rgba(16,185,129,.3);">
+    <div class="int-card-header" style="background:rgba(16,185,129,.1);">
+      <div class="int-card-icon">🔄</div>
+      <div>
+        <div class="int-card-title" style="color:#6ee7b7;">n8n Outbound Webhooks</div>
+        <div class="int-card-subtitle">Project event triggers → n8n workflows · Async, non-blocking · Per-project configuration</div>
+      </div>
+    </div>
+    <div class="int-card-body">
+      <div class="grid-2" style="gap:1rem;">
+        <div>
+          <strong>Trigger Events (N8nTriggerEvent enum):</strong><br/>
+          <div style="margin:.4rem 0;">
+            <span class="int-step" style="background:rgba(37,99,235,.15);color:#93c5fd;">PHASE_COMPLETE</span>&nbsp;
+            <span class="int-step" style="background:rgba(16,185,129,.15);color:#6ee7b7;">MILESTONE_REACHED</span>&nbsp;
+            <span class="int-step" style="background:rgba(245,158,11,.15);color:#fcd34d;">TASK_DONE</span>&nbsp;
+            <span class="int-step" style="background:rgba(239,68,68,.15);color:#fca5a5;">RISK_THRESHOLD</span>&nbsp;
+            <span class="int-step" style="background:rgba(139,92,246,.15);color:#c4b5fd;">EXPERIMENT_LOGGED</span>
+          </div>
+          <strong>Payload:</strong> event, projectId, projectName, timestamp, context object, optional custom template (N8nWebhook.payloadTemplate)<br/>
+          <strong>Timeout:</strong> 10 seconds per webhook<br/>
+          <strong>Result capture:</strong> lastTriggeredAt, lastStatus ("success"|"error"), lastResponse (JSON) stored in N8nWebhook model
+        </div>
+        <div>
+          <strong>Webhook lifecycle:</strong>
+          <div class="int-flow" style="flex-direction:column;align-items:flex-start;gap:.35rem;">
+            <div style="display:flex;align-items:center;gap:.5rem;"><span class="int-step" style="background:rgba(37,99,235,.15);color:#93c5fd;">Project event fires</span><span style="color:var(--gray-400);">→</span><span class="int-step" style="background:rgba(16,185,129,.15);color:#6ee7b7;">fireWebhooks(projectId, event, ctx)</span></div>
+            <div style="display:flex;align-items:center;gap:.5rem;"><span class="int-step" style="background:rgba(16,185,129,.15);color:#6ee7b7;">Fetch active webhooks for project</span><span style="color:var(--gray-400);">→</span><span class="int-step" style="background:rgba(245,158,11,.15);color:#fcd34d;">Build payload</span></div>
+            <div style="display:flex;align-items:center;gap:.5rem;"><span class="int-step" style="background:rgba(245,158,11,.15);color:#fcd34d;">POST to webhookUrl</span><span style="color:var(--gray-400);">→</span><span class="int-step" style="background:rgba(139,92,246,.15);color:#c4b5fd;">Promise.allSettled (non-blocking)</span></div>
+            <div style="display:flex;align-items:center;gap:.5rem;"><span class="int-step" style="background:rgba(139,92,246,.15);color:#c4b5fd;">Capture status + response → DB</span><span style="color:var(--gray-400);">→</span><span class="int-step" style="background:rgba(16,185,129,.15);color:#6ee7b7;">Manual trigger: POST /api/projects/[id]/webhooks/[whid]/trigger</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other integrations -->
+  <div class="grid-3" style="gap:1rem;">
+    <div class="int-card" style="border-color:rgba(245,158,11,.3);margin-bottom:0;">
+      <div class="int-card-header" style="background:rgba(245,158,11,.1);">
+        <div class="int-card-icon">📧</div>
+        <div>
+          <div class="int-card-title" style="color:#fcd34d;">Resend Email</div>
+          <div class="int-card-subtitle">resend ^6.12.0</div>
+        </div>
+      </div>
+      <div class="int-card-body">
+        <strong>Auth:</strong> RESEND_API_KEY<br/>
+        <strong>Use cases:</strong><br/>
+        · Email verification (POST /api/auth/register)<br/>
+        · Org invitations (POST /api/organizations/[id]/invites)<br/>
+        · Scheduled report delivery (POST /api/reports/[id]/schedule)<br/>
+        <strong>Link base:</strong> NEXT_PUBLIC_APP_URL + /verify-email | /invite/[token]
+      </div>
+    </div>
+
+    <div class="int-card" style="border-color:rgba(6,182,212,.3);margin-bottom:0;">
+      <div class="int-card-header" style="background:rgba(6,182,212,.1);">
+        <div class="int-card-icon">📦</div>
+        <div>
+          <div class="int-card-title" style="color:#67e8f9;">Vercel Blob</div>
+          <div class="int-card-subtitle">@vercel/blob ^2.3.3</div>
+        </div>
+      </div>
+      <div class="int-card-body">
+        <strong>Route:</strong> POST /api/upload<br/>
+        <strong>Input:</strong> multipart/form-data (file + metadata)<br/>
+        <strong>Output:</strong> Vercel CDN URL stored in EvidenceFile.url<br/>
+        <strong>Types:</strong> PDF, PNG, DOCX evidence files for ISO 42001 controls, risk assessments, model documentation<br/>
+        <strong>Access:</strong> Public CDN (no token needed on file URL)
+      </div>
+    </div>
+
+    <div class="int-card" style="border-color:rgba(16,185,129,.3);margin-bottom:0;">
+      <div class="int-card-header" style="background:rgba(16,185,129,.1);">
+        <div class="int-card-icon">📄</div>
+        <div>
+          <div class="int-card-title" style="color:#6ee7b7;">jsPDF — PDF Reports</div>
+          <div class="int-card-subtitle">jspdf + jspdf-autotable (client-side)</div>
+        </div>
+      </div>
+      <div class="int-card-body">
+        <strong>Type:</strong> 100% client-side (no server)<br/>
+        <strong>Trigger:</strong> "Download PDF Report" button in AI Use Case Finder results<br/>
+        <strong>Output:</strong> 8-page A4 PDF — cover, executive summary, discovery context, problem/solution, ROI, n8n workflow, implementation roadmap, integration architecture, methodology appendix<br/>
+        <strong>Filename:</strong> Auto-slugged from use case name
+      </div>
+    </div>
+
+    <div class="int-card" style="border-color:rgba(37,99,235,.3);margin-bottom:0;">
+      <div class="int-card-header" style="background:rgba(37,99,235,.1);">
+        <div class="int-card-icon">🔐</div>
+        <div>
+          <div class="int-card-title" style="color:#93c5fd;">JWT Auth (jose)</div>
+          <div class="int-card-subtitle">jose ^5.6.3 · HS256 · 24h TTL</div>
+        </div>
+      </div>
+      <div class="int-card-body">
+        <strong>Algorithm:</strong> HS256 (HMAC SHA-256)<br/>
+        <strong>Secret:</strong> JWT_SECRET (≥32 chars)<br/>
+        <strong>Claims:</strong> userId, email, name, organizationId, orgRole, plan, iss, aud<br/>
+        <strong>Issuer:</strong> "ai-governance-tower"<br/>
+        <strong>Audience:</strong> "ai-governance-tower-client"<br/>
+        <strong>Transport:</strong> Authorization: Bearer &lt;token&gt; header
+      </div>
+    </div>
+
+    <div class="int-card" style="border-color:rgba(139,92,246,.3);margin-bottom:0;">
+      <div class="int-card-header" style="background:rgba(139,92,246,.1);">
+        <div class="int-card-icon">🔍</div>
+        <div>
+          <div class="int-card-title" style="color:#c4b5fd;">Langfuse — LLM Observability</div>
+          <div class="int-card-subtitle">Optional · cloud.langfuse.com</div>
+        </div>
+      </div>
+      <div class="int-card-body">
+        <strong>Keys:</strong> LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST<br/>
+        <strong>Tracks:</strong> Prompt logs (PromptLog model), token usage, latency, toxicity scores, policy violations, bias scores<br/>
+        <strong>Integrated via:</strong> PromptLog entries in DB + Langfuse SDK<br/>
+        <strong>Note:</strong> Graceful degradation — app works without Langfuse configured
+      </div>
+    </div>
+
+    <div class="int-card" style="border-color:rgba(245,158,11,.3);margin-bottom:0;">
+      <div class="int-card-header" style="background:rgba(245,158,11,.1);">
+        <div class="int-card-icon">✅</div>
+        <div>
+          <div class="int-card-title" style="color:#fcd34d;">Zod — Schema Validation</div>
+          <div class="int-card-subtitle">zod ^3.23.8 · All API routes</div>
+        </div>
+      </div>
+      <div class="int-card-body">
+        <strong>Used on:</strong> Every POST/PUT API route body<br/>
+        <strong>Pattern:</strong> Schema.safeParse(body) → badRequest() on failure<br/>
+        <strong>AI routes:</strong> 30+ field schemas with .default() for backward compatibility<br/>
+        <strong>Error format:</strong> First error message returned as 400 JSON response<br/>
+        <strong>Benefit:</strong> Type-safe request bodies throughout the entire API layer
+      </div>
+    </div>
+  </div>
+
+  <!-- Request lifecycle summary -->
+  <div class="dcard" style="margin-top:1rem;">
+    <div class="dcard-title">Complete Request Lifecycle — Happy Path</div>
+    <div class="flow-row">
+      <div class="flow-box" style="background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3);color:#93c5fd;">1. Browser<br/><span style="font-size:.62rem;font-weight:400;">useApi().post()</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fcd34d;">2. Rate Limiter<br/><span style="font-size:.62rem;font-weight:400;">Redis check</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#6ee7b7;">3. withAuth()<br/><span style="font-size:.62rem;font-weight:400;">JWT verify + RBAC</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#c4b5fd;">4. Zod validate<br/><span style="font-size:.62rem;font-weight:400;">Schema.safeParse()</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fcd34d;">5. Redis cache<br/><span style="font-size:.62rem;font-weight:400;">getCache() hit/miss</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:#67e8f9;">6. Prisma query<br/><span style="font-size:.62rem;font-weight:400;">orgId scoped</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5;">7. AuditLogger<br/><span style="font-size:.62rem;font-weight:400;">before/after snapshot</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#6ee7b7;">8. ok() / created()<br/><span style="font-size:.62rem;font-weight:400;">200 / 201 JSON</span></div>
+    </div>
+  </div>
+</div>
+</section>
 
 <!-- FOOTER -->
 <div class="arch-footer">
-  <p>AI Governance Control Tower &nbsp;·&nbsp; <a href="https://aigovernancetower.com">aigovernancetower.com</a> &nbsp;·&nbsp; Architecture v2.0 &nbsp;·&nbsp; April 2026</p>
-  <p style="margin-top:0.4rem;color:rgba(255,255,255,0.25);">CONFIDENTIAL — For internal use only</p>
+  <p>AI Governance Control Tower — Full Architecture v2.0 &nbsp;·&nbsp; <a href="https://aigovernancetower.com">aigovernancetower.com</a> &nbsp;·&nbsp; April 2026</p>
+  <p style="margin-top:.4rem;color:rgba(255,255,255,.2);">CONFIDENTIAL — For internal and partner use only · Derived from production codebase</p>
 </div>
 
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.2 });
+sections.forEach(s => observer.observe(s));
+</script>
 </body>
 </html>

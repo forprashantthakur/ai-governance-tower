@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Agent, PromptLog } from "@/types";
 import { formatDate, truncate } from "@/lib/utils";
+import { RegisterAgentModal } from "@/components/agents/register-agent-modal";
 
 export default function AgentsPage() {
   const api = useApi();
@@ -18,6 +19,7 @@ export default function AgentsPage() {
   const [logs, setLogs] = useState<PromptLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   useEffect(() => {
     api
@@ -185,7 +187,7 @@ export default function AgentsPage() {
           <CardTitle className="text-base flex items-center gap-2">
             <Bot className="h-4 w-4" /> Agent Registry
           </CardTitle>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowRegisterModal(true)}>
             <Plus className="h-4 w-4" /> Register Agent
           </Button>
         </CardHeader>
@@ -198,6 +200,17 @@ export default function AgentsPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Register Agent Modal */}
+      {showRegisterModal && (
+        <RegisterAgentModal
+          onClose={() => setShowRegisterModal(false)}
+          onSuccess={() => {
+            setShowRegisterModal(false);
+            api.get<Agent[]>("/agents").then(setAgents);
+          }}
+        />
+      )}
 
       {/* Prompt Logs for selected agent */}
       {selectedAgent && (
