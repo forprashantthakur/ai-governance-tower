@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, GanttChart, Columns3, Users, FlaskConical, Workflow, Settings } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, GanttChart, Columns3, Users, FlaskConical, Archive, Workflow, Settings } from "lucide-react";
 import type { Project } from "@/types";
 import { useProjectStore } from "@/store/project.store";
 
@@ -13,6 +13,7 @@ const TABS = [
   { label: "Kanban", path: "/kanban", icon: Columns3 },
   { label: "Resources", path: "/resources", icon: Users },
   { label: "Experiments", path: "/experiments", icon: FlaskConical },
+  { label: "Artifacts", path: "/artifacts", icon: Archive },
   { label: "Workflow", path: "/workflow", icon: Workflow },
   { label: "Settings", path: "/settings", icon: Settings },
 ];

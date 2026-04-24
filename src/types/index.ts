@@ -455,6 +455,36 @@ export interface ProjectAIModel {
   createdAt: string;
 }
 
+export type ArtifactCategory =
+  | "BRD"
+  | "PROJECT_PLAN"
+  | "TEST_CASES"
+  | "FRD"
+  | "DESIGN_DOCUMENT"
+  | "BUSINESS_CASE"
+  | "MODEL_ARTIFACT"
+  | "TRAINING_DATA"
+  | "EVALUATION_REPORT"
+  | "COMPLIANCE_EVIDENCE"
+  | "OTHER";
+
+export interface ProjectArtifact {
+  id: string;
+  projectId: string;
+  name: string;
+  url: string;
+  size: number;
+  mimeType: string;
+  category: ArtifactCategory;
+  description?: string;
+  version?: string;
+  tags: string[];
+  uploadedBy: string;
+  uploader?: { id: string; name: string };
+  uploadedAt: string;
+  updatedAt: string;
+}
+
 export interface ProjectTemplate {
   id: string;
   name: string;

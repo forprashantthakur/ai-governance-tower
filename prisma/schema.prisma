@@ -674,6 +674,7 @@ model Project {
   workflows    WorkflowCanvas[]
   n8nWebhooks  N8nWebhook[]
   linkedModels ProjectAIModel[]
+  artifacts    ProjectArtifact[]
 
   @@index([organizationId, status, healthStatus])
   @@index([ownerId])
@@ -869,6 +870,42 @@ model ProjectAIModel {
 
   @@id([projectId, modelId])
   @@map("project_ai_models")
+}
+
+enum ArtifactCategory {
+  BRD
+  PROJECT_PLAN
+  TEST_CASES
+  FRD
+  DESIGN_DOCUMENT
+  BUSINESS_CASE
+  MODEL_ARTIFACT
+  TRAINING_DATA
+  EVALUATION_REPORT
+  COMPLIANCE_EVIDENCE
+  OTHER
+}
+
+model ProjectArtifact {
+  id          String           @id @default(uuid())
+  projectId   String           @map("project_id")
+  name        String
+  url         String
+  size        Int
+  mimeType    String           @map("mime_type")
+  category    ArtifactCategory @default(OTHER)
+  description String?
+  version     String?
+  tags        String[]         @default([])
+  uploadedBy  String           @map("uploaded_by")
+  uploadedAt  DateTime         @default(now()) @map("uploaded_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, category])
+  @@index([projectId, uploadedAt])
+  @@map("project_artifacts")
 }
 
 // ─── Policy Configuration ─────────────────────────────────────────────────────
