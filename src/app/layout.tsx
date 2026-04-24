@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   description:
     "Enterprise AI Governance platform for DPDP, ISO 42001, and Responsible AI compliance",
   robots: "noindex, nofollow", // Enterprise internal tool
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

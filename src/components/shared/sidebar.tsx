@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Shield,
   FolderKanban,
   FileSearch,
   BarChart3,
@@ -74,15 +73,11 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 p-4 border-b border-border h-16">
-        <div className="p-1.5 bg-primary/10 rounded-lg shrink-0">
-          <Shield className="h-6 w-6 text-primary" />
-        </div>
-        {!sidebarCollapsed && (
-          <div className="min-w-0">
-            <p className="text-sm font-bold leading-tight truncate">AI Governance</p>
-            <p className="text-xs text-muted-foreground">Control Tower</p>
-          </div>
+      <div className="flex items-center justify-center p-3 border-b border-border h-16">
+        {sidebarCollapsed ? (
+          <img src="/logo.png" alt="AI Governance Control Tower" className="h-8 w-8 object-contain" />
+        ) : (
+          <img src="/logo.png" alt="AI Governance Control Tower" className="h-10 object-contain" />
         )}
       </div>
 

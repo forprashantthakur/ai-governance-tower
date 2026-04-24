@@ -459,15 +459,7 @@ export default function LandingPage() {
         <nav className="lp-nav">
           <div className="lp-nav-inner">
             <a href="/landing" className="lp-logo">
-              <div className="lp-logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <div>
-                <div className="lp-logo-text">AI Governance</div>
-                <div className="lp-logo-sub">Control Tower</div>
-              </div>
+              <img src="/logo.png" alt="AI Governance Control Tower" style={{height:"48px",objectFit:"contain"}} />
             </a>
             <ul className="lp-nav-links" style={{display:"flex",alignItems:"center",gap:"1.75rem",listStyle:"none"}}>
 
@@ -1190,10 +1182,7 @@ export default function LandingPage() {
           <div className="lp-footer-grid">
             <div>
               <a href="/landing" className="lp-logo">
-                <div className="lp-logo-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                </div>
-                <div><div className="lp-logo-text">AI Governance</div><div className="lp-logo-sub">Control Tower</div></div>
+                <img src="/logo.png" alt="AI Governance Control Tower" style={{height:"48px",objectFit:"contain"}} />
               </a>
               <p className="lp-footer-desc">Enterprise AI Governance platform for DPDP, ISO 42001, GDPR, and EU AI Act compliance. Monitor, govern, and explain every AI decision at scale.</p>
             </div>
