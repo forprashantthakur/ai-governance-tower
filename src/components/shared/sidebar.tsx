@@ -75,7 +75,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center justify-center p-3 border-b border-border h-16">
         {sidebarCollapsed ? (
-          <img src="/logo.png" alt="AI Governance Control Tower" className="h-8 w-8 object-contain" />
+          <img src="/logo.png" alt="AI Governance Control Tower" className="h-8 object-contain" />
         ) : (
           <img src="/logo.png" alt="AI Governance Control Tower" className="h-10 object-contain" />
         )}
