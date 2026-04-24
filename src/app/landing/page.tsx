@@ -18,7 +18,7 @@ html { scroll-behavior: smooth; }
 
 /* NAV */
 .lp-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,35,66,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 0 2rem; }
-.lp-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 68px; }
+.lp-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 90px; }
 .lp-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .lp-logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--blue), var(--cyan)); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .lp-logo-icon svg { width: 20px; height: 20px; color: white; }
@@ -459,7 +459,7 @@ export default function LandingPage() {
         <nav className="lp-nav">
           <div className="lp-nav-inner">
             <a href="/landing" className="lp-logo">
-              <img src="/logo.png" alt="AI Governance Control Tower" style={{height:"52px", width:"auto", objectFit:"contain"}} />
+              <img src="/logo.png" alt="AI Governance Control Tower" style={{height:"74px", width:"auto", objectFit:"contain"}} />
             </a>
             <ul className="lp-nav-links" style={{display:"flex",alignItems:"center",gap:"1.75rem",listStyle:"none"}}>
 
@@ -1182,7 +1182,7 @@ export default function LandingPage() {
           <div className="lp-footer-grid">
             <div>
               <a href="/landing" className="lp-logo">
-                <img src="/logo.png" alt="AI Governance Control Tower" style={{height:"52px", width:"auto", objectFit:"contain"}} />
+                <img src="/logo.png" alt="AI Governance Control Tower" style={{height:"74px", width:"auto", objectFit:"contain"}} />
               </a>
               <p className="lp-footer-desc">Enterprise AI Governance platform for DPDP, ISO 42001, GDPR, and EU AI Act compliance. Monitor, govern, and explain every AI decision at scale.</p>
             </div>
