@@ -258,7 +258,7 @@ interface UpdateDrawerProps {
   onSaved: () => void;
   // Pass api + notify from the authenticated parent so the token is guaranteed present
   api: ReturnType<typeof useApi>;
-  addNotification: (n: { type: string; title: string; message: string }) => void;
+  addNotification: (n: { type: "success" | "error" | "warning" | "info"; title: string; message?: string }) => void;
 }
 
 function UpdateDrawer({ row, allControls, models, onClose, onSaved, api, addNotification }: UpdateDrawerProps) {
