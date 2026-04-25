@@ -267,7 +267,7 @@ function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDraw
 
   // Per-control edit state (keyed by DB `id`)
   const [edits, setEdits] = useState<Record<string, {
-    status: ControlStatus; notes: string; evidence: string; saving: boolean; saved: boolean;
+    status: ControlStatus; notes: string; evidence: string; saving: boolean; saved: boolean; error: string;
   }>>(() =>
     Object.fromEntries(
       matched.map((c) => [c.id, {
@@ -276,6 +276,7 @@ function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDraw
         evidence: c.evidence ?? "",
         saving: false,
         saved: false,
+        error: "",
       }])
     )
   );
@@ -299,7 +300,7 @@ function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDraw
     const e = edits[ctrl.id];
     if (!e) return;
     const meta = CONTROL_META[ctrl.controlId];
-    setEdit(ctrl.id, { saving: true, saved: false });
+    setEdit(ctrl.id, { saving: true, saved: false, error: "" });
     try {
       await api.post("/compliance", {
         modelId: ctrl.modelId,
@@ -310,11 +311,12 @@ function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDraw
         notes: e.notes || undefined,
         evidence: e.evidence || undefined,
       });
-      setEdit(ctrl.id, { saving: false, saved: true });
+      setEdit(ctrl.id, { saving: false, saved: true, error: "" });
       addNotification({ type: "success", title: "Control updated", message: `${ctrl.controlId} → ${e.status}` });
       onSaved();
-    } catch {
-      setEdit(ctrl.id, { saving: false });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Save failed — check your role permissions";
+      setEdit(ctrl.id, { saving: false, error: msg });
     }
   }
 
@@ -447,6 +449,11 @@ function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDraw
                     </div>
 
                     {/* Save */}
+                    {e.error && (
+                      <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-3 py-1.5">
+                        {e.error}
+                      </p>
+                    )}
                     <div className="flex items-center justify-between pt-1">
                       {e.saved && (
                         <span className="text-xs text-green-400 flex items-center gap-1">
@@ -457,7 +464,7 @@ function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDraw
                         <Button
                           size="sm"
                           onClick={() => saveControl(ctrl)}
-                          disabled={e.saving || e.saved}
+                          disabled={e.saving}
                         >
                           {e.saving ? (
                             <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Saving…</>
