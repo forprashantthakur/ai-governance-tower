@@ -256,11 +256,12 @@ interface UpdateDrawerProps {
   models: ModelOption[];
   onClose: () => void;
   onSaved: () => void;
+  // Pass api + notify from the authenticated parent so the token is guaranteed present
+  api: ReturnType<typeof useApi>;
+  addNotification: ReturnType<typeof useUIStore>["addNotification"];
 }
 
-function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDrawerProps) {
-  const api = useApi();
-  const { addNotification } = useUIStore();
+function UpdateDrawer({ row, allControls, models, onClose, onSaved, api, addNotification }: UpdateDrawerProps) {
 
   // Controls already in DB for this row
   const matched = allControls.filter((c) => row.controlIds.includes(c.controlId));
@@ -617,6 +618,7 @@ function UpdateDrawer({ row, allControls, models, onClose, onSaved }: UpdateDraw
 
 export default function ComplianceMapPage() {
   const api = useApi();
+  const { addNotification } = useUIStore();
   const [controls, setControls] = useState<ComplianceControl[]>([]);
   const [models, setModels]     = useState<ModelOption[]>([]);
   const [filter, setFilter]     = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
@@ -861,6 +863,8 @@ export default function ComplianceMapPage() {
           models={models}
           onClose={() => setSelectedRow(null)}
           onSaved={() => fetchControls()}
+          api={api}
+          addNotification={addNotification}
         />
       )}
     </div>
