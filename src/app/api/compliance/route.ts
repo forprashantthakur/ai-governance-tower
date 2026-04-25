@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 const CreateControlSchema = z.object({
   modelId: z.string().uuid(),
-  framework: z.enum(["DPDP", "ISO42001", "ISO42005", "GDPR", "SOC2", "EU_AI_ACT", "RBI", "SEBI", "IRDAI"]),
+  framework: z.string().min(1).max(50),   // plain string — supports DPDP, ISO42001, EU_AI_ACT, RBI, etc.
   controlId: z.string().min(1),
   controlName: z.string().min(1),
   description: z.string().optional(),
