@@ -73,8 +73,9 @@ export default function NewProjectPage() {
 
       const projectId = data.data.id;
 
-      // Link the selected model if one was chosen
-      if (form.linkedModelId) {
+      // Link the selected model if a real registry model was chosen
+      // "OTHER" means model exists but isn't registered yet — skip API call
+      if (form.linkedModelId && form.linkedModelId !== "OTHER") {
         await fetch(`/api/projects/${projectId}/models`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -235,10 +236,12 @@ export default function NewProjectPage() {
                   {m.name} · {m.type} · v{m.version}
                 </option>
               ))}
+              <option value="OTHER">— Others (model not yet in registry) —</option>
             </select>
             <p className="text-xs text-muted-foreground">
               Only select if this project involves building or governing a specific AI model.
               Projects without a linked model will skip model-specific governance gates.
+              Choose <em>Others</em> if the model exists but isn&apos;t registered in AI Inventory yet.
             </p>
           </div>
 
