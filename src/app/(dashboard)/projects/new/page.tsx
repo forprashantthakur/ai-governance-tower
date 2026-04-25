@@ -45,7 +45,7 @@ export default function NewProjectPage() {
     // Pre-fetch models so the dropdown in Step 2 is ready instantly
     fetch("/api/models?limit=100", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
-      .then((d) => setModels(d.data?.items ?? []));
+      .then((d) => setModels(d.data?.models ?? []));
   }, []);
 
   async function createProject() {
