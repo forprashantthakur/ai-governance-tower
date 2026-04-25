@@ -32,7 +32,7 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "6.1.2", title: "AI risk identification" },
     dpdp: { section: "Sec 4", title: "Lawful processing of personal data" },
     euAiAct: { article: "Art 6–7", title: "Classification of high-risk AI systems" },
-    controlIds: [],
+    controlIds: ["ISO42001-6.1", "ISO42001-5.2"],
     riskTier: "HIGH",
   },
   {
@@ -41,7 +41,7 @@ const MAPPING: MappingRow[] = [
     dpdp: { section: "Sec 8", title: "Obligations of data fiduciary" },
     euAiAct: { article: "Art 9", title: "Risk management system" },
     iso42005: { clause: "Sec. 5.3", title: "Description of AI system" },
-    controlIds: [],
+    controlIds: ["ISO42001-6.1", "EUAIA-9.1"],
     riskTier: "HIGH",
   },
   {
@@ -49,7 +49,7 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "8.4", title: "Data for AI systems" },
     dpdp: { section: "Sec 8–9", title: "Data quality & purpose limitation" },
     euAiAct: { article: "Art 10", title: "Data and data governance" },
-    controlIds: [],
+    controlIds: ["DPDP-7.2", "DPDP-9.1"],
     riskTier: "HIGH",
   },
   {
@@ -58,7 +58,7 @@ const MAPPING: MappingRow[] = [
     dpdp: { section: "Sec 11", title: "Right to information" },
     euAiAct: { article: "Art 13", title: "Transparency and provision of information" },
     iso42005: { clause: "Sec. 5.8.d", title: "Transparency dimension" },
-    controlIds: [],
+    controlIds: ["EUAIA-13.1", "RBI-ML-4.2"],
     riskTier: "HIGH",
   },
   {
@@ -66,7 +66,7 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "8.5", title: "AI system life cycle" },
     euAiAct: { article: "Art 14", title: "Human oversight" },
     iso42005: { clause: "Sec. 5.8.h", title: "Human agency dimension" },
-    controlIds: [],
+    controlIds: ["ISO42001-7.1"],
     riskTier: "HIGH",
   },
   {
@@ -74,7 +74,7 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "8.7", title: "Documented information for AI systems" },
     euAiAct: { article: "Art 15", title: "Accuracy, robustness and cybersecurity" },
     iso42005: { clause: "Sec. 5.8.e", title: "Reliability dimension" },
-    controlIds: [],
+    controlIds: ["ISO42001-9.1", "RBI-ML-3.1"],
     riskTier: "MEDIUM",
   },
   {
@@ -83,7 +83,7 @@ const MAPPING: MappingRow[] = [
     dpdp: { section: "Sec 5", title: "Notice and consent" },
     euAiAct: { article: "Art 10.3", title: "Training data bias requirements" },
     iso42005: { clause: "Sec. 5.8.c", title: "Fairness dimension" },
-    controlIds: [],
+    controlIds: ["ISO42001-8.2"],
     riskTier: "HIGH",
   },
   {
@@ -91,7 +91,7 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "8.4.3", title: "Data quality for AI" },
     dpdp: { section: "Sec 12–13", title: "Rights of data principal" },
     euAiAct: { article: "Art 13.2", title: "Right to explanation" },
-    controlIds: [],
+    controlIds: ["DPDP-8.1"],
     riskTier: "HIGH",
   },
   {
@@ -99,14 +99,14 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "9.1", title: "Monitoring & measurement" },
     euAiAct: { article: "Art 26", title: "Post-market monitoring" },
     iso42005: { clause: "Sec. 5.8.f", title: "Safety dimension" },
-    controlIds: [],
+    controlIds: ["ISO42001-9.1", "ISO42001-10.1"],
     riskTier: "MEDIUM",
   },
   {
     area: "AI System Documentation",
     iso42001: { clause: "7.5", title: "Documented information" },
     euAiAct: { article: "Art 11", title: "Technical documentation" },
-    controlIds: [],
+    controlIds: ["ISO42001-5.2", "EUAIA-9.1"],
     riskTier: "LOW",
   },
   {
@@ -114,7 +114,7 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "8.4.1", title: "Third-party AI systems" },
     dpdp: { section: "Sec 8.3", title: "Processor obligations" },
     euAiAct: { article: "Art 25", title: "Obligations of providers placing AI systems" },
-    controlIds: [],
+    controlIds: ["DPDP-9.1", "RBI-ML-5.1"],
     riskTier: "MEDIUM",
   },
   {
@@ -122,14 +122,14 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "8.4.2", title: "Personal data in AI" },
     dpdp: { section: "Sec 6–7", title: "Consent and deemed consent" },
     euAiAct: { article: "Art 10.5", title: "Data minimisation" },
-    controlIds: [],
+    controlIds: ["DPDP-6.1", "DPDP-7.2"],
     riskTier: "HIGH",
   },
   {
     area: "Conformity Assessment & Audit",
     iso42001: { clause: "9.2", title: "Internal audit" },
     euAiAct: { article: "Art 43", title: "Conformity assessment" },
-    controlIds: [],
+    controlIds: ["ISO42001-9.1", "RBI-ML-5.1"],
     riskTier: "MEDIUM",
   },
   {
@@ -137,7 +137,7 @@ const MAPPING: MappingRow[] = [
     iso42001: { clause: "6.1.2.b", title: "Unintended use scenarios" },
     euAiAct: { article: "Art 9.2.b", title: "Reasonably foreseeable misuse" },
     iso42005: { clause: "Sec. 5.3.5", title: "Foreseeable misuse scenarios" },
-    controlIds: [],
+    controlIds: ["ISO42001-6.1", "ISO42001-10.1"],
     riskTier: "HIGH",
   },
 ];
@@ -205,12 +205,12 @@ export default function ComplianceMapPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all controls across all frameworks
+    // Fetch controls across all frameworks (including EU_AI_ACT and RBI stored in seeded data)
     Promise.all([
       api.get<{ controls: ComplianceControl[] }>("/compliance?framework=DPDP"),
       api.get<{ controls: ComplianceControl[] }>("/compliance?framework=ISO42001"),
-      api.get<{ controls: ComplianceControl[] }>("/compliance?framework=ISO42005"),
-      api.get<{ controls: ComplianceControl[] }>("/compliance?framework=SOC2"),
+      api.get<{ controls: ComplianceControl[] }>("/compliance?framework=EU_AI_ACT"),
+      api.get<{ controls: ComplianceControl[] }>("/compliance?framework=RBI"),
     ])
       .then(([a, b, c, d]) => {
         setControls([
@@ -230,15 +230,17 @@ export default function ComplianceMapPage() {
   const medRows    = MAPPING.filter((r) => r.riskTier === "MEDIUM").length;
   const lowRows    = MAPPING.filter((r) => r.riskTier === "LOW").length;
 
-  // For each row: has at least one PASS control → "covered"
+  // Derive status for each mapping area by matching actual DB control IDs
   const rowStatus = (row: MappingRow): ControlStatus | "UNKNOWN" => {
     if (controls.length === 0) return "UNKNOWN";
-    const matching = controls.filter((c) =>
-      row.iso42001.clause.includes(c.controlId) || row.controlIds.includes(c.controlId)
-    );
+    const matching = controls.filter((c) => row.controlIds.includes(c.controlId));
     if (matching.length === 0) return "UNKNOWN";
-    if (matching.every((c) => c.status === "PASS")) return "PASS";
+    // FAIL wins if any control fails
     if (matching.some((c) => c.status === "FAIL")) return "FAIL";
+    // PASS only if every matched control passes
+    if (matching.every((c) => c.status === "PASS")) return "PASS";
+    // PENDING if any are pending and none failed
+    if (matching.some((c) => c.status === "PENDING_REVIEW")) return "PENDING_REVIEW";
     return "PARTIAL";
   };
 
@@ -269,8 +271,8 @@ export default function ComplianceMapPage() {
         <Card>
           <CardContent className="p-4 space-y-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Framework Coverage</p>
-            <CoveragePill label="ISO 42001" covered={controls.filter((c) => c.controlId.includes("ISO") && c.status === "PASS").length} total={controls.filter((c) => c.controlId.includes("ISO")).length} color="#3b82f6" />
-            <CoveragePill label="DPDP Act"  covered={controls.filter((c) => c.controlId.includes("DPDP") && c.status === "PASS").length} total={controls.filter((c) => c.controlId.includes("DPDP")).length} color="#10b981" />
+            <CoveragePill label="ISO 42001"   covered={controls.filter((c) => c.controlId.startsWith("ISO42001") && c.status === "PASS").length} total={controls.filter((c) => c.controlId.startsWith("ISO42001")).length} color="#3b82f6" />
+            <CoveragePill label="DPDP Act"    covered={controls.filter((c) => c.controlId.startsWith("DPDP") && c.status === "PASS").length}     total={controls.filter((c) => c.controlId.startsWith("DPDP")).length}     color="#10b981" />
             <CoveragePill label="All Frameworks" covered={controls.filter((c) => c.status === "PASS").length} total={controls.length} color="#8b5cf6" />
           </CardContent>
         </Card>
