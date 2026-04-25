@@ -465,7 +465,7 @@ model PromptLog {
   id             String   @id @default(uuid())
   organizationId String?  @map("organization_id")
   agentId        String?  @map("agent_id")
-  modelId        String   @map("model_id")
+  modelId        String?  @map("model_id")   // nullable for external LLM agents
   userId         String?  @map("user_id")
   sessionId      String?  @map("session_id")
 
@@ -497,11 +497,10 @@ model PromptLog {
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   agent        Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  model        AIModel       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model        AIModel?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
   user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, createdAt])
-  @@index([modelId, createdAt])
   @@index([agentId, createdAt])
   @@index([flagged])
   @@map("prompt_logs")
