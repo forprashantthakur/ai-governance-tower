@@ -75,7 +75,7 @@ function buildGates(
       icon: FileSearch,
       checks: [
         { id: "impact-assessment", label: "ISO 42005 Impact Assessment", description: "Societal impact assessment completed for the linked AI model.", passed: hasImpactAssessment, link: "/iso42005", linkLabel: "Create Assessment" },
-        { id: "misuse-scenarios", label: "Misuse scenarios documented", description: `${misuseCount} foreseeable misuse scenario(s) catalogued. ISO 42005 §5.3.5 requires at least one.`, passed: misuseCount > 0, link: "/iso42005", linkLabel: "Add Scenarios" },
+        { id: "misuse-scenarios", label: "Misuse scenarios documented", description: `${misuseCount} foreseeable misuse scenario(s) catalogued. ISO 42005 Sec. 5.3.5 requires at least one.`, passed: misuseCount > 0, link: "/iso42005", linkLabel: "Add Scenarios" },
         { id: "approval-initiated", label: "Approval workflow initiated", description: "A cross-functional approval workflow has been created for this model.", passed: hasApprovalWorkflow, link: "/approvals", linkLabel: "Start Workflow" },
       ],
     },

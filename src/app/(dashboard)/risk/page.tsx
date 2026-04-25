@@ -391,7 +391,7 @@ export default function RiskPage() {
             <CardTitle className="text-base flex items-center gap-2">
               <Grid3x3 className="h-4 w-4" />
               Misuse Scenario Risk Matrix
-              <span className="text-xs font-normal text-muted-foreground ml-1">ISO 42005 · §5.3.5</span>
+              <span className="text-xs font-normal text-muted-foreground ml-1">ISO 42005 · Sec. 5.3.5</span>
             </CardTitle>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               {openScenarios > 0 && (
