@@ -8,7 +8,7 @@ import { logAudit, getClientIp } from "@/lib/audit-logger";
 export const dynamic = 'force-dynamic';
 
 const CreateControlSchema = z.object({
-  modelId: z.string().uuid(),
+  modelId: z.string().min(1),             // accept any non-empty string (UUID or otherwise)
   framework: z.string().min(1).max(50),   // plain string — supports DPDP, ISO42001, EU_AI_ACT, RBI, etc.
   controlId: z.string().min(1),
   controlName: z.string().min(1),
@@ -59,13 +59,18 @@ export const POST = withAuth(async (req, { user, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = CreateControlSchema.safeParse(body);
-    if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const firstField = Object.keys(fieldErrors)[0] ?? "unknown";
+      const firstMsg   = (fieldErrors as Record<string, string[]>)[firstField]?.[0] ?? "invalid";
+      return badRequest(`Validation failed: ${firstField} — ${firstMsg}`, parsed.error.flatten());
+    }
 
-    // Ensure model belongs to this org
-    const model = await prisma.aIModel.findUnique({
+    // Ensure model belongs to this org (use findFirst to avoid crash if id isn't a valid UUID)
+    const model = await prisma.aIModel.findFirst({
       where: { id: parsed.data.modelId, organizationId },
     });
-    if (!model) return badRequest("Model not found in this organization");
+    if (!model) return badRequest(`Model not found: ${parsed.data.modelId}`);
 
     const control = await prisma.complianceControl.upsert({
       where: {
