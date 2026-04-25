@@ -163,7 +163,8 @@ export interface Agent {
   id: string;
   name: string;
   description?: string;
-  modelId: string;
+  modelId?: string;
+  externalModel?: string;           // e.g. "gpt-4o", "claude-sonnet-4"
   model?: Pick<AIModel, "id" | "name" | "type">;
   status: AgentStatus;
   systemPrompt?: string;

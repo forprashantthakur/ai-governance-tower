@@ -60,9 +60,22 @@ export default function AgentsPage() {
     {
       key: "model",
       header: "Base Model",
-      cell: (row) => (
-        <span className="text-sm">{row.model?.name ?? "—"}</span>
-      ),
+      cell: (row) => {
+        const name = row.model?.name ?? row.externalModel ?? null;
+        const isExternal = !row.model && !!row.externalModel;
+        return name ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">{name}</span>
+            {isExternal && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
+                LLM
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
+      },
     },
     {
       key: "tools",
