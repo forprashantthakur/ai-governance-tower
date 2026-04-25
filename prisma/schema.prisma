@@ -441,7 +441,8 @@ model Agent {
   organizationId String?     @map("organization_id")
   name           String
   description    String?
-  modelId        String      @map("model_id")
+  modelId        String?     @map("model_id")           // null when agent uses an external LLM
+  externalModel  String?     @map("external_model")      // e.g. "gpt-4o", "claude-3-5-sonnet"
   status         AgentStatus @default(IDLE)
   systemPrompt   String?     @map("system_prompt")
   tools          String[]    @default([])  // tool names the agent can use
@@ -453,7 +454,7 @@ model Agent {
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  model        AIModel       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model        AIModel?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
   promptLogs   PromptLog[]
 
   @@index([organizationId])
