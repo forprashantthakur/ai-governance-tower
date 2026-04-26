@@ -668,6 +668,7 @@ export async function POST(req: NextRequest) {
   ];
 
   let projectCount = 0;
+  const createdProjects: { id: string }[] = [];
   for (const pd of projectDefs) {
     const targetDate = addDays(now, pd.targetDaysFromNow);
     const startDate = addDays(now, -30);
@@ -713,9 +714,41 @@ export async function POST(req: NextRequest) {
       })),
     });
 
+    createdProjects.push({ id: project.id });
     projectCount++;
   }
   results.projects = projectCount;
+
+  // ── 7b. LINK AI MODELS TO PROJECTS ───────────────────────────────────────────
+  // Model indices: 0=Credit, 1=Fraud, 2=KYC, 3=AML, 4=Loan, 5=Market, 6=Claims, 7=NLP, 8=Churn, 9=Sentiment
+  // Project indices match projectDefs order above
+  const projectModelMappings: Array<{ projectIdx: number; modelIndices: number[]; role: string }> = [
+    { projectIdx: 0, modelIndices: [2, 3],          role: "subject" }, // DPDP Compliance → KYC, AML
+    { projectIdx: 1, modelIndices: [0, 1, 2, 4],    role: "subject" }, // ISO 42001 Cert → Credit, Fraud, KYC, Loan
+    { projectIdx: 2, modelIndices: [1],              role: "output"  }, // Fraud v6 Upgrade → Fraud Detection
+    { projectIdx: 3, modelIndices: [0],              role: "output"  }, // Credit Refresh → Credit Risk Scorer
+    { projectIdx: 4, modelIndices: [3],              role: "output"  }, // AML Modernisation → AML Monitor
+    { projectIdx: 5, modelIndices: [2],              role: "subject" }, // KYC Bias Audit → KYC Verifier
+    { projectIdx: 6, modelIndices: [0, 1, 2, 3, 4, 5], role: "subject" }, // Dashboard Rollout → all core models
+    { projectIdx: 7, modelIndices: [5],              role: "output"  }, // Market Risk SEBI → Market Forecaster
+  ];
+
+  let projectModelLinkCount = 0;
+  for (const mapping of projectModelMappings) {
+    const proj = createdProjects[mapping.projectIdx];
+    if (!proj) continue;
+    for (const modelIdx of mapping.modelIndices) {
+      const m = createdModels[modelIdx];
+      if (!m) continue;
+      await prisma.projectAIModel.upsert({
+        where: { projectId_modelId: { projectId: proj.id, modelId: m.id } },
+        create: { projectId: proj.id, modelId: m.id, role: mapping.role },
+        update: {},
+      });
+      projectModelLinkCount++;
+    }
+  }
+  results.projectModelLinks = projectModelLinkCount;
 
   // ── 8. AUDIT LOGS ────────────────────────────────────────────────────────────
   const auditActions = [
