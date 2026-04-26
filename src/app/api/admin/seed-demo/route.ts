@@ -875,3 +875,8 @@ export async function POST(req: NextRequest) {
     totalRecords: Object.values(results).reduce((a, b) => a + b, 0),
   });
 }
+
+// GET handler — allows triggering seed from browser URL bar
+export async function GET(req: NextRequest) {
+  return POST(req);
+}
