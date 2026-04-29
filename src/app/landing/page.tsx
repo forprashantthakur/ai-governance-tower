@@ -609,6 +609,7 @@ export default function LandingPage() {
               <li><a href="#ai-projects" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>AI Projects</a></li>
               <li><a href="#ai-maturity" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>AI Maturity</a></li>
               <li><a href="#faq" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>FAQ</a></li>
+              <li><a href="#pricing" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>Pricing</a></li>
               <li><a href="#contact-sales" style={{color:"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:"0.875rem",fontWeight:500}}>Contact Sales</a></li>
             </ul>
             <div className="lp-nav-cta">
@@ -1055,6 +1056,147 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* PRICING */}
+        <section className="lp-section lp-gray" id="pricing">
+          <div className="lp-container">
+            <div className="lp-header-center" style={{marginBottom:"3rem"}}>
+              <div className="lp-badge"><span className="lp-badge-dot"/>Transparent Pricing</div>
+              <h2 className="lp-section-title">Simple, Predictable Plans</h2>
+              <p className="lp-section-desc">No hidden fees. No per-user surprises. Choose a plan that fits your organisation — upgrade anytime as you grow.</p>
+            </div>
+
+            {/* Toggle */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"0.75rem",marginBottom:"2.5rem",fontSize:"0.9rem",color:"var(--gray-600)"}}>
+              <span style={{fontWeight:600,color:"var(--navy)"}}>Monthly</span>
+              <div style={{width:"44px",height:"24px",borderRadius:"100px",background:"var(--blue-glow)",position:"relative",cursor:"default",opacity:0.5}}>
+                <span style={{position:"absolute",top:"3px",left:"3px",width:"18px",height:"18px",borderRadius:"50%",background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,.2)"}}/>
+              </div>
+              <span>Annual <span style={{marginLeft:"6px",fontSize:"0.72rem",background:"rgba(16,185,129,0.12)",color:"#10b981",padding:"2px 8px",borderRadius:"100px",fontWeight:700}}>Save 20%</span></span>
+            </div>
+
+            {/* Cards */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:"1.5rem",alignItems:"start"}}>
+
+              {/* Trial */}
+              <div style={{background:"#fff",border:"1.5px solid #e2e8f0",borderRadius:"16px",padding:"2rem",display:"flex",flexDirection:"column",gap:"0"}}>
+                <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"var(--gray-600)",marginBottom:"0.5rem"}}>Trial</div>
+                <div style={{fontSize:"0.9rem",color:"var(--gray-600)",marginBottom:"1.25rem"}}>Explore the platform</div>
+                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"var(--navy)",letterSpacing:"-0.03em"}}>₹0</span></div>
+                <div style={{fontSize:"0.78rem",color:"var(--gray-600)",marginBottom:"1.5rem"}}>14 days · No card required</div>
+                <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",border:"1.5px solid #cbd5e1",color:"var(--navy)",fontWeight:600,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none"}}>Start Free Trial</a>
+                <div style={{display:"flex",gap:"0.5rem",background:"#f8fafc",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Users</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"var(--navy)"}}>5</div>
+                  </div>
+                  <div style={{width:"1px",background:"#e2e8f0"}}/>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Models</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"var(--navy)"}}>10</div>
+                  </div>
+                </div>
+                <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+                  {["DPDP Act compliance controls","Basic risk scoring","Consent management","Community support"].map(f=>(
+                    <li key={f} style={{display:"flex",alignItems:"flex-start",gap:"0.5rem",fontSize:"0.83rem",color:"var(--gray-600)"}}>
+                      <svg style={{width:"14px",height:"14px",color:"#10b981",flexShrink:0,marginTop:"2px"}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>{f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Starter */}
+              <div style={{background:"#fff",border:"1.5px solid #bfdbfe",borderRadius:"16px",padding:"2rem",display:"flex",flexDirection:"column",gap:"0"}}>
+                <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"var(--blue-glow)",marginBottom:"0.5rem"}}>Starter</div>
+                <div style={{fontSize:"0.9rem",color:"var(--gray-600)",marginBottom:"1.25rem"}}>For fintechs &amp; NBFCs</div>
+                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"var(--navy)",letterSpacing:"-0.03em"}}>₹12,711</span></div>
+                <div style={{fontSize:"0.78rem",color:"var(--gray-600)",marginBottom:"1.5rem"}}>+ 18% GST &nbsp;·&nbsp; ₹14,999 incl. GST/mo</div>
+                <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",border:"1.5px solid var(--blue-glow)",color:"var(--blue-glow)",fontWeight:600,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none"}}>Get Started</a>
+                <div style={{display:"flex",gap:"0.5rem",background:"#f8fafc",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Users</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"var(--navy)"}}>10</div>
+                  </div>
+                  <div style={{width:"1px",background:"#e2e8f0"}}/>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Models</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"var(--navy)"}}>25</div>
+                  </div>
+                </div>
+                <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+                  {["DPDP Act + ISO 42001 controls","Automated risk scoring","Consent & data governance","Compliance reports (PDF)","Email support (48h SLA)","Audit logs — 90 days"].map(f=>(
+                    <li key={f} style={{display:"flex",alignItems:"flex-start",gap:"0.5rem",fontSize:"0.83rem",color:"var(--gray-600)"}}>
+                      <svg style={{width:"14px",height:"14px",color:"#10b981",flexShrink:0,marginTop:"2px"}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>{f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Professional — highlighted */}
+              <div style={{background:"linear-gradient(145deg,#0f172a 0%,#1e3a5f 100%)",border:"1.5px solid rgba(37,99,235,0.5)",borderRadius:"16px",padding:"2rem",display:"flex",flexDirection:"column",gap:"0",position:"relative",boxShadow:"0 20px 60px rgba(37,99,235,0.2)"}}>
+                <div style={{position:"absolute",top:"-12px",left:"50%",transform:"translateX(-50%)",background:"var(--blue-glow)",color:"#fff",fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.06em",padding:"3px 14px",borderRadius:"100px",whiteSpace:"nowrap"}}>MOST POPULAR</div>
+                <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#60a5fa",marginBottom:"0.5rem"}}>Professional</div>
+                <div style={{fontSize:"0.9rem",color:"rgba(255,255,255,0.55)",marginBottom:"1.25rem"}}>For banks &amp; insurers</div>
+                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"#fff",letterSpacing:"-0.03em"}}>₹38,135</span></div>
+                <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.45)",marginBottom:"1.5rem"}}>+ 18% GST &nbsp;·&nbsp; ₹44,999 incl. GST/mo</div>
+                <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",background:"var(--blue-glow)",color:"#fff",fontWeight:700,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none",boxShadow:"0 4px 16px rgba(37,99,235,0.4)"}}>Upgrade to Pro</a>
+                <div style={{display:"flex",gap:"0.5rem",background:"rgba(255,255,255,0.07)",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.45)"}}>Users</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"#fff"}}>25</div>
+                  </div>
+                  <div style={{width:"1px",background:"rgba(255,255,255,0.1)"}}/>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.45)"}}>Models</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"#fff"}}>100</div>
+                  </div>
+                </div>
+                <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+                  {["All frameworks: DPDP, ISO 42001, RBI, SEBI, IRDAI, EU AI Act","AI Agent governance (10 agents)","Bias & fairness testing module","ISO 42005 impact assessments","n8n workflow automation","Priority support (24h SLA)","Audit logs — 1 year","SSO / SAML integration"].map(f=>(
+                    <li key={f} style={{display:"flex",alignItems:"flex-start",gap:"0.5rem",fontSize:"0.83rem",color:"rgba(255,255,255,0.7)"}}>
+                      <svg style={{width:"14px",height:"14px",color:"#34d399",flexShrink:0,marginTop:"2px"}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>{f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Enterprise */}
+              <div style={{background:"#fff",border:"1.5px solid #fde68a",borderRadius:"16px",padding:"2rem",display:"flex",flexDirection:"column",gap:"0",position:"relative"}}>
+                <div style={{position:"absolute",top:"-12px",left:"50%",transform:"translateX(-50%)",background:"#f59e0b",color:"#fff",fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.06em",padding:"3px 14px",borderRadius:"100px",whiteSpace:"nowrap"}}>BEST VALUE</div>
+                <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#d97706",marginBottom:"0.5rem"}}>Enterprise</div>
+                <div style={{fontSize:"0.9rem",color:"var(--gray-600)",marginBottom:"1.25rem"}}>For PSBs &amp; large institutions</div>
+                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"var(--navy)",letterSpacing:"-0.03em"}}>Custom</span></div>
+                <div style={{fontSize:"0.78rem",color:"var(--gray-600)",marginBottom:"1.5rem"}}>Annual billing · Volume discounts</div>
+                <a href="#contact-sales" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",background:"#f59e0b",color:"#fff",fontWeight:700,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none"}}>Contact Sales</a>
+                <div style={{display:"flex",gap:"0.5rem",background:"#fffbeb",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Users</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"var(--navy)"}}>∞</div>
+                  </div>
+                  <div style={{width:"1px",background:"#fde68a"}}/>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Models</div>
+                    <div style={{fontWeight:800,fontSize:"1.1rem",color:"var(--navy)"}}>∞</div>
+                  </div>
+                </div>
+                <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+                  {["Everything in Professional","On-premise / private cloud","Dedicated Customer Success Manager","99.9% uptime SLA","Custom compliance frameworks","White-label option","On-site training & workshops","4-hour critical support SLA"].map(f=>(
+                    <li key={f} style={{display:"flex",alignItems:"flex-start",gap:"0.5rem",fontSize:"0.83rem",color:"var(--gray-600)"}}>
+                      <svg style={{width:"14px",height:"14px",color:"#10b981",flexShrink:0,marginTop:"2px"}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>{f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+            </div>
+
+            {/* GST note */}
+            <p style={{textAlign:"center",fontSize:"0.82rem",color:"var(--gray-600)",marginTop:"2rem"}}>
+              All prices exclusive of GST unless stated. GST invoice generated automatically. Accepted: UPI, NetBanking, Credit/Debit Cards, NEFT/RTGS.
+              &nbsp;<a href="mailto:billing@aigovernancetower.com" style={{color:"var(--blue-glow)"}}>billing@aigovernancetower.com</a>
+            </p>
+          </div>
+        </section>
+
         {/* CONTACT SALES */}
         <section className="lp-cs-section" id="contact-sales">
           <div className="lp-cs-inner">
@@ -1201,7 +1343,8 @@ export default function LandingPage() {
             <div>
               <div className="lp-footer-col-title">Company</div>
               <ul className="lp-footer-links">
-                {["About", "Pricing", "Documentation", "Privacy Policy", "Terms of Service", "Contact"].map((l) => <li key={l}><a href="#">{l}</a></li>)}
+                {["About", "Documentation", "Privacy Policy", "Terms of Service", "Contact"].map((l) => <li key={l}><a href="#">{l}</a></li>)}
+                <li><a href="#pricing">Pricing</a></li>
               </ul>
             </div>
           </div>
