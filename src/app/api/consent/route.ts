@@ -18,7 +18,7 @@ const CreateConsentSchema = z.object({
 });
 
 // GET /api/consent
-export const GET = withAuth(async (req) => {
+export const GET = withAuth(async (req, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const status    = searchParams.get("status") ?? undefined;
@@ -29,6 +29,7 @@ export const GET = withAuth(async (req) => {
     const skip      = (page - 1) * limit;
 
     const where = {
+      organizationId,                                                              // ← org isolation
       ...(status  && { status:      status  as "GRANTED"|"REVOKED"|"PENDING"|"EXPIRED" }),
       ...(type    && { consentType: type    as "DATA_PROCESSING"|"AI_DECISION"|"DATA_SHARING"|"MARKETING" }),
       ...(assetId && { dataAssetId: assetId }),
@@ -47,14 +48,12 @@ export const GET = withAuth(async (req) => {
       prisma.consentRecord.count({ where }),
     ]);
 
-    // Summary counts (always across all records for the asset filter only)
-    const [summary] = await Promise.all([
-      prisma.consentRecord.groupBy({
-        by: ["status"],
-        where: assetId ? { dataAssetId: assetId } : {},
-        _count: { _all: true },
-      }),
-    ]);
+    // Summary counts scoped to this org (+ optional asset filter)
+    const summary = await prisma.consentRecord.groupBy({
+      by: ["status"],
+      where: { organizationId, ...(assetId && { dataAssetId: assetId }) },   // ← org isolation
+      _count: { _all: true },
+    });
 
     const statusCounts = { GRANTED: 0, REVOKED: 0, PENDING: 0, EXPIRED: 0 };
     summary.forEach((s) => { statusCounts[s.status] = s._count._all; });
@@ -72,7 +71,7 @@ export const GET = withAuth(async (req) => {
 });
 
 // POST /api/consent
-export const POST = withAuth(async (req, { user }) => {
+export const POST = withAuth(async (req, { user, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = CreateConsentSchema.safeParse(body);
@@ -84,6 +83,7 @@ export const POST = withAuth(async (req, { user }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: {
         ...rest,
+        organizationId,                                                            // ← org isolation
         grantedAt: grantedAt ? new Date(grantedAt) : rest.status === "GRANTED" ? new Date() : null,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       } as any,
@@ -94,6 +94,7 @@ export const POST = withAuth(async (req, { user }) => {
 
     await logAudit({
       userId: user.userId,
+      organizationId,                                                              // ← org isolation
       action: "CREATE",
       resource: "ConsentRecord",
       resourceId: record.id,
