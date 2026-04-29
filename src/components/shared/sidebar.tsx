@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Sparkles,
   Workflow,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -58,7 +59,8 @@ const NAV_ITEMS = [
   { href: "/n8n-builder",  icon: Workflow,  label: "n8n Workflow Builder" },
 
   // ── Admin ─────────────────────────────────────────────────
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/billing",  icon: CreditCard, label: "Billing & Plans" },
+  { href: "/settings", icon: Settings,   label: "Settings" },
 ];
 
 export function Sidebar() {
