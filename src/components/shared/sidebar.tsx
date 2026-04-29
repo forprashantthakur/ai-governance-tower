@@ -21,6 +21,9 @@ import {
   CheckSquare,
   Scale,
   ShieldCheck,
+  Sparkles,
+  Workflow,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui.store";
@@ -28,20 +31,36 @@ import { useAuthStore } from "@/store/auth.store";
 import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
+  // ── Overview ──────────────────────────────────────────────
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
+
+  // ── Inventory ─────────────────────────────────────────────
+  { href: "/models",   icon: BrainCircuit, label: "AI Inventory" },
   { href: "/projects", icon: FolderKanban, label: "AI Projects" },
-  { href: "/models", icon: BrainCircuit, label: "AI Inventory" },
-  { href: "/risk", icon: ShieldAlert, label: "Risk & Compliance" },
-  { href: "/iso42005", icon: FileSearch, label: "ISO 42005 Assessment" },
-  { href: "/approvals", icon: CheckSquare, label: "Approval Workflows" },
-  { href: "/compliance-map", icon: Scale, label: "Regulation Mapping" },
-  { href: "/data-governance", icon: Database, label: "Data Governance" },
-  { href: "/consent", icon: ShieldCheck, label: "Consent Management" },
-  { href: "/agents", icon: Bot, label: "Agent Governance" },
+  { href: "/agents",   icon: Bot,          label: "Agent Governance" },
+
+  // ── Risk & Compliance ─────────────────────────────────────
+  { href: "/risk",            icon: ShieldAlert, label: "Risk & Compliance" },
+  { href: "/compliance-map",  icon: Scale,       label: "Regulation Mapping" },
+  { href: "/iso42005",        icon: FileSearch,  label: "ISO 42001 Assessment" },
+  { href: "/approvals",       icon: CheckSquare, label: "Approval Workflows" },
+
+  // ── Data & Privacy ────────────────────────────────────────
+  { href: "/data-governance", icon: Database,    label: "Data Governance" },
+  { href: "/consent",         icon: ShieldCheck, label: "Consent Management" },
+
+  // ── Observe & Report ──────────────────────────────────────
   { href: "/monitoring", icon: Activity, label: "Monitoring" },
-  { href: "/audit",   icon: FileText,   label: "Audit Logs" },
-  { href: "/reports", icon: BarChart3,  label: "Reports" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/audit",      icon: FileText, label: "Audit Logs" },
+  { href: "/reports",    icon: BarChart3, label: "Reports" },
+
+  // ── Strategy ──────────────────────────────────────────────
+  { href: "/ai-maturity",  icon: Sparkles,  label: "AI Use Case Finder" },
+  { href: "/n8n-builder",  icon: Workflow,  label: "n8n Workflow Builder" },
+
+  // ── Admin ─────────────────────────────────────────────────
+  { href: "/billing",  icon: CreditCard, label: "Billing & Plans" },
+  { href: "/settings", icon: Settings,   label: "Settings" },
 ];
 
 export function Sidebar() {

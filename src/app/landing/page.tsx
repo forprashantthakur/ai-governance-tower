@@ -17,9 +17,9 @@ html { scroll-behavior: smooth; }
 .lp-body { font-family: 'Inter', 'Open Sans', sans-serif; background: #fff; color: var(--gray-800); line-height: 1.6; -webkit-font-smoothing: antialiased; }
 
 /* NAV */
-.lp-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,35,66,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 0 2rem; }
-.lp-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 68px; }
-.lp-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.lp-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,35,66,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 0 2rem 0 0; }
+.lp-nav-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 110px; padding-left: 0; }
+.lp-logo { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; margin-left: -0.5rem; }
 .lp-logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--blue), var(--cyan)); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .lp-logo-icon svg { width: 20px; height: 20px; color: white; }
 .lp-logo-text { font-size: 0.95rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; line-height: 1.2; }
@@ -459,15 +459,7 @@ export default function LandingPage() {
         <nav className="lp-nav">
           <div className="lp-nav-inner">
             <a href="/landing" className="lp-logo">
-              <div className="lp-logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <div>
-                <div className="lp-logo-text">AI Governance</div>
-                <div className="lp-logo-sub">Control Tower</div>
-              </div>
+              <img src="/logo.png" alt="AI Governance Control Tower" style={{width:"320px", height:"108px", objectFit:"contain", objectPosition:"left center", display:"block"}} />
             </a>
             <ul className="lp-nav-links" style={{display:"flex",alignItems:"center",gap:"1.75rem",listStyle:"none"}}>
 
@@ -1189,11 +1181,8 @@ export default function LandingPage() {
         <footer className="lp-footer">
           <div className="lp-footer-grid">
             <div>
-              <a href="/landing" className="lp-logo">
-                <div className="lp-logo-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                </div>
-                <div><div className="lp-logo-text">AI Governance</div><div className="lp-logo-sub">Control Tower</div></div>
+              <a href="/landing" className="lp-logo" style={{marginLeft:"0"}}>
+                <img src="/logo.png" alt="AI Governance Control Tower" style={{width:"220px", height:"80px", objectFit:"contain", objectPosition:"left center", display:"block"}} />
               </a>
               <p className="lp-footer-desc">Enterprise AI Governance platform for DPDP, ISO 42001, GDPR, and EU AI Act compliance. Monitor, govern, and explain every AI decision at scale.</p>
             </div>

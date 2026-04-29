@@ -201,6 +201,7 @@ export default function DashboardPage() {
           subtitle={`${kpis.activeModels} active`}
           icon={BrainCircuit}
           variant="info"
+          href="/models"
         />
         <StatCard
           title="Avg Risk Score"
@@ -208,6 +209,7 @@ export default function DashboardPage() {
           subtitle="Composite risk index"
           icon={ShieldAlert}
           variant={kpis.avgRiskScore >= 65 ? "danger" : kpis.avgRiskScore >= 45 ? "warning" : "success"}
+          href="/risk"
         />
         <StatCard
           title="Compliance Score"
@@ -215,6 +217,7 @@ export default function DashboardPage() {
           subtitle="Controls passing"
           icon={CheckCircle2}
           variant={kpis.complianceScore >= 80 ? "success" : kpis.complianceScore >= 60 ? "warning" : "danger"}
+          href="/risk"
         />
         <StatCard
           title="Active Alerts"
@@ -222,6 +225,7 @@ export default function DashboardPage() {
           subtitle="Unresolved incidents"
           icon={AlertTriangle}
           variant={kpis.activeAlerts > 0 ? "warning" : "success"}
+          href="/monitoring"
         />
       </div>
 
@@ -233,6 +237,7 @@ export default function DashboardPage() {
           subtitle="Prompt executions this month"
           icon={Activity}
           variant="default"
+          href="/monitoring"
         />
         <StatCard
           title="Pending Approvals"
@@ -240,6 +245,7 @@ export default function DashboardPage() {
           subtitle="Workflows awaiting decision"
           icon={CheckSquare}
           variant={pendingApprovals > 3 ? "warning" : pendingApprovals > 0 ? "default" : "success"}
+          href="/approvals"
         />
         <StatCard
           title="Open Misuse Risks"
@@ -247,13 +253,15 @@ export default function DashboardPage() {
           subtitle="Unaddressed misuse scenarios"
           icon={Siren}
           variant={openMisuse > 5 ? "danger" : openMisuse > 2 ? "warning" : "success"}
+          href="/risk"
         />
         <StatCard
           title="Frameworks Tracked"
           value={5}
-          subtitle="DPDP · ISO 42001 · ISO 42005 · GDPR · SOC2"
+          subtitle="DPDP · ISO 42001 · ISO 42001 · GDPR · SOC2"
           icon={CheckCircle2}
           variant="info"
+          href="/compliance-map"
         />
       </div>
 

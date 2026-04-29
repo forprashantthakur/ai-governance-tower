@@ -114,6 +114,7 @@ enum AuditAction {
   APPROVE
   REJECT
   ESCALATE
+  AI_MATURITY_ASSESSMENT_COMPLETED
 }
 
 enum ConsentType {
@@ -163,6 +164,7 @@ model Organization {
   promptLogs    PromptLog[]
   approvalWorkflows ApprovalWorkflow[]
   alertRules        AlertRule[]
+  maturityAssessments MaturityAssessment[]
 
   @@map("organizations")
 }
@@ -214,8 +216,10 @@ model User {
   department    String?
   avatarUrl     String?   @map("avatar_url")
   isActive      Boolean   @default(true)  @map("is_active")
-  emailVerified Boolean   @default(false) @map("email_verified")
-  lastLoginAt   DateTime? @map("last_login_at")
+  emailVerified              Boolean   @default(false) @map("email_verified")
+  verificationToken          String?   @unique         @map("verification_token")
+  verificationTokenExpiresAt DateTime?                 @map("verification_token_expires_at")
+  lastLoginAt                DateTime?                 @map("last_login_at")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt      @map("updated_at")
 
@@ -437,7 +441,8 @@ model Agent {
   organizationId String?     @map("organization_id")
   name           String
   description    String?
-  modelId        String      @map("model_id")
+  modelId        String?     @map("model_id")           // null when agent uses an external LLM
+  externalModel  String?     @map("external_model")      // e.g. "gpt-4o", "claude-3-5-sonnet"
   status         AgentStatus @default(IDLE)
   systemPrompt   String?     @map("system_prompt")
   tools          String[]    @default([])  // tool names the agent can use
@@ -449,7 +454,7 @@ model Agent {
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  model        AIModel       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model        AIModel?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
   promptLogs   PromptLog[]
 
   @@index([organizationId])
@@ -460,7 +465,7 @@ model PromptLog {
   id             String   @id @default(uuid())
   organizationId String?  @map("organization_id")
   agentId        String?  @map("agent_id")
-  modelId        String   @map("model_id")
+  modelId        String?  @map("model_id")   // nullable for external LLM agents
   userId         String?  @map("user_id")
   sessionId      String?  @map("session_id")
 
@@ -492,11 +497,10 @@ model PromptLog {
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   agent        Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  model        AIModel       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model        AIModel?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
   user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, createdAt])
-  @@index([modelId, createdAt])
   @@index([agentId, createdAt])
   @@index([flagged])
   @@map("prompt_logs")
@@ -670,6 +674,7 @@ model Project {
   workflows    WorkflowCanvas[]
   n8nWebhooks  N8nWebhook[]
   linkedModels ProjectAIModel[]
+  artifacts    ProjectArtifact[]
 
   @@index([organizationId, status, healthStatus])
   @@index([ownerId])
@@ -865,6 +870,42 @@ model ProjectAIModel {
 
   @@id([projectId, modelId])
   @@map("project_ai_models")
+}
+
+enum ArtifactCategory {
+  BRD
+  PROJECT_PLAN
+  TEST_CASES
+  FRD
+  DESIGN_DOCUMENT
+  BUSINESS_CASE
+  MODEL_ARTIFACT
+  TRAINING_DATA
+  EVALUATION_REPORT
+  COMPLIANCE_EVIDENCE
+  OTHER
+}
+
+model ProjectArtifact {
+  id          String           @id @default(uuid())
+  projectId   String           @map("project_id")
+  name        String
+  url         String
+  size        Int
+  mimeType    String           @map("mime_type")
+  category    ArtifactCategory @default(OTHER)
+  description String?
+  version     String?
+  tags        String[]         @default([])
+  uploadedBy  String           @map("uploaded_by")
+  uploadedAt  DateTime         @default(now()) @map("uploaded_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, category])
+  @@index([projectId, uploadedAt])
+  @@map("project_artifacts")
 }
 
 // ─── Policy Configuration ─────────────────────────────────────────────────────
@@ -1150,4 +1191,39 @@ model AlertRule {
 
   @@index([organizationId])
   @@map("alert_rules")
+}
+
+// ─── AI Maturity Assessment ───────────────────────────────────────────────────
+
+enum MaturityStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model MaturityAssessment {
+  id                  String         @id @default(uuid())
+  organizationId      String         @map("organization_id")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  // Inputs
+  organizationProfile String         @map("organization_profile")
+  industry            String
+  functions           String[]       @default([])
+  maturityScore       Int            @map("maturity_score")   // 1–5 scale
+  dataSources         String[]       @default([]) @map("data_sources")
+  existingSystems     String[]       @default([]) @map("existing_systems")
+  businessGoals       String[]       @default([]) @map("business_goals")
+
+  // Generated output
+  useCases            Json?          @map("use_cases")       // Array of use case objects
+  status              MaturityStatus @default(PENDING)
+  errorMessage        String?        @map("error_message")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("maturity_assessments")
 }

@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Sparkles, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ProjectTemplate } from "@/types";
+import type { ProjectTemplate, AIModel } from "@/types";
 
 const CATEGORY_COLORS: Record<string, string> = {
   BFSI: "border-blue-500/40 text-blue-400",
@@ -21,28 +21,38 @@ export default function NewProjectPage() {
   const [templates, setTemplates] = useState<ProjectTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [useBlank, setUseBlank] = useState(false);
+  const [models, setModels] = useState<AIModel[]>([]);
   const [form, setForm] = useState({
     name: "",
     description: "",
     startDate: new Date().toISOString().split("T")[0],
     targetDate: "",
     budget: "",
+    linkedModelId: "",   // optional — "" means none
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getToken = () =>
+    JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
+
   useEffect(() => {
-    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
+    const token = getToken();
     fetch("/api/projects/templates", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setTemplates(d.data ?? []));
+
+    // Pre-fetch models so the dropdown in Step 2 is ready instantly
+    fetch("/api/models?limit=100", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => setModels(d.data?.models ?? []));
   }, []);
 
   async function createProject() {
     setSaving(true);
     setError(null);
     try {
-      const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
+      const token = getToken();
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -56,11 +66,24 @@ export default function NewProjectPage() {
         }),
       });
       const data = await res.json();
-      if (data.data?.id) {
-        router.push(`/projects/${data.data.id}`);
-      } else {
+      if (!data.data?.id) {
         setError(data.error ?? data.message ?? `Server error (${res.status})`);
+        return;
       }
+
+      const projectId = data.data.id;
+
+      // Link the selected model if a real registry model was chosen
+      // "OTHER" means model exists but isn't registered yet — skip API call
+      if (form.linkedModelId && form.linkedModelId !== "OTHER") {
+        await fetch(`/api/projects/${projectId}/models`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ modelId: form.linkedModelId, role: "output" }),
+        });
+      }
+
+      router.push(`/projects/${projectId}`);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -191,6 +214,35 @@ export default function NewProjectPage() {
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
+          </div>
+
+          {/* ── AI Model Link (optional) ─────────────────────────────────────── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label className="flex items-center gap-1.5">
+                <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                Link AI Model
+              </Label>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">optional</span>
+            </div>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              value={form.linkedModelId}
+              onChange={(e) => setForm((f) => ({ ...f, linkedModelId: e.target.value }))}
+            >
+              <option value="">— None (non-model project) —</option>
+              {models.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} · {m.type} · v{m.version}
+                </option>
+              ))}
+              <option value="OTHER">— Others (model not yet in registry) —</option>
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Only select if this project involves building or governing a specific AI model.
+              Projects without a linked model will skip model-specific governance gates.
+              Choose <em>Others</em> if the model exists but isn&apos;t registered in AI Inventory yet.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

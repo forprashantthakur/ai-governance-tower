@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Eye, EyeOff, Building2 } from "lucide-react";
+import { Eye, EyeOff, Building2 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import { Button } from "@/components/ui/button";
@@ -142,12 +142,9 @@ export default function LoginPage() {
         {/* Branding */}
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <div className="p-3 bg-primary/10 rounded-2xl">
-              <Shield className="h-10 w-10 text-primary" />
-            </div>
+            <img src="/logo.png" alt="AI Governance Control Tower" className="h-24 object-contain mx-auto" />
           </div>
-          <h1 className="text-2xl font-bold">AI Governance</h1>
-          <p className="text-muted-foreground text-sm">Control Tower — Enterprise Edition</p>
+          <p className="text-muted-foreground text-sm">Enterprise Edition</p>
         </div>
 
         <Card>
@@ -205,13 +202,6 @@ export default function LoginPage() {
               </Link>
             </p>
 
-            {/* Demo credentials hint */}
-            <div className="mt-4 p-3 bg-muted rounded-lg text-xs text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">Demo credentials</p>
-              <p>Admin: admin@aigovernance.com / Admin@123456</p>
-              <p>Risk Officer: risk@aigovernance.com / Risk@123456</p>
-              <p>Auditor: auditor@aigovernance.com / Audit@123456</p>
-            </div>
           </CardContent>
         </Card>
       </div>

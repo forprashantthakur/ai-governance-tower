@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  CheckCircle2, Circle, Clock, AlertTriangle, FlaskConical, Link2,
+  CheckCircle2, Circle, Clock, AlertTriangle, Link2,
   Shield, ShieldAlert, FileSearch, CheckSquare, Lock, Unlock, ChevronRight,
+  Info, Settings,
 } from "lucide-react";
 import type { Project, ProjectPhaseRecord, Milestone, ProjectAIModel } from "@/types";
 
@@ -75,7 +76,7 @@ function buildGates(
       icon: FileSearch,
       checks: [
         { id: "impact-assessment", label: "ISO 42005 Impact Assessment", description: "Societal impact assessment completed for the linked AI model.", passed: hasImpactAssessment, link: "/iso42005", linkLabel: "Create Assessment" },
-        { id: "misuse-scenarios", label: "Misuse scenarios documented", description: `${misuseCount} foreseeable misuse scenario(s) catalogued. ISO 42005 §5.3.5 requires at least one.`, passed: misuseCount > 0, link: "/iso42005", linkLabel: "Add Scenarios" },
+        { id: "misuse-scenarios", label: "Misuse scenarios documented", description: `${misuseCount} foreseeable misuse scenario(s) catalogued. ISO 42005 Sec. 5.3.5 requires at least one.`, passed: misuseCount > 0, link: "/iso42005", linkLabel: "Add Scenarios" },
         { id: "approval-initiated", label: "Approval workflow initiated", description: "A cross-functional approval workflow has been created for this model.", passed: hasApprovalWorkflow, link: "/approvals", linkLabel: "Start Workflow" },
       ],
     },
@@ -351,26 +352,46 @@ export default function ProjectOverviewPage() {
         </div>
       </div>
 
-      {/* Governance Gates */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Governance Gates — ISO 42001 Lifecycle Controls
-          </h3>
-          <span className="text-xs text-muted-foreground">
-            {gates.filter((g) => g.checks.every((c) => c.passed)).length}/{gates.length} gates cleared
-          </span>
+      {/* Governance Gates — only shown when an AI model is linked */}
+      {linkedModelId ? (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Governance Gates — ISO 42001 Lifecycle Controls
+            </h3>
+            <span className="text-xs text-muted-foreground">
+              {gates.filter((g) => g.checks.every((c) => c.passed)).length}/{gates.length} gates cleared
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {relevantGates.map((gate) => (
+              <GatePanel
+                key={gate.phase}
+                gate={gate}
+                isCurrentGate={gate.phase === PHASES[currentPhaseIdx + 1]?.key}
+              />
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {relevantGates.map((gate) => (
-            <GatePanel
-              key={gate.phase}
-              gate={gate}
-              isCurrentGate={gate.phase === PHASES[currentPhaseIdx + 1]?.key}
-            />
-          ))}
+      ) : (
+        <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-card">
+          <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">No AI model linked — Governance gates not applicable</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              This project is not associated with a specific AI model. Model-level governance gates
+              (Risk Assessment, ISO 42005 Impact Assessment, Approval Workflows) only apply to
+              projects that govern an AI/ML model.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              If this project involves a model, link it via{" "}
+              <Link href={`/projects/${params.id}/settings`} className="text-primary hover:underline inline-flex items-center gap-0.5">
+                Project Settings <Settings className="h-3 w-3" />
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Milestones */}
       {(project.milestones?.length ?? 0) > 0 && (
