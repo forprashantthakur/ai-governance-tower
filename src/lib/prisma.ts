@@ -20,8 +20,8 @@ if (process.env.NODE_ENV !== "production") {
 // Retry wrapper to handle Neon cold starts (P1001/P1002 connection errors)
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  retries = 3,
-  delayMs = 1500
+  retries = 2,
+  delayMs = 500
 ): Promise<T> {
   let lastErr: unknown;
   for (let i = 0; i < retries; i++) {

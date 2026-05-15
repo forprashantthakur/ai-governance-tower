@@ -21,6 +21,7 @@ import { formatDate, truncate } from "@/lib/utils";
 interface MonitoringData {
   summary: {
     totalCalls: number;
+    alertCount: number;
     flaggedCount: number;
     flaggedRate: string;
     avgLatencyMs: number;
@@ -42,7 +43,7 @@ export default function MonitoringPage() {
 
   useEffect(() => {
     api
-      .get<MonitoringData>("/monitoring?days=14")
+      .get<MonitoringData>("/monitoring?days=30")
       .then(setData)
       .finally(() => setLoading(false));
   }, []);
@@ -89,7 +90,7 @@ export default function MonitoringPage() {
     <div className="space-y-6">
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard icon={Activity} label="Total Calls (14d)" value={s?.totalCalls.toLocaleString() ?? "—"} />
+        <MetricCard icon={Activity} label="Total Calls (30d)" value={s?.totalCalls.toLocaleString() ?? "—"} />
         <MetricCard icon={AlertTriangle} label="Flagged Rate" value={`${s?.flaggedRate ?? 0}%`} variant="warning" />
         <MetricCard icon={Clock} label="Avg Latency" value={`${s?.avgLatencyMs ?? 0}ms`} />
         <MetricCard icon={Zap} label="Avg Tokens/Call" value={String(((s?.avgInputTokens ?? 0) + (s?.avgOutputTokens ?? 0)).toFixed(0))} />
@@ -120,7 +121,7 @@ export default function MonitoringPage() {
       {/* Call Volume Trend */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">LLM Call Volume (14 days)</CardTitle>
+          <CardTitle className="text-base">LLM Call Volume (30 days)</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
@@ -152,7 +153,12 @@ export default function MonitoringPage() {
         <Card className="border-orange-500/30">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2 text-orange-400">
-              <AlertTriangle className="h-4 w-4" /> Active Alerts ({data.activeAlerts.length})
+              <AlertTriangle className="h-4 w-4" /> Active Alerts ({data.summary.alertCount})
+              {data.summary.alertCount > data.activeAlerts.length && (
+                <span className="text-xs font-normal text-muted-foreground ml-1">
+                  — showing {data.activeAlerts.length} most recent
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
