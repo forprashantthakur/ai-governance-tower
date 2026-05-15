@@ -7,7 +7,7 @@ import { ok, created, badRequest } from "@/lib/api-response";
 import { logAudit } from "@/lib/audit-logger";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const CreateSchema = z.object({
   // Core
@@ -70,11 +70,14 @@ function buildPrompt(data: z.infer<typeof CreateSchema>): string {
 Your task: Analyse the detailed discovery data below and generate ONE highest-impact, production-ready AI use case. The output must be HYPER-SPECIFIC — reference exact KPI numbers, specific pain points, named systems, and industry terminology. NEVER produce generic output like "improve efficiency" — always say "reduce loan approval time from ${data.kpiBaseline || "current"} to ${data.kpiTarget || "target"}".
 
 CRITICAL RULES:
-- Return STRICT VALID JSON only — no markdown, no code fences
+- Return STRICT VALID JSON only — no markdown, no code fences, no trailing commas
 - Generate EXACTLY 1 use case (the single highest-priority one after scoring)
 - Reference EXACT metrics from the input in every section
 - Use industry-specific terminology appropriate for ${data.industry}
 - Every node in n8n_workflow must be a real n8n node type
+- Keep n8n_workflow.nodes to MAX 6 nodes — be concise
+- Keep all string values under 200 characters — no verbose paragraphs
+- Keep activities arrays to max 3 items, phases to max 3 phases
 
 ===== DISCOVERY DATA =====
 
@@ -199,18 +202,13 @@ Return ONLY this JSON (no markdown):
         "workflow_name": "Specific workflow name",
         "trigger": "How this workflow is triggered",
         "nodes": [
-          {
-            "step": 1,
-            "name": "Node Display Name",
-            "node_type": "n8n-nodes-base.webhook",
-            "description": "What this node does",
-            "parameters": { "key": "value" }
-          }
+          { "step": 1, "name": "Node Display Name", "node_type": "n8n-nodes-base.webhook", "description": "What this node does" },
+          { "step": 2, "name": "Next Node", "node_type": "n8n-nodes-base.httpRequest", "description": "What this node does" }
         ],
         "connections": [
           { "from": "Node A Name", "to": "Node B Name" }
         ],
-        "integrations": ["list of systems integrated"],
+        "integrations": ["System A", "System B"],
         "workflow_summary": "One paragraph summary"
       },
       "implementation_plan": {
@@ -293,7 +291,7 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
 
       const message = await anthropic.messages.create({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 8000,
+        max_tokens: 4000,
         messages: [{ role: "user", content: prompt }],
       });
 
