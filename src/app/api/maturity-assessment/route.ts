@@ -354,7 +354,13 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[maturity-assessment POST]", err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error("[maturity-assessment POST] ERROR:", msg);
+    console.error("[maturity-assessment POST] STACK:", stack);
+    // Log extra detail if it looks like an Anthropic SDK error
+    if (err && typeof err === "object" && "status" in err) {
+      console.error("[maturity-assessment POST] HTTP status:", (err as { status: unknown }).status);
+    }
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 });
