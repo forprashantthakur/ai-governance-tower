@@ -235,7 +235,8 @@ model User {
   taskAssignments    ProjectTask[]     @relation("TaskAssignee")
   taskReports        ProjectTask[]     @relation("TaskReporter")
   projectResources   ProjectResource[] @relation("ProjectResources")
-  createdReports     Report[]          @relation("ReportCreator")
+  createdReports      Report[]           @relation("ReportCreator")
+  passwordResetTokens PasswordResetToken[]
   requestedWorkflows ApprovalWorkflow[] @relation("WorkflowRequester")
   assignedSteps      ApprovalStep[]    @relation("StepAssignee")
 
@@ -1226,4 +1227,18 @@ model MaturityAssessment {
 
   @@index([organizationId])
   @@map("maturity_assessments")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("password_reset_tokens")
 }
