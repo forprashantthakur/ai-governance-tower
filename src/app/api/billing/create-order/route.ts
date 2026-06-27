@@ -22,9 +22,9 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
       currency: "INR",
       receipt,
       notes: {
-        organizationId: user.organizationId,
-        plan,
-        userId: user.id,
+        organizationId: String(user.organizationId),
+        plan: String(plan),
+        userId: String(user.id),
       },
     });
 
