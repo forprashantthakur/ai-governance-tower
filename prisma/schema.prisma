@@ -165,6 +165,7 @@ model Organization {
   approvalWorkflows ApprovalWorkflow[]
   alertRules        AlertRule[]
   maturityAssessments MaturityAssessment[]
+  payments            Payment[]
 
   @@map("organizations")
 }
@@ -1227,6 +1228,34 @@ model MaturityAssessment {
 
   @@index([organizationId])
   @@map("maturity_assessments")
+}
+
+// ─── Billing & Payments ───────────────────────────────────────────────────────
+
+enum PaymentStatus {
+  CREATED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id                  String        @id @default(uuid())
+  organizationId      String        @map("organization_id")
+  razorpayOrderId     String        @unique @map("razorpay_order_id")
+  razorpayPaymentId   String?       @unique @map("razorpay_payment_id")
+  razorpaySignature   String?       @map("razorpay_signature")
+  plan                PlanTier
+  amountPaise         Int           @map("amount_paise")
+  currency            String        @default("INR")
+  status              PaymentStatus @default(CREATED)
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("payments")
 }
 
 model PasswordResetToken {
