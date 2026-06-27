@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { withAuth } from "@/lib/with-auth";
-import { razorpay, PLAN_CONFIG } from "@/lib/razorpay";
+import { getRazorpay, PLAN_CONFIG } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { ok, badRequest, serverError } from "@/lib/api-response";
 
@@ -17,7 +17,7 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
   try {
     const receipt = `org_${user.organizationId}_${Date.now()}`.slice(0, 40);
 
-    const order = await razorpay.orders.create({
+    const order = await getRazorpay().orders.create({
       amount: config.amountPaise,
       currency: "INR",
       receipt,
