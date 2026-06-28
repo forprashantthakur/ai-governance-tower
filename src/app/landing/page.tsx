@@ -1062,16 +1062,7 @@ export default function LandingPage() {
             <div className="lp-header-center" style={{marginBottom:"3rem"}}>
               <div className="lp-badge"><span className="lp-badge-dot"/>Transparent Pricing</div>
               <h2 className="lp-section-title">Simple, Predictable Plans</h2>
-              <p className="lp-section-desc">No hidden fees. No per-user surprises. Choose a plan that fits your organisation — upgrade anytime as you grow.</p>
-            </div>
-
-            {/* Toggle */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"0.75rem",marginBottom:"2.5rem",fontSize:"0.9rem",color:"var(--gray-600)"}}>
-              <span style={{fontWeight:600,color:"var(--navy)"}}>Monthly</span>
-              <div style={{width:"44px",height:"24px",borderRadius:"100px",background:"var(--blue-glow)",position:"relative",cursor:"default",opacity:0.5}}>
-                <span style={{position:"absolute",top:"3px",left:"3px",width:"18px",height:"18px",borderRadius:"50%",background:"#fff",boxShadow:"0 1px 4px rgba(0,0,0,.2)"}}/>
-              </div>
-              <span>Annual <span style={{marginLeft:"6px",fontSize:"0.72rem",background:"rgba(16,185,129,0.12)",color:"#10b981",padding:"2px 8px",borderRadius:"100px",fontWeight:700}}>Save 20%</span></span>
+              <p className="lp-section-desc">No hidden fees. No per-user surprises. Cancel anytime in the first 14 days — no charge.</p>
             </div>
 
             {/* Cards */}
@@ -1081,8 +1072,30 @@ export default function LandingPage() {
               <div style={{background:"#fff",border:"1.5px solid #e2e8f0",borderRadius:"16px",padding:"2rem",display:"flex",flexDirection:"column",gap:"0"}}>
                 <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"var(--gray-600)",marginBottom:"0.5rem"}}>Trial</div>
                 <div style={{fontSize:"0.9rem",color:"var(--gray-600)",marginBottom:"1.25rem"}}>Explore the platform</div>
-                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"var(--navy)",letterSpacing:"-0.03em"}}>₹0</span></div>
-                <div style={{fontSize:"0.78rem",color:"var(--gray-600)",marginBottom:"1.5rem"}}>14 days · No card required</div>
+
+                {/* Upcoming charges */}
+                <div style={{marginBottom:"1.5rem",padding:"1rem",background:"#f8fafc",borderRadius:"10px",border:"1px solid #e2e8f0"}}>
+                  <div style={{fontSize:"0.68rem",fontWeight:700,color:"var(--gray-600)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.07em"}}>Upcoming charges</div>
+                  <div style={{display:"flex",gap:"0.75rem"}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:"3px"}}>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",background:"#10b981",flexShrink:0}}/>
+                      <div style={{width:"2px",flex:1,background:"#e2e8f0",margin:"4px 0",minHeight:"28px"}}/>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",border:"2px solid #cbd5e1",background:"#f8fafc",flexShrink:0}}/>
+                    </div>
+                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"var(--gray-600)"}}>Starting today</div>
+                        <div style={{fontSize:"1rem",fontWeight:700,color:"var(--navy)"}}>₹0.00/month</div>
+                        <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>14-day free trial · No card required</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"var(--gray-600)"}}>After 14 days</div>
+                        <div style={{fontSize:"0.88rem",fontWeight:600,color:"#94a3b8"}}>Upgrade to a paid plan or stop</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",border:"1.5px solid #cbd5e1",color:"var(--navy)",fontWeight:600,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none"}}>Start Free Trial</a>
                 <div style={{display:"flex",gap:"0.5rem",background:"#f8fafc",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
                   <div style={{flex:1,textAlign:"center"}}>
@@ -1108,9 +1121,38 @@ export default function LandingPage() {
               <div style={{background:"#fff",border:"1.5px solid #bfdbfe",borderRadius:"16px",padding:"2rem",display:"flex",flexDirection:"column",gap:"0"}}>
                 <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"var(--blue-glow)",marginBottom:"0.5rem"}}>Starter</div>
                 <div style={{fontSize:"0.9rem",color:"var(--gray-600)",marginBottom:"1.25rem"}}>For fintechs &amp; NBFCs</div>
-                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"var(--navy)",letterSpacing:"-0.03em"}}>₹12,711</span></div>
-                <div style={{fontSize:"0.78rem",color:"var(--gray-600)",marginBottom:"1.5rem"}}>+ 18% GST &nbsp;·&nbsp; ₹14,999 incl. GST/mo</div>
-                <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",border:"1.5px solid var(--blue-glow)",color:"var(--blue-glow)",fontWeight:600,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none"}}>Get Started</a>
+
+                {/* Upcoming charges */}
+                <div style={{marginBottom:"1.5rem",padding:"1rem",background:"#f0f7ff",borderRadius:"10px",border:"1px solid #bfdbfe"}}>
+                  <div style={{fontSize:"0.68rem",fontWeight:700,color:"var(--blue-glow)",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.07em"}}>Upcoming charges</div>
+                  <div style={{display:"flex",gap:"0.75rem"}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:"3px"}}>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",background:"var(--blue-glow)",flexShrink:0}}/>
+                      <div style={{width:"2px",flex:1,background:"#bfdbfe",margin:"4px 0",minHeight:"28px"}}/>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",border:"2px solid #bfdbfe",background:"#f0f7ff",flexShrink:0}}/>
+                    </div>
+                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"var(--gray-600)"}}>Starting today</div>
+                        <div style={{fontSize:"1rem",fontWeight:700,color:"var(--navy)"}}>₹0.00/month</div>
+                        <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>14-day free trial</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"var(--gray-600)"}}>After 14 days</div>
+                        <div style={{fontSize:"1rem",fontWeight:700,color:"var(--navy)"}}>₹14,999.00/month</div>
+                        <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>includes tax of ₹2,288</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",border:"1.5px solid var(--blue-glow)",color:"var(--blue-glow)",fontWeight:600,fontSize:"0.88rem",marginBottom:"0.75rem",textDecoration:"none"}}>Get Started</a>
+                {/* Payment methods */}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"0.5rem",marginBottom:"1.5rem",fontSize:"0.72rem",color:"var(--gray-600)"}}>
+                  <span style={{background:"#e8f0fe",color:"#1a73e8",fontWeight:700,padding:"2px 7px",borderRadius:"4px",fontSize:"0.68rem"}}>UPI</span>
+                  <span style={{background:"#f1f5f9",color:"#475569",fontWeight:600,padding:"2px 7px",borderRadius:"4px",fontSize:"0.68rem"}}>Cards</span>
+                  <span style={{background:"#f1f5f9",color:"#475569",fontWeight:600,padding:"2px 7px",borderRadius:"4px",fontSize:"0.68rem"}}>NetBanking</span>
+                </div>
                 <div style={{display:"flex",gap:"0.5rem",background:"#f8fafc",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
                   <div style={{flex:1,textAlign:"center"}}>
                     <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Users</div>
@@ -1136,9 +1178,38 @@ export default function LandingPage() {
                 <div style={{position:"absolute",top:"-12px",left:"50%",transform:"translateX(-50%)",background:"var(--blue-glow)",color:"#fff",fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.06em",padding:"3px 14px",borderRadius:"100px",whiteSpace:"nowrap"}}>MOST POPULAR</div>
                 <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#60a5fa",marginBottom:"0.5rem"}}>Professional</div>
                 <div style={{fontSize:"0.9rem",color:"rgba(255,255,255,0.55)",marginBottom:"1.25rem"}}>For banks &amp; insurers</div>
-                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"#fff",letterSpacing:"-0.03em"}}>₹38,135</span></div>
-                <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.45)",marginBottom:"1.5rem"}}>+ 18% GST &nbsp;·&nbsp; ₹44,999 incl. GST/mo</div>
-                <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",background:"var(--blue-glow)",color:"#fff",fontWeight:700,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none",boxShadow:"0 4px 16px rgba(37,99,235,0.4)"}}>Upgrade to Pro</a>
+
+                {/* Upcoming charges */}
+                <div style={{marginBottom:"1.5rem",padding:"1rem",background:"rgba(255,255,255,0.06)",borderRadius:"10px",border:"1px solid rgba(96,165,250,0.3)"}}>
+                  <div style={{fontSize:"0.68rem",fontWeight:700,color:"#60a5fa",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.07em"}}>Upcoming charges</div>
+                  <div style={{display:"flex",gap:"0.75rem"}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:"3px"}}>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",background:"#60a5fa",flexShrink:0}}/>
+                      <div style={{width:"2px",flex:1,background:"rgba(96,165,250,0.3)",margin:"4px 0",minHeight:"28px"}}/>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",border:"2px solid rgba(96,165,250,0.4)",background:"rgba(255,255,255,0.05)",flexShrink:0}}/>
+                    </div>
+                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.5)"}}>Starting today</div>
+                        <div style={{fontSize:"1rem",fontWeight:700,color:"#fff"}}>₹0.00/month</div>
+                        <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.45)"}}>14-day free trial</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.5)"}}>After 14 days</div>
+                        <div style={{fontSize:"1rem",fontWeight:700,color:"#fff"}}>₹44,999.00/month</div>
+                        <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.45)"}}>includes tax of ₹6,864</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <a href="/register" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",background:"var(--blue-glow)",color:"#fff",fontWeight:700,fontSize:"0.88rem",marginBottom:"0.75rem",textDecoration:"none",boxShadow:"0 4px 16px rgba(37,99,235,0.4)"}}>Upgrade to Pro</a>
+                {/* Payment methods */}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"0.5rem",marginBottom:"1.5rem",fontSize:"0.72rem"}}>
+                  <span style={{background:"rgba(99,179,237,0.15)",color:"#63b3ed",fontWeight:700,padding:"2px 7px",borderRadius:"4px",fontSize:"0.68rem"}}>UPI</span>
+                  <span style={{background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.6)",fontWeight:600,padding:"2px 7px",borderRadius:"4px",fontSize:"0.68rem"}}>Cards</span>
+                  <span style={{background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.6)",fontWeight:600,padding:"2px 7px",borderRadius:"4px",fontSize:"0.68rem"}}>NetBanking</span>
+                </div>
                 <div style={{display:"flex",gap:"0.5rem",background:"rgba(255,255,255,0.07)",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
                   <div style={{flex:1,textAlign:"center"}}>
                     <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.45)"}}>Users</div>
@@ -1164,8 +1235,31 @@ export default function LandingPage() {
                 <div style={{position:"absolute",top:"-12px",left:"50%",transform:"translateX(-50%)",background:"#f59e0b",color:"#fff",fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.06em",padding:"3px 14px",borderRadius:"100px",whiteSpace:"nowrap"}}>BEST VALUE</div>
                 <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#d97706",marginBottom:"0.5rem"}}>Enterprise</div>
                 <div style={{fontSize:"0.9rem",color:"var(--gray-600)",marginBottom:"1.25rem"}}>For PSBs &amp; large institutions</div>
-                <div style={{marginBottom:"0.25rem"}}><span style={{fontSize:"2.4rem",fontWeight:800,color:"var(--navy)",letterSpacing:"-0.03em"}}>Custom</span></div>
-                <div style={{fontSize:"0.78rem",color:"var(--gray-600)",marginBottom:"1.5rem"}}>Annual billing · Volume discounts</div>
+
+                {/* Upcoming charges */}
+                <div style={{marginBottom:"1.5rem",padding:"1rem",background:"#fffbeb",borderRadius:"10px",border:"1px solid #fde68a"}}>
+                  <div style={{fontSize:"0.68rem",fontWeight:700,color:"#d97706",marginBottom:"0.75rem",textTransform:"uppercase",letterSpacing:"0.07em"}}>Upcoming charges</div>
+                  <div style={{display:"flex",gap:"0.75rem"}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:"3px"}}>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",background:"#f59e0b",flexShrink:0}}/>
+                      <div style={{width:"2px",flex:1,background:"#fde68a",margin:"4px 0",minHeight:"28px"}}/>
+                      <div style={{width:"10px",height:"10px",borderRadius:"50%",border:"2px solid #fde68a",background:"#fffbeb",flexShrink:0}}/>
+                    </div>
+                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"var(--gray-600)"}}>Starting today</div>
+                        <div style={{fontSize:"1rem",fontWeight:700,color:"var(--navy)"}}>Custom quote</div>
+                        <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>Scoping call with sales team</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:"0.75rem",color:"var(--gray-600)"}}>Annual billing</div>
+                        <div style={{fontSize:"0.88rem",fontWeight:600,color:"#d97706"}}>Volume discounts available</div>
+                        <div style={{fontSize:"0.7rem",color:"var(--gray-600)"}}>GST invoice generated automatically</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <a href="#contact-sales" style={{display:"block",textAlign:"center",padding:"0.65rem 1rem",borderRadius:"8px",background:"#f59e0b",color:"#fff",fontWeight:700,fontSize:"0.88rem",marginBottom:"1.5rem",textDecoration:"none"}}>Contact Sales</a>
                 <div style={{display:"flex",gap:"0.5rem",background:"#fffbeb",borderRadius:"8px",padding:"0.75rem",marginBottom:"1.5rem"}}>
                   <div style={{flex:1,textAlign:"center"}}>
@@ -1189,10 +1283,11 @@ export default function LandingPage() {
 
             </div>
 
-            {/* GST note */}
+            {/* Footer note */}
             <p style={{textAlign:"center",fontSize:"0.82rem",color:"var(--gray-600)",marginTop:"2rem"}}>
-              All prices exclusive of GST unless stated. GST invoice generated automatically. Accepted: UPI, NetBanking, Credit/Debit Cards, NEFT/RTGS.
-              &nbsp;<a href="mailto:billing@aigovernancetower.com" style={{color:"var(--blue-glow)"}}>billing@aigovernancetower.com</a>
+              We&apos;ll notify you 7 days before your trial ends. Cancel anytime — no questions asked.
+              &nbsp;GST invoice generated automatically. &nbsp;
+              <a href="mailto:billing@aigovernancetower.com" style={{color:"var(--blue-glow)"}}>billing@aigovernancetower.com</a>
             </p>
           </div>
         </section>
