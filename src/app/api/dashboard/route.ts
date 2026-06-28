@@ -120,7 +120,7 @@ export const GET = withAuth(async (_req, { organizationId }) => {
       topRiskyModels,
     };
 
-    await setCache(cacheKey, result, 120); // 2-min cache
+    await setCache(cacheKey, result, 30); // 30-sec cache
     return ok(result);
   } catch (err) {
     return serverError(err);
