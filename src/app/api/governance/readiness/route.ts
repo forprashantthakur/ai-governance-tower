@@ -15,7 +15,9 @@ export const dynamic = "force-dynamic";
  * gets a zeroed row rather than a failed dashboard.
  */
 
-export interface WorkstreamReadiness {
+// Not exported: a Next.js route module may only export HTTP handlers and
+// route config fields. Any other export fails the build.
+interface WorkstreamReadiness {
   key: string;
   label: string;
   href: string;

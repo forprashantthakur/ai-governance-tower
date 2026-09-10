@@ -22,7 +22,9 @@ const CreateSchema = z.object({
 });
 
 // Weighted implementation-% formula shared with the PATCH handler's stats recompute.
-export function computeAimsStats(clauses: Pick<AimsClause, "status">[]) {
+// Not exported: a Next.js route module may only export HTTP handlers and
+// route config fields. Any other export fails the build.
+function computeAimsStats(clauses: Pick<AimsClause, "status">[]) {
   const total = clauses.length;
   const verified = clauses.filter((c) => c.status === "VERIFIED").length;
   const implemented = clauses.filter((c) => c.status === "IMPLEMENTED").length;

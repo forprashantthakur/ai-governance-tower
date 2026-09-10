@@ -25,7 +25,9 @@ const CreateSchema = z.object({
 
 // Rollup stats + the "excluded controls missing justification" audit check —
 // shared shape with the PATCH-driven client-side recompute.
-export function computeSoaStats(controls: Pick<SoaControl, "decision" | "implStatus" | "justification">[]) {
+// Not exported: a Next.js route module may only export HTTP handlers and
+// route config fields. Any other export fails the build.
+function computeSoaStats(controls: Pick<SoaControl, "decision" | "implStatus" | "justification">[]) {
   const applicable = controls.filter((c) => c.decision === "APPLICABLE").length;
   const applicablePlanned = controls.filter((c) => c.decision === "APPLICABLE_PLANNED").length;
   const excluded = controls.filter((c) => c.decision === "NOT_APPLICABLE").length;

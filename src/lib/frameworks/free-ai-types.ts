@@ -2,14 +2,19 @@
  * Shared types for the RBI FREE-AI reference catalogue.
  *
  * Kept separate from the catalogue data itself so the API routes and page can
- * be built and typechecked against a stable contract while the regulatory
- * content is verified against the source document.
+ * be built and typechecked against a stable contract.
  */
 
 export type FreeAiItemTypeKey = "SUTRA" | "RECOMMENDATION";
 
-/** The six pillars: three enable innovation, three mitigate risk. */
+/**
+ * The six pillars, plus "Sutras" as a pseudo-pillar so the seven guiding
+ * principles can live in the same table as the recommendations without
+ * being forced under a pillar they do not belong to — the Sutras cut across
+ * all six.
+ */
 export type FreeAiPillarKey =
+  | "Sutras"
   | "Infrastructure"
   | "Policy"
   | "Capacity"
@@ -17,66 +22,87 @@ export type FreeAiPillarKey =
   | "Protection"
   | "Assurance";
 
+/** RBI tags each recommendation Short term or Medium term. There is no long-term tag. */
+export type FreeAiTimelineKey = "SHORT_TERM" | "MEDIUM_TERM" | "NOT_APPLICABLE";
+
 export interface FreeAiPillarMeta {
   key: FreeAiPillarKey;
-  /** "ENABLEMENT" pillars grow adoption; "MITIGATION" pillars contain risk. */
-  group: "ENABLEMENT" | "MITIGATION";
+  /**
+   * Which sub-framework the pillar belongs to. RBI groups the six pillars into
+   * an Innovation Enablement Framework and a Risk Mitigation Framework.
+   */
+  group: "SUTRAS" | "ENABLEMENT" | "MITIGATION";
+  /** RBI's own descriptor for the pillar. */
   description: string;
 }
 
 export interface FreeAiItemSeed {
-  /** "SUTRA-1" for guiding principles, "REC-1" for recommendations. */
+  /** "SUTRA-1" for guiding principles, "REC-1" … "REC-26" for recommendations. */
   itemCode: string;
   itemType: FreeAiItemTypeKey;
-  /** Sutras apply across all pillars and carry the pillar "Governance". */
   pillar: FreeAiPillarKey;
+  /** Verbatim title from the RBI report. */
   title: string;
+  /** RBI's own descriptor. */
   description: string;
-  /** What a regulated entity has to do to evidence alignment. */
+  /**
+   * Implementation guidance — what a regulated entity does to evidence
+   * alignment. This is our interpretation, not RBI text.
+   */
   applicability: string;
+  /** RBI's "Action" column — who the recommendation is addressed to. */
+  actionOwner: string;
+  /** RBI's "Timeline" column. */
+  timeline: FreeAiTimelineKey;
+  /** Suggested internal owner for a regulated entity. */
   ownerRole: string;
 }
 
 export const FREE_AI_PILLARS: FreeAiPillarMeta[] = [
   {
+    key: "Sutras",
+    group: "SUTRAS",
+    description:
+      "Seven guiding principles that cut across every pillar and anchor the entire framework.",
+  },
+  {
     key: "Infrastructure",
     group: "ENABLEMENT",
-    description:
-      "Shared data, compute and digital public infrastructure that makes responsible AI adoption feasible for the sector.",
+    description: "Building the infrastructure needed to support AI innovation.",
   },
   {
     key: "Policy",
     group: "ENABLEMENT",
     description:
-      "Adaptive regulatory and internal policy that enables AI adoption without loosening prudential standards.",
+      "Putting in place agile, adaptive policy and regulatory architecture to encourage responsible AI adoption.",
   },
   {
     key: "Capacity",
     group: "ENABLEMENT",
     description:
-      "Skills, awareness and institutional knowledge across the regulated entity, its board and its supervisors.",
+      "Promoting human skill development and institutional capacity to harness AI safely and effectively.",
   },
   {
     key: "Governance",
     group: "MITIGATION",
     description:
-      "Board-level accountability, policy, lifecycle controls and approval structures for every AI system.",
+      "Establishing robust governance structures in respect of AI-based decisions and actions.",
   },
   {
     key: "Protection",
     group: "MITIGATION",
-    description:
-      "Consumer protection, cyber security, resilience and incident response for AI-driven services.",
+    description: "Ensuring strong safeguards for protection from harms.",
   },
   {
     key: "Assurance",
     group: "MITIGATION",
     description:
-      "Audit, transparency, disclosure and independent validation that the framework works as intended.",
+      "Instituting mechanisms for continuous validation and oversight of AI systems.",
   },
 ];
 
 export const PILLAR_ORDER: FreeAiPillarKey[] = [
+  "Sutras",
   "Governance",
   "Protection",
   "Assurance",
@@ -84,3 +110,19 @@ export const PILLAR_ORDER: FreeAiPillarKey[] = [
   "Policy",
   "Capacity",
 ];
+
+/**
+ * Provenance shown in the UI. FREE-AI is a committee report to the RBI, not a
+ * regulation — the module must not imply that its recommendations bind a
+ * regulated entity today.
+ */
+export const FREE_AI_SOURCE = {
+  title:
+    "Framework for Responsible and Ethical Enablement of Artificial Intelligence (FREE-AI)",
+  publisher: "Reserve Bank of India — Committee Report",
+  publishedOn: "13 August 2025",
+  chair: "Dr. Pushpak Bhattacharyya, IIT Bombay",
+  statusNote:
+    "A committee report to the RBI, not a regulation. Recommendations are directed at regulators, the government and regulated entities, and do not by themselves create binding obligations.",
+  url: "https://rbidocs.rbi.org.in/rdocs/PublicationReport/Pdfs/FREEAIR130820250A24FF2D4578453F824C72ED9F5D5851.PDF",
+} as const;
