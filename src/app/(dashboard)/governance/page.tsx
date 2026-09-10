@@ -141,12 +141,7 @@ export default function GovernanceProgrammePage() {
     } finally {
       setLoading(false);
     }
-    // `get` is intentionally not a dependency. useApi() returns a fresh object
-    // on every render, so depending on it recreates this callback each render,
-    // which re-fires the effect below and loops requests until the middleware
-    // rate-limits them. Every other page in the app omits it for the same reason.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [get]);
 
   useEffect(() => {
     load();

@@ -1,13 +1,23 @@
+import { useCallback, useMemo } from "react";
+
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 
 type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
 
+/**
+ * Returns a stable API client. The identity only changes when the auth token
+ * changes, so callers can safely list `get`/`post`/etc. in a hook dependency
+ * array. Before this was memoised a fresh object was built every render, and
+ * any component that depended on one of these functions re-created its
+ * callback each render, re-fired its effect, and looped requests until the
+ * rate limiter rejected them.
+ */
 export function useApi() {
   const token = useAuthStore((s) => s.token);
   const addNotification = useUIStore((s) => s.addNotification);
 
-  async function request<T>(
+  const request = useCallback(async function request<T>(
     path: string,
     method: HttpMethod = "GET",
     body?: unknown
@@ -44,12 +54,15 @@ export function useApi() {
     }
 
     return json.data as T;
-  }
+  }, [token, addNotification]);
 
-  return {
-    get: <T>(path: string) => request<T>(path, "GET"),
-    post: <T>(path: string, body: unknown) => request<T>(path, "POST", body),
-    patch: <T>(path: string, body: unknown) => request<T>(path, "PATCH", body),
-    del: <T>(path: string) => request<T>(path, "DELETE"),
-  };
+  return useMemo(
+    () => ({
+      get: <T,>(path: string) => request<T>(path, "GET"),
+      post: <T,>(path: string, body: unknown) => request<T>(path, "POST", body),
+      patch: <T,>(path: string, body: unknown) => request<T>(path, "PATCH", body),
+      del: <T,>(path: string) => request<T>(path, "DELETE"),
+    }),
+    [request]
+  );
 }
