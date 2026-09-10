@@ -23,6 +23,7 @@ import {
 import { useApi } from "@/hooks/use-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DemoSeedButton } from "@/components/shared/demo-seed-button";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -190,6 +191,10 @@ export default function GovernanceProgrammePage() {
           DPDP Act, 2023.
         </p>
       </div>
+
+      {/* One-click CIO demo — seeds a fully-populated programme into a separate
+          organization so a walkthrough never touches this organization's data. */}
+      <DemoSeedButton />
 
       {/* Overall readiness */}
       <Card>

@@ -1,0 +1,676 @@
+<title>AI Governance Control Tower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* ─── Tokens ─────────────────────────────────────────────────────────────── */
+:root{
+  --ground:#F5F3EE; --surface:#FFFFFF; --surface-2:#EFEDE7; --surface-3:#E5E2DA;
+  --ink:#1A2029; --ink-2:#3D4653; --muted:#6B7583; --line:#D8D4CA; --line-2:#C4BFB3;
+  --accent:#2C5F8A; --accent-soft:rgba(44,95,138,.10);
+  --brass:#9A7B45;
+  --red:#C4453C; --red-soft:rgba(196,69,60,.12);
+  --amber:#B5820F; --amber-soft:rgba(181,130,15,.14);
+  --green:#3D7F55; --green-soft:rgba(61,127,85,.12);
+  --shadow:0 1px 2px rgba(26,32,41,.06),0 8px 24px rgba(26,32,41,.06);
+  --stage-h:clamp(380px,52vh,560px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1620; --surface:#18212E; --surface-2:#1E2836; --surface-3:#26313F;
+    --ink:#E9E6DF; --ink-2:#C3C8D0; --muted:#8A94A3; --line:#2A3544; --line-2:#3A4657;
+    --accent:#6E9BC5; --accent-soft:rgba(110,155,197,.14);
+    --brass:#B08D57;
+    --red:#E05252; --red-soft:rgba(224,82,82,.15);
+    --amber:#E0A32E; --amber-soft:rgba(224,163,46,.15);
+    --green:#4FA96B; --green-soft:rgba(79,169,107,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1620; --surface:#18212E; --surface-2:#1E2836; --surface-3:#26313F;
+  --ink:#E9E6DF; --ink-2:#C3C8D0; --muted:#8A94A3; --line:#2A3544; --line-2:#3A4657;
+  --accent:#6E9BC5; --accent-soft:rgba(110,155,197,.14);
+  --brass:#B08D57;
+  --red:#E05252; --red-soft:rgba(224,82,82,.15);
+  --amber:#E0A32E; --amber-soft:rgba(224,163,46,.15);
+  --green:#4FA96B; --green-soft:rgba(79,169,107,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.28);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.num{font-variant-numeric:tabular-nums}
+
+/* ─── Shell ──────────────────────────────────────────────────────────────── */
+.wrap{max-width:1240px;margin:0 auto;padding:28px 24px 56px}
+
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+  padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:3px}
+.eyebrow{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);font-weight:600}
+.brand h1{margin:0;font-family:Newsreader,Georgia,serif;font-weight:500;font-size:26px;letter-spacing:-.01em;line-height:1.15}
+.masthead .meta{font-size:12px;color:var(--muted);text-align:right;line-height:1.5}
+
+.layout{display:grid;grid-template-columns:216px 1fr;gap:24px;align-items:start}
+@media (max-width:880px){.layout{grid-template-columns:1fr}.spine{display:none}}
+
+/* ─── Scene spine ────────────────────────────────────────────────────────── */
+.spine{position:sticky;top:16px;display:flex;flex-direction:column;gap:1px}
+.spine-label{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;padding:0 8px 8px}
+.spine button{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;
+  border:0;padding:6px 8px;border-radius:5px;cursor:pointer;color:var(--muted);
+  font:inherit;font-size:12.5px;line-height:1.3;transition:color .15s,background .15s;
+}
+.spine button:hover{color:var(--ink-2);background:var(--surface-2)}
+.spine button .dot{width:5px;height:5px;border-radius:50%;background:var(--line-2);flex-shrink:0;transition:all .2s}
+.spine button.done{color:var(--ink-2)}
+.spine button.done .dot{background:var(--brass)}
+.spine button.on{color:var(--ink);font-weight:600;background:var(--accent-soft)}
+.spine button.on .dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.spine button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ─── Stage ──────────────────────────────────────────────────────────────── */
+.stage{
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.stage-top{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:11px 18px;border-bottom:1px solid var(--line);background:var(--surface-2);
+}
+.stage-top .route{font-size:11.5px;color:var(--muted)}
+.stage-top .count{font-size:11px;color:var(--muted);letter-spacing:.06em}
+
+.scene{padding:26px 30px;min-height:var(--stage-h);display:flex;flex-direction:column;gap:18px}
+.scene h2{margin:0;font-family:Newsreader,Georgia,serif;font-weight:500;font-size:29px;
+  line-height:1.18;letter-spacing:-.015em;text-wrap:balance;max-width:24ch}
+.scene .lede{margin:0;color:var(--ink-2);font-size:14.5px;max-width:64ch}
+
+/* title scenes */
+.scene.hero{justify-content:center;gap:22px;text-align:left}
+.scene.hero h2{font-size:clamp(32px,4.6vw,48px);max-width:19ch;letter-spacing:-.025em}
+.scene.hero .lede{font-size:16px;max-width:56ch}
+.rule{height:1px;background:linear-gradient(90deg,var(--brass),transparent);border:0;margin:0;max-width:280px}
+.hero-facts{display:flex;gap:28px;flex-wrap:wrap;margin-top:4px}
+.hero-fact{display:flex;flex-direction:column;gap:2px}
+.hero-fact b{font-family:Newsreader,Georgia,serif;font-weight:600;font-size:25px;letter-spacing:-.01em}
+.hero-fact span{font-size:11.5px;color:var(--muted);letter-spacing:.03em}
+
+/* ─── Stat tiles ─────────────────────────────────────────────────────────── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.tile{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:3px}
+.tile .k{font-size:10.5px;letter-spacing:.05em;color:var(--muted);text-transform:uppercase;font-weight:600}
+.tile .v{font-family:Newsreader,Georgia,serif;font-size:26px;font-weight:600;line-height:1.05;letter-spacing:-.01em}
+.tile .s{font-size:11px;color:var(--muted)}
+.tile.red .v{color:var(--red)} .tile.amber .v{color:var(--amber)} .tile.green .v{color:var(--green)}
+
+/* ─── Panels ─────────────────────────────────────────────────────────────── */
+.panel{flex:1;min-height:0;display:flex;flex-direction:column;gap:9px}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.panel-head h3{margin:0;font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);font-weight:600}
+.panel-head .note{font-size:11.5px;color:var(--muted)}
+
+.rows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:8.5px 13px;background:var(--surface);
+  border-bottom:1px solid var(--line);font-size:13px}
+.row:last-child{border-bottom:0}
+.row:nth-child(even){background:var(--surface-2)}
+.row .ref{color:var(--muted);font-size:11.5px;flex-shrink:0;min-width:74px}
+.row .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .sub{color:var(--muted);font-size:11.5px;flex-shrink:0}
+
+.pill{font-size:10.5px;font-weight:600;letter-spacing:.03em;padding:2px 7px;border-radius:4px;
+  white-space:nowrap;flex-shrink:0;border:1px solid transparent}
+.pill.red{background:var(--red-soft);color:var(--red);border-color:var(--red-soft)}
+.pill.amber{background:var(--amber-soft);color:var(--amber);border-color:var(--amber-soft)}
+.pill.green{background:var(--green-soft);color:var(--green);border-color:var(--green-soft)}
+.pill.grey{background:var(--surface-3);color:var(--muted);border-color:var(--line)}
+.pill.accent{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-soft)}
+
+/* grouped bars */
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.group{border:1px solid var(--line);border-radius:7px;padding:11px 13px;background:var(--surface);
+  display:flex;flex-direction:column;gap:7px}
+.group .gt{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.group .gt b{font-weight:600;font-size:12.5px}
+.group .gt span{font-size:11.5px;color:var(--muted)}
+.bar{height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.bar i.green{background:var(--green)} .bar i.amber{background:var(--amber)} .bar i.red{background:var(--red)}
+
+/* KRI rows */
+.kri{display:flex;align-items:center;gap:13px;padding:9px 13px;border-bottom:1px solid var(--line);
+  background:var(--surface)}
+.kri:last-child{border-bottom:0}
+.kri:nth-child(even){background:var(--surface-2)}
+.kri .code{font-size:11px;color:var(--muted);min-width:66px;flex-shrink:0}
+.kri .nm{flex:1;min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kri .val{font-family:Newsreader,Georgia,serif;font-size:17px;font-weight:600;min-width:64px;text-align:right}
+.kri .val.red{color:var(--red)} .kri .val.amber{color:var(--amber)} .kri .val.green{color:var(--green)}
+.kri svg{flex-shrink:0;display:block}
+.kri .tr{font-size:13px;width:15px;text-align:center;flex-shrink:0}
+.tr.up{color:var(--red)} .tr.dn{color:var(--green)} .tr.fl{color:var(--muted)}
+
+/* lanes */
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.lane{border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:11px;
+  display:flex;flex-direction:column;gap:8px}
+.lane .lh{display:flex;flex-direction:column;gap:1px}
+.lane .lh b{font-size:12px;font-weight:600}
+.lane .lh span{font-size:11px;color:var(--muted)}
+.chip{font-size:11.5px;padding:5px 8px;border-radius:5px;background:var(--surface-2);
+  border:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.chip .cn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* matrix */
+.matrix{border:1px solid var(--line);border-radius:7px;overflow-x:auto}
+.matrix table{border-collapse:collapse;width:100%;min-width:620px;font-size:12.5px}
+.matrix th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding:9px 12px;background:var(--surface-2);
+  border-bottom:1px solid var(--line);white-space:nowrap}
+.matrix td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.matrix tr:last-child td{border-bottom:0}
+.matrix .who{display:inline-block;font-size:11px;padding:1px 6px;border-radius:3px;
+  background:var(--surface-3);color:var(--ink-2);margin:1px 2px 1px 0;white-space:nowrap}
+.matrix .who.a{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+/* callout */
+.callout{border-left:2px solid var(--brass);padding:2px 0 2px 13px;font-size:13.5px;color:var(--ink-2);max-width:70ch}
+.callout b{color:var(--ink);font-weight:600}
+
+/* ─── Transport ──────────────────────────────────────────────────────────── */
+.transport{margin-top:14px;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.scrub{display:flex;gap:2px;padding:9px 14px 0}
+.scrub i{flex:1;height:3px;border-radius:2px;background:var(--surface-3);cursor:pointer;transition:background .2s}
+.scrub i.done{background:var(--brass)}
+.scrub i.on{background:var(--accent)}
+.controls{display:flex;align-items:center;gap:10px;padding:11px 14px 13px}
+button.ctl{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);
+  font:inherit;font-size:13px;font-weight:500;padding:7px 13px;border-radius:6px;cursor:pointer;
+  transition:background .15s,border-color .15s}
+button.ctl:hover{background:var(--surface-3);border-color:var(--accent)}
+button.ctl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.ctl.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+:root:not([data-theme="light"]) button.ctl.primary{color:#0F1620}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) button.ctl.primary{color:#FFFFFF}}
+:root[data-theme="light"] button.ctl.primary{color:#FFFFFF}
+button.ctl.primary:hover{filter:brightness(1.08)}
+button.ctl[disabled]{opacity:.4;cursor:not-allowed}
+.controls .spacer{flex:1}
+.controls .status{font-size:11.5px;color:var(--muted)}
+.toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--accent);cursor:pointer}
+
+.caption{padding:13px 16px;border-top:1px solid var(--line);background:var(--surface-2);
+  font-size:13.5px;line-height:1.62;color:var(--ink-2);min-height:74px}
+.caption b{color:var(--ink);font-weight:600}
+
+.foot{margin-top:20px;font-size:11.5px;color:var(--muted);display:flex;
+  justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--line)}
+.foot a{color:var(--accent)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.fade{animation:fade .34s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+</style>
+
+<div class="wrap">
+  <div class="masthead">
+    <div class="brand">
+      <div class="eyebrow">Narrated walkthrough &middot; Chief Information Officer</div>
+      <h1>AI Governance Control Tower</h1>
+    </div>
+    <div class="meta">
+      Sample data &mdash; illustrative bank<br>
+      ISO/IEC 42001 &middot; RBI FREE-AI &middot; DPDP Act 2023
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav class="spine" id="spine" aria-label="Scenes"><div class="spine-label">Contents</div></nav>
+
+    <div>
+      <div class="stage">
+        <div class="stage-top">
+          <span class="route mono" id="route">/governance</span>
+          <span class="count num" id="count">1 / 14</span>
+        </div>
+        <div class="scene" id="scene"></div>
+      </div>
+
+      <div class="transport">
+        <div class="scrub" id="scrub"></div>
+        <div class="controls">
+          <button class="ctl primary" id="play">&#9654;&nbsp; Play briefing</button>
+          <button class="ctl" id="prev" aria-label="Previous scene">&#9664;</button>
+          <button class="ctl" id="next" aria-label="Next scene">&#9654;</button>
+          <div class="spacer"></div>
+          <label class="toggle"><input type="checkbox" id="voice" checked> Voice-over</label>
+          <span class="status" id="status">Ready</span>
+        </div>
+        <div class="caption" id="caption"></div>
+      </div>
+
+      <div class="foot">
+        <span>Figures are seeded sample data for demonstration, not a live tenant.</span>
+        <span>Live platform &mdash; <a href="https://www.aigovernancetower.com" target="_blank" rel="noopener noreferrer">aigovernancetower.com</a></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ── Scene data ─────────────────────────────────────────────────────────────
+   Figures match the demo seed exactly so the narration and the live app agree. */
+
+var S = [
+{
+  route:"/", nav:"Opening", kind:"hero",
+  h:"Governing AI at the pace it is being deployed",
+  lede:"Most banks now run more AI in production than they can evidence control over. This is the platform that closes that distance — eleven governance workstreams, one readiness position, and the audit evidence underneath it.",
+  facts:[["30 Jun 2026","RBI gap-assessment deadline"],["11","governance workstreams"],["≈ 9 min","running time"]],
+  n:"Most banks now run more AI in production than they can evidence control over. The Reserve Bank has asked regulated entities for a board-approved AI risk gap assessment and a time-bound action plan. This is a walkthrough of the platform that produces exactly that. Eleven governance workstreams, one readiness position, and the audit evidence underneath it. It takes about nine minutes."
+},
+{
+  route:"/governance", nav:"Governance Programme",
+  h:"One readiness number, and what is holding it back",
+  lede:"Every workstream scored, grouped by engagement phase, with the specific blockers listed underneath.",
+  tiles:[["Overall readiness","61%","derived, not asserted",""],["Workstreams live","11","of 11",""],["P1 items open","5","remediation","red"],["Major NCRs","2","still open","red"]],
+  panel:{t:"groups",head:"Programme phases",note:"Phase 1 build · Phase 2 assurance · continuous",
+    items:[["Phase 1 — Framework & Policy","74%",74,"green"],["Phase 2 — Assurance & Testing","52%",52,"amber"],["Continuous Oversight","58%",58,"amber"]]},
+  callout:"Blockers before sign-off: <b>3 critical gaps</b>, <b>2 major non-conformities</b>, <b>5 P1 remediation items</b>, <b>2 models overdue</b> for revalidation.",
+  n:"This is the view for the board. Sixty-one percent overall readiness, built up from eleven workstreams — not a number someone typed into a slide. Phase one, the framework itself, is at seventy-four percent. Phase two, independent assurance, sits at fifty-two. Below that sit the specific blockers: three critical gaps, two major non-conformities, five P1 remediation items. Every one links straight to the record behind it."
+},
+{
+  route:"/policies", nav:"AI Policy Framework",
+  h:"A policy estate that plugs into what the bank already runs",
+  lede:"One board-approved apex policy, a management system manual, and fifteen procedures and standards beneath it.",
+  tiles:[["Documents","17","apex to SOP",""],["Approved","12","board or exec","green"],["Awaiting board","2","pending sign-off","amber"],["Overdue review","2","past review date","red"]],
+  panel:{t:"rows",head:"Document hierarchy",note:"integration mapped per document",
+    items:[
+      ["AI-POL-001","Enterprise AI Governance Policy","ERM · MRM · IT Gov",["green","Published"]],
+      ["AI-CHR-001","AI Governance Committee Charter","Board Risk Cttee",["green","Approved"]],
+      ["AI-MAN-001","AI Management System Manual","Internal Audit",["green","Published"]],
+      ["AI-PRO-005","Model Validation & Independent Review","MRM · ERM",["amber","In review"]],
+      ["AI-PRO-008","Third-Party & Vendor AI Procedure","Outsourcing · Cyber",["amber","Board pending"]],
+      ["AI-STD-002","AI Security & Adversarial Resilience","Cyber",["red","Review overdue"]]
+    ]},
+  n:"The policy estate. One board-approved apex policy, a management system manual, and fifteen procedures and standards beneath it. Each document records which existing structure it plugs into — enterprise risk, model risk, IT governance — so this integrates with what the bank already runs rather than sitting beside it. Two documents are overdue for review. That is a finding an internal auditor would raise, surfaced before they do."
+},
+{
+  route:"/aims", nav:"AI Management System",
+  h:"The management system, clause by clause",
+  lede:"ISO/IEC 42001 Clauses 4 to 10. Twenty-seven requirements, each with an owner, a maturity level and attached evidence.",
+  tiles:[["Implementation","59%","weighted",""],["Verified","7","clauses","green"],["In progress","7","clauses","amber"],["Not started","4","clauses","red"]],
+  panel:{t:"groups",head:"By management system section",note:"27 clauses",
+    items:[["Context",  "4 of 4",100,"green"],["Leadership","3 of 3",100,"green"],["Planning","4 of 6",67,"amber"],
+           ["Support","3 of 5",60,"amber"],["Operation","2 of 4",50,"amber"],["Performance","0 of 3",0,"red"],["Improvement","0 of 2",0,"red"]]},
+  callout:"Gaps concentrate in <b>performance evaluation</b> and <b>improvement</b> — precisely where a certification body begins stage two.",
+  n:"ISO 42001 clauses four through ten — the management system itself. Twenty-seven requirements, each with an owner, a maturity level and the evidence attached. Fifty-nine percent implemented. The gaps concentrate in performance evaluation and improvement, which is exactly where a certification body starts. Nothing here is self-assessed narrative; every clause carries evidence, or it does not count."
+},
+{
+  route:"/soa", nav:"Statement of Applicability",
+  h:"The document a certification body reads first",
+  lede:"All thirty-eight Annex A controls accounted for — applicable or excluded, and every exclusion justified in writing.",
+  tiles:[["Applicable","32","of 38 controls",""],["Implemented","21","fully","green"],["Partial","8","in progress","amber"],["Excluded","6","all justified","green"]],
+  panel:{t:"groups",head:"Annex A control groups",note:"applicable controls implemented",
+    items:[["A.2 Policies","3 of 3",100,"green"],["A.3 Internal org","2 of 2",100,"green"],["A.4 Resources","4 of 5",80,"green"],
+           ["A.5 Impact assessment","3 of 4",75,"amber"],["A.6 Life cycle","5 of 9",56,"amber"],["A.7 Data","3 of 5",60,"amber"],
+           ["A.8 Interested parties","1 of 2",50,"amber"],["A.10 Third parties","0 of 2",0,"red"]]},
+  callout:"An excluded control with no written justification is the most common stage-one finding. The register <b>will not let one pass silently</b>.",
+  n:"The Statement of Applicability — the document a certification body reads first. All thirty-eight Annex A controls are accounted for. Six are excluded, and every exclusion carries a written justification. That last point matters more than it sounds: an excluded control without a documented reason is the single most common finding in a first-stage audit. This register will not let that pass silently."
+},
+{
+  route:"/free-ai", nav:"RBI FREE-AI",
+  h:"Seven Sutras, twenty-six recommendations, and which are actually yours",
+  lede:"A committee report to the Reserve Bank — not a regulation. The platform states that plainly and separates regulator-led items from the bank’s own.",
+  tiles:[["Items tracked","33","7 Sutras + 26 recs",""],["Compliant","14","assessed PASS","green"],["Partial","9","in progress","amber"],["Gaps","5","assessed FAIL","red"]],
+  panel:{t:"rows",head:"Governance pillar — the bank’s to action",note:"regulator-led items de-emphasised",
+    items:[
+      ["REC-14","Board Approved AI Policy","Medium term",["green","Pass"]],
+      ["REC-15","Data Lifecycle Governance","Medium term",["amber","Partial"]],
+      ["REC-16","AI System Governance Framework","Medium term",["green","Pass"]],
+      ["REC-17","Product Approval Process","Medium term",["red","Fail"]],
+      ["REC-23","AI Inventory & Sector Repository","Short term",["green","Pass"]],
+      ["REC-25","Disclosures by REs","Short term",["amber","Partial"]]
+    ]},
+  n:"The Reserve Bank's FREE-AI framework — seven guiding Sutras and twenty-six recommendations. Worth being precise here: this is a committee report, not a regulation, and the platform says so on its face. What it does is separate the recommendations aimed at regulators from the ones that are genuinely the bank's to action. Fourteen of thirty-three currently assess as compliant."
+},
+{
+  route:"/model-risk", nav:"Model Risk Management",
+  h:"Every model tiered, validated, and on a revalidation clock",
+  lede:"Twelve models under governance, tiered by materiality, each with a validation dossier behind it.",
+  tiles:[["Under MRM","12","models",""],["Tier 1","4","high materiality","amber"],["Overdue","2","revalidation","red"],["Fail / conditional","3","outcomes","amber"]],
+  panel:{t:"rows",head:"Model register",note:"sorted by materiality",
+    items:[
+      ["TIER 1","Loan Underwriting Engine","due 12 Aug 2026",["red","Overdue"]],
+      ["TIER 1","Retail Credit Scorecard","validated 04 Jun",["green","Pass"]],
+      ["TIER 1","AML Transaction Monitor","conditions attached",["amber","Conditional"]],
+      ["TIER 1","Fraud Detection Engine","due 28 Aug 2026",["red","Overdue"]],
+      ["TIER 2","KYC Document Verifier","validated 19 May",["green","Pass"]],
+      ["TIER 2","GenAI Service Assistant","validation open",["grey","Pending"]]
+    ]},
+  callout:"<b>Loan Underwriting Engine</b> is Tier 1, live in production, and past its revalidation date — the first thing a supervisor asks about.",
+  n:"Model risk management. Twelve models under governance, tiered by materiality. Four are Tier One. Two are overdue for revalidation — including the Loan Underwriting Engine, which is Tier One and live in production. Under the Reserve Bank's draft model risk guidance, that is precisely the exposure a supervisor asks about first. The dossier behind each row holds conceptual soundness, back-testing and benchmarking."
+},
+{
+  route:"/gap-assessment", nav:"Gap Assessment",
+  h:"The deliverable the regulator asked for by 30 June",
+  lede:"Two assessments producing twenty-four findings, each scoring current maturity against target.",
+  tiles:[["Findings","24","across 2 reviews",""],["Critical open","3","unclosed","red"],["Avg current","2.4","of 5","amber"],["Target","3.8","of 5","green"]],
+  panel:{t:"rows",head:"Critical and high findings",note:"current → target maturity",
+    items:[
+      ["ISO-10.2","AI incident response playbook absent","0 → 4",["red","Critical"]],
+      ["ISO-8.2","Bias testing not run on CV models","1 → 4",["red","Critical"]],
+      ["A.10.3","Third-party AI due diligence gap","1 → 4",["red","Critical"]],
+      ["ISO-9.2","Internal audit programme not defined","2 → 4",["amber","High"]],
+      ["DPDP-3.1","Data principal self-service portal","2 → 4",["amber","High"]],
+      ["A.7.5","Training data provenance incomplete","2 → 3",["amber","High"]]
+    ]},
+  n:"This is the deliverable the Reserve Bank asked for by the thirtieth of June. Two assessments — ISO 42001 readiness and FREE-AI alignment — producing twenty-four findings, each scored current maturity against target. Three are critical and still open. This is not a document that goes stale in a shared drive: closing a finding here moves the readiness number on the board view."
+},
+{
+  route:"/control-testing", nav:"Control Testing",
+  h:"Controls tested by sample, exceptions on the record",
+  lede:"Eighteen controls tested across three frameworks, with sample sizes, exceptions and a documented conclusion.",
+  tiles:[["Tests run","18","sampled",""],["Effective","12","67% rate","green"],["Partial","3","exceptions found","amber"],["Ineffective","3","control failed","red"]],
+  panel:{t:"rows",head:"Ineffective and partially effective",note:"exceptions drive NCRs",
+    items:[
+      ["CT-004","Human oversight of automated decisions","4 of 25 exceptions",["red","Ineffective"]],
+      ["CT-009","Model change approval evidence","6 of 20 exceptions",["red","Ineffective"]],
+      ["CT-015","Third-party AI contract clauses","3 of 8 exceptions",["red","Ineffective"]],
+      ["CT-002","Consent capture for AI processing","2 of 30 exceptions",["amber","Partial"]],
+      ["CT-011","Event logging on inference calls","2 of 25 exceptions",["amber","Partial"]]
+    ]},
+  callout:"A failed test raises a non-conformity <b>automatically</b> — the gap between finding a control failure and someone owning it collapses to nothing.",
+  n:"Independent assurance. Eighteen controls tested by sample, with exceptions recorded — sixty-seven percent assessed fully effective. Three came back ineffective. Under the old model that finding lives in an audit report; here it raises a non-conformity automatically, which is the next screen. The distance between finding a control failure and someone owning it collapses to nothing."
+},
+{
+  route:"/ncr-capa", nav:"NCR & CAPA",
+  h:"Findings that cannot quietly go stale",
+  lede:"ISO/IEC 42001 Clause 10.2. Seven non-conformities raised, each with root cause and verified corrective actions.",
+  tiles:[["NCRs raised","7","3 closed",""],["Major open","2","escalated","red"],["CAPAs","11","actions","amber"],["Overdue","3","past due date","red"]],
+  panel:{t:"rows",head:"Open register",note:"root cause → CAPA → effectiveness check",
+    items:[
+      ["NCR-2026-01","No AI incident response playbook","2 CAPAs · 1 overdue",["red","Major"]],
+      ["NCR-2026-03","Bias testing absent on KYC model","2 CAPAs",["red","Major"]],
+      ["NCR-2026-04","Model change approvals unevidenced","2 CAPAs · 1 overdue",["amber","Minor"]],
+      ["NCR-2026-05","Vendor AI clauses not standardised","1 CAPA · 1 overdue",["amber","Minor"]],
+      ["NCR-2026-06","Inference logging retention short","1 CAPA",["amber","Minor"]],
+      ["NCR-2026-02","Consent record gaps — closed","verified 22 Jul",["green","Closed"]]
+    ]},
+  n:"The non-conformity register — ISO 42001 clause ten point two. Seven raised, three closed. Each carries a root cause and corrective actions with named owners and dates, and three of those actions are overdue, shown in red rather than buried. Closure requires an effectiveness check, so an action is not done because someone marked it done. It is done because it was verified to have worked."
+},
+{
+  route:"/remediation", nav:"Remediation Roadmap",
+  h:"What it costs to close the gap, and in what order",
+  lede:"Twenty-one items sequenced across four horizons, with effort, owners, dependencies and progress.",
+  tiles:[["Items","21","sequenced",""],["P1 open","5","priority one","red"],["Progress","43%","weighted","amber"],["Blocked","2","awaiting input","red"]],
+  panel:{t:"lanes",head:"Roadmap horizons",note:"quick wins first",
+    items:[
+      ["Quick wins","0–3 months · 6 items",[["Publish AI incident playbook","P1"],["Close SoA justifications","P2"],["Board AI awareness session","P1"]]],
+      ["Short term","3–6 months · 7 items",[["Bias testing for CV models","P1"],["Vendor AI clause library","P2"],["Internal audit programme","P2"]]],
+      ["Medium term","6–12 months · 5 items",[["Data provenance tooling","P2"],["Self-service DPDP portal","P1"]]],
+      ["Long term","12+ months · 3 items",[["Continuous control monitoring","P3"],["ISO 42001 certification","P1"]]]
+    ]},
+  n:"The remediation roadmap — twenty-one items sequenced across quick wins, short, medium and long term, with effort and dependencies. Forty-three percent complete. Five P1 items remain open and two are blocked. For a CIO this is the resourcing conversation: what it costs to close the gap, in what order, and what is stuck waiting on somebody else."
+},
+{
+  route:"/kri", nav:"Risk KRI Dashboard",
+  h:"AI risk in the same pack as technology, cyber and data",
+  lede:"Seventeen indicators with six months of history and thresholds set against stated risk appetite — deliberately in one pack.",
+  tiles:[["Red","3","breaching appetite","red"],["Amber","5","within tolerance","amber"],["Green","9","within appetite","green"],["Deteriorating","2","trend worsening","red"]],
+  panel:{t:"kri",head:"Selected indicators",note:"latest reading · 6-month trend",
+    items:[
+      ["AI-KRI-01","Models without current validation","16.7%","red","up",[6,8,9,11,14,16.7]],
+      ["AI-KRI-04","Shadow AI detections","7","red","up",[2,3,3,5,6,7]],
+      ["CY-KRI-01","AI systems without red-team testing","38%","red","fl",[42,41,40,39,38,38]],
+      ["AI-KRI-05","Human oversight coverage","88%","amber","dn",[79,81,83,85,86,88]],
+      ["DT-KRI-02","Personal data without lawful basis","1","amber","fl",[2,2,1,1,1,1]],
+      ["TE-KRI-01","AI platform availability","99.7%","green","dn",[99.2,99.4,99.5,99.6,99.6,99.7]]
+    ]},
+  n:"And this is where it lands for the board. Seventeen indicators across technology, cyber, AI and data risk — deliberately in one pack, because AI risk reported separately from technology risk is how it gets discounted. Three are red. Two are deteriorating, which matters more than the red count, because those are the ones heading somewhere. Six months of history behind each, with thresholds set against stated risk appetite."
+},
+{
+  route:"/training", nav:"Training & Enablement",
+  h:"Competence you can evidence, and the gap that reads badly",
+  lede:"ISO/IEC 42001 Clause 7.2 and 7.3. Nine programmes across seven audience groups, with attendance on the record.",
+  tiles:[["Programmes","9","5 delivered",""],["People trained","486","completed","green"],["Attendance","82%","of target","green"],["Audience gaps","1","Board","red"]],
+  panel:{t:"rows",head:"Audience coverage",note:"completed programmes per group",
+    items:[
+      ["BOARD","Board — AI oversight awareness","0 of 1 delivered",["red","Gap"]],
+      ["EXEC","Executive — AI risk appetite","1 of 1 · 18 attended",["green","Complete"]],
+      ["RISK","Risk & Compliance — AIMS operation","2 of 2 · 64 attended",["green","Complete"]],
+      ["TECH","Technology — secure AI engineering","1 of 2 · 96 attended",["amber","Partial"]],
+      ["DS","Data Science — bias & validation","1 of 1 · 42 attended",["green","Complete"]],
+      ["STAFF","All staff — responsible AI use","0 of 2 · scheduled",["amber","Scheduled"]]
+    ]},
+  n:"Clause seven point two — competence. Nine programmes, five delivered, four hundred and eighty-six people trained. One gap the platform flags on its own: no completed board-level AI awareness session. That is a small line item that reads badly in a supervisory review, because it suggests the accountable body has not been briefed on what it is accountable for."
+},
+{
+  route:"/governance", nav:"What this means", kind:"hero",
+  h:"From evidence gathering to evidence on demand",
+  lede:"The readiness number is derived, not asserted. Every percentage traces to a record with an owner, a date and attached evidence — and closing one finding updates the assessment, the roadmap and the board pack at once.",
+  facts:[["Derived","every figure traces to a record"],["Sourced","drafts labelled as drafts"],["Compounding","one closure, three updates"]],
+  n:"Three things worth taking away. The readiness number is derived, not asserted — every percentage traces to a record with an owner. The regulatory content is drawn from source documents, and where something is a draft or a committee report rather than binding rule, the platform says so rather than overstating it. And the work compounds: closing a finding updates the gap assessment, the remediation roadmap and the board pack at once. The live platform is at a i governance tower dot com."
+}
+];
+
+/* ── DOM ─────────────────────────────────────────────────────────────────── */
+var el=function(id){return document.getElementById(id)};
+var sceneEl=el("scene"), spineEl=el("spine"), scrubEl=el("scrub"),
+    capEl=el("caption"), routeEl=el("route"), countEl=el("count"),
+    playBtn=el("play"), prevBtn=el("prev"), nextBtn=el("next"),
+    voiceBox=el("voice"), statusEl=el("status");
+
+var idx=0, playing=false, timer=null, utter=null;
+var canSpeak = typeof window.speechSynthesis!=="undefined" && typeof window.SpeechSynthesisUtterance!=="undefined";
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+/* ── Renderers ───────────────────────────────────────────────────────────── */
+function spark(vals,tone){
+  var w=88,h=24,p=3;
+  if(!vals||!vals.length) return "";
+  if(vals.length===1) return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><circle cx="'+(w/2)+'" cy="'+(h/2)+'" r="2.5" fill="var(--'+tone+')"/></svg>';
+  var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals), rg=(mx-mn)||1;
+  var pts=vals.map(function(v,i){
+    var x=p+i*(w-p*2)/(vals.length-1);
+    var y=h-p-((v-mn)/rg)*(h-p*2);
+    return x.toFixed(1)+","+y.toFixed(1);
+  });
+  var last=pts[pts.length-1].split(",");
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'+
+    '<polyline points="'+pts.join(" ")+'" fill="none" stroke="var(--'+tone+')" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="2.2" fill="var(--'+tone+')"/></svg>';
+}
+
+function tiles(t){
+  return '<div class="tiles">'+t.map(function(x){
+    return '<div class="tile '+(x[3]||"")+'"><span class="k">'+esc(x[0])+'</span>'+
+           '<span class="v num">'+esc(x[1])+'</span><span class="s">'+esc(x[2])+'</span></div>';
+  }).join("")+'</div>';
+}
+
+function panel(p){
+  if(!p) return "";
+  var head='<div class="panel-head"><h3>'+esc(p.head)+'</h3><span class="note">'+esc(p.note||"")+'</span></div>';
+  var body="";
+  if(p.t==="rows"){
+    body='<div class="rows">'+p.items.map(function(r){
+      return '<div class="row"><span class="ref mono">'+esc(r[0])+'</span>'+
+             '<span class="name">'+esc(r[1])+'</span>'+
+             '<span class="sub num">'+esc(r[2])+'</span>'+
+             '<span class="pill '+r[3][0]+'">'+esc(r[3][1])+'</span></div>';
+    }).join("")+'</div>';
+  } else if(p.t==="groups"){
+    body='<div class="groups">'+p.items.map(function(g){
+      return '<div class="group"><div class="gt"><b>'+esc(g[0])+'</b><span class="num">'+esc(g[1])+'</span></div>'+
+             '<div class="bar"><i class="'+(g[3]||"")+'" style="width:'+g[2]+'%"></i></div></div>';
+    }).join("")+'</div>';
+  } else if(p.t==="kri"){
+    body='<div class="rows">'+p.items.map(function(k){
+      var ar = k[4]==="up"?"&#9650;":k[4]==="dn"?"&#9660;":"&#8212;";
+      return '<div class="kri"><span class="code mono">'+esc(k[0])+'</span>'+
+             '<span class="nm">'+esc(k[1])+'</span>'+spark(k[5],k[3])+
+             '<span class="tr '+k[4]+'">'+ar+'</span>'+
+             '<span class="val num '+k[3]+'">'+esc(k[2])+'</span></div>';
+    }).join("")+'</div>';
+  } else if(p.t==="lanes"){
+    body='<div class="lanes">'+p.items.map(function(l){
+      return '<div class="lane"><div class="lh"><b>'+esc(l[0])+'</b><span>'+esc(l[1])+'</span></div>'+
+        l[2].map(function(c){
+          var tone=c[1]==="P1"?"red":c[1]==="P2"?"amber":"grey";
+          return '<div class="chip"><span class="cn">'+esc(c[0])+'</span><span class="pill '+tone+'">'+esc(c[1])+'</span></div>';
+        }).join("")+'</div>';
+    }).join("")+'</div>';
+  }
+  return '<div class="panel">'+head+body+'</div>';
+}
+
+function render(i){
+  var s=S[i];
+  routeEl.textContent=s.route;
+  countEl.textContent=(i+1)+" / "+S.length;
+
+  var html;
+  if(s.kind==="hero"){
+    html='<div class="eyebrow">'+esc(s.nav)+'</div>'+
+         '<h2>'+esc(s.h)+'</h2><hr class="rule">'+
+         '<p class="lede">'+esc(s.lede)+'</p>'+
+         '<div class="hero-facts">'+s.facts.map(function(f){
+           return '<div class="hero-fact"><b class="num">'+esc(f[0])+'</b><span>'+esc(f[1])+'</span></div>';
+         }).join("")+'</div>';
+  } else {
+    html='<div class="eyebrow">'+esc(s.nav)+'</div>'+
+         '<h2>'+esc(s.h)+'</h2>'+
+         '<p class="lede">'+esc(s.lede)+'</p>'+
+         (s.tiles?tiles(s.tiles):"")+
+         panel(s.panel)+
+         (s.callout?'<div class="callout">'+s.callout+'</div>':"");
+  }
+  sceneEl.className="scene fade"+(s.kind==="hero"?" hero":"");
+  sceneEl.innerHTML=html;
+
+  capEl.textContent=s.n;
+
+  Array.prototype.forEach.call(spineEl.querySelectorAll("button"),function(b,j){
+    b.className = j===i?"on":(j<i?"done":"");
+  });
+  Array.prototype.forEach.call(scrubEl.children,function(c,j){
+    c.className = j===i?"on":(j<i?"done":"");
+  });
+  prevBtn.disabled = i===0;
+  nextBtn.disabled = i===S.length-1;
+}
+
+/* ── Playback ────────────────────────────────────────────────────────────── */
+function readMs(text){ return Math.max(4200, (text.split(/\s+/).length/165)*60000 + 900); }
+
+function stopAudio(){
+  if(timer){clearTimeout(timer);timer=null}
+  if(canSpeak){try{window.speechSynthesis.cancel()}catch(e){}}
+  utter=null;
+}
+
+function pickVoice(){
+  if(!canSpeak) return null;
+  var vs=window.speechSynthesis.getVoices()||[];
+  if(!vs.length) return null;
+  var pref=["Google UK English Male","Microsoft Ryan","Daniel","Microsoft David","Google US English"];
+  for(var p=0;p<pref.length;p++){
+    for(var i=0;i<vs.length;i++){ if(vs[i].name.indexOf(pref[p])===0) return vs[i]; }
+  }
+  for(var j=0;j<vs.length;j++){ if(/^en[-_]/i.test(vs[j].lang)) return vs[j]; }
+  return vs[0];
+}
+
+function advance(){
+  if(idx < S.length-1){ go(idx+1); }
+  else { setPlaying(false); statusEl.textContent="Briefing complete"; }
+}
+
+function speakCurrent(){
+  var text=S[idx].n;
+  if(voiceBox.checked && canSpeak){
+    var v=pickVoice();
+    utter=new SpeechSynthesisUtterance(text);
+    if(v) utter.voice=v;
+    utter.rate=0.97; utter.pitch=1.0;
+    utter.onend=function(){ if(playing) advance(); };
+    utter.onerror=function(){ if(playing){ timer=setTimeout(advance, readMs(text)); } };
+    statusEl.textContent="Narrating…";
+    try{ window.speechSynthesis.speak(utter); }
+    catch(e){ timer=setTimeout(advance, readMs(text)); }
+  } else {
+    statusEl.textContent = canSpeak ? "Captions only" : "Voice-over unavailable — captions";
+    timer=setTimeout(advance, readMs(text));
+  }
+}
+
+function go(i){
+  stopAudio();
+  idx=Math.max(0,Math.min(S.length-1,i));
+  render(idx);
+  if(playing) speakCurrent(); else statusEl.textContent="Scene "+(idx+1);
+}
+
+function setPlaying(on){
+  playing=on;
+  playBtn.innerHTML = on ? "&#10073;&#10073;&nbsp; Pause" : "&#9654;&nbsp; Play briefing";
+  if(on) speakCurrent();
+  else { stopAudio(); statusEl.textContent="Paused"; }
+}
+
+/* ── Build chrome ────────────────────────────────────────────────────────── */
+S.forEach(function(s,i){
+  var b=document.createElement("button");
+  b.innerHTML='<span class="dot"></span><span>'+esc(s.nav)+'</span>';
+  b.addEventListener("click",function(){ go(i); });
+  spineEl.appendChild(b);
+
+  var t=document.createElement("i");
+  t.title=s.nav;
+  t.addEventListener("click",function(){ go(i); });
+  scrubEl.appendChild(t);
+});
+
+playBtn.addEventListener("click",function(){ setPlaying(!playing); });
+prevBtn.addEventListener("click",function(){ go(idx-1); });
+nextBtn.addEventListener("click",function(){ go(idx+1); });
+voiceBox.addEventListener("change",function(){
+  if(playing){ stopAudio(); speakCurrent(); }
+});
+
+document.addEventListener("keydown",function(e){
+  if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key==="ArrowRight"){ e.preventDefault(); go(idx+1); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); go(idx-1); }
+  else if(e.key===" "){ e.preventDefault(); setPlaying(!playing); }
+});
+
+if(canSpeak && typeof window.speechSynthesis.onvoiceschanged!=="undefined"){
+  window.speechSynthesis.onvoiceschanged=function(){};
+}
+window.addEventListener("beforeunload",stopAudio);
+
+render(0);
+statusEl.textContent = canSpeak ? "Ready" : "Captions only";
+})();
+</script>
