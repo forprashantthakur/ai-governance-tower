@@ -167,6 +167,20 @@ model Organization {
   maturityAssessments MaturityAssessment[]
   payments            Payment[]
 
+  // Enterprise AI governance modules (RBI / ISO 42001 engagement deliverables)
+  policyDocuments   PolicyDocument[]
+  raciAssignments   RaciAssignment[]
+  aimsClauses       AimsClause[]
+  soaControls       SoaControl[]
+  freeAiItems       FreeAiItem[]
+  modelRiskRecords  ModelRiskRecord[]
+  gapAssessments    GapAssessment[]
+  controlTests      ControlTest[]
+  nonConformities   NonConformity[]
+  remediationItems  RemediationItem[]
+  kriDefinitions    KriDefinition[]
+  trainingPrograms  TrainingProgram[]
+
   @@map("organizations")
 }
 
@@ -310,6 +324,7 @@ model AIModel {
   interestedParties  InterestedParty[]
   approvalWorkflows  ApprovalWorkflow[]
   misuseScenarios    MisuseScenario[]
+  modelRiskRecords   ModelRiskRecord[]
 
   @@index([organizationId])
   @@map("ai_models")
@@ -1270,4 +1285,599 @@ model PasswordResetToken {
 
   @@index([token])
   @@map("password_reset_tokens")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Enterprise AI Governance Modules
+// Maps to the RBI / ISO 42001 engagement deliverables:
+//   1. Board-approved AI Governance Policy Framework (ERM + MRM + IT Gov)
+//   2. AI Management System (AIMS) — ISO/IEC 42001 Clauses 4–10
+//   3. Statement of Applicability — ISO/IEC 42001 Annex A
+//   4. RBI FREE-AI — Sutras & Recommendations
+//   5. Model Risk Management — RBI Regulatory Principles 2026
+//   6. Gap Assessment & Control Testing
+//   7. NCR & CAPA Register
+//   8. Prioritized Remediation Roadmap
+//   9. Integrated Technology / Cyber / AI / Data risk KRI Dashboard
+//  10. Training & Enablement
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── 1. AI Policy Framework ────────────────────────────────────────────────────
+
+enum PolicyDocType {
+  POLICY
+  MANUAL
+  PROCEDURE
+  STANDARD
+  GUIDELINE
+  CHARTER
+  SOP
+}
+
+enum PolicyDocStatus {
+  DRAFT
+  IN_REVIEW
+  BOARD_APPROVAL_PENDING
+  APPROVED
+  PUBLISHED
+  SUPERSEDED
+  RETIRED
+}
+
+enum GovernanceLayer {
+  BOARD
+  BOARD_COMMITTEE
+  EXECUTIVE
+  MANAGEMENT
+  OPERATIONAL
+}
+
+model PolicyDocument {
+  id             String          @id @default(uuid())
+  organizationId String          @map("organization_id")
+  docCode        String          @map("doc_code")
+  title          String
+  type           PolicyDocType   @default(POLICY)
+  status         PolicyDocStatus @default(DRAFT)
+  version        String          @default("1.0")
+  summary        String?
+  content        String?         @db.Text
+  ownerRole      String?         @map("owner_role")
+  approverRole   String?         @map("approver_role")
+  approvedBy     String?         @map("approved_by")
+  approvedAt     DateTime?       @map("approved_at")
+  effectiveFrom  DateTime?       @map("effective_from")
+  nextReviewDate DateTime?       @map("next_review_date")
+  integratesWith String[]        @default([]) @map("integrates_with")
+  frameworkRefs  String[]        @default([]) @map("framework_refs")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, docCode])
+  @@index([organizationId, status])
+  @@map("policy_documents")
+}
+
+model RaciAssignment {
+  id             String          @id @default(uuid())
+  organizationId String          @map("organization_id")
+  activity       String
+  lifecyclePhase String          @map("lifecycle_phase")
+  layer          GovernanceLayer @default(MANAGEMENT)
+  responsible    String[]        @default([])
+  accountable    String?
+  consulted      String[]        @default([])
+  informed       String[]        @default([])
+  notes          String?
+  sortOrder      Int             @default(0) @map("sort_order")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, lifecyclePhase])
+  @@map("raci_assignments")
+}
+
+// ── 2. AI Management System (AIMS) — ISO/IEC 42001 Clauses 4–10 ───────────────
+
+enum AimsClauseStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  IMPLEMENTED
+  VERIFIED
+}
+
+model AimsClause {
+  id                  String           @id @default(uuid())
+  organizationId      String           @map("organization_id")
+  clauseNo            String           @map("clause_no")
+  clauseTitle         String           @map("clause_title")
+  section             String
+  requirement         String           @db.Text
+  status              AimsClauseStatus @default(NOT_STARTED)
+  maturityLevel       Int              @default(0) @map("maturity_level")
+  ownerRole           String?          @map("owner_role")
+  evidence            String?          @db.Text
+  implementationNotes String?          @db.Text @map("implementation_notes")
+  lastReviewedAt      DateTime?        @map("last_reviewed_at")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, clauseNo])
+  @@index([organizationId, section])
+  @@map("aims_clauses")
+}
+
+// ── 3. Statement of Applicability — ISO/IEC 42001 Annex A ─────────────────────
+
+enum SoaDecision {
+  APPLICABLE
+  APPLICABLE_PLANNED
+  NOT_APPLICABLE
+}
+
+enum SoaImplStatus {
+  NOT_IMPLEMENTED
+  PARTIAL
+  IMPLEMENTED
+}
+
+model SoaControl {
+  id                    String        @id @default(uuid())
+  organizationId        String        @map("organization_id")
+  controlRef            String        @map("control_ref")
+  controlTitle          String        @map("control_title")
+  objectiveGroup        String        @map("objective_group")
+  controlObjective      String        @db.Text @map("control_objective")
+  decision              SoaDecision   @default(APPLICABLE)
+  justification         String?       @db.Text
+  implStatus            SoaImplStatus @default(NOT_IMPLEMENTED) @map("impl_status")
+  implementationSummary String?       @db.Text @map("implementation_summary")
+  ownerRole             String?       @map("owner_role")
+  linkedPolicyCodes     String[]      @default([]) @map("linked_policy_codes")
+  lastReviewedAt        DateTime?     @map("last_reviewed_at")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, controlRef])
+  @@index([organizationId, objectiveGroup])
+  @@map("soa_controls")
+}
+
+// ── 4. RBI FREE-AI — Sutras & Recommendations ─────────────────────────────────
+
+enum FreeAiItemType {
+  SUTRA
+  RECOMMENDATION
+}
+
+model FreeAiItem {
+  id             String           @id @default(uuid())
+  organizationId String           @map("organization_id")
+  itemCode       String           @map("item_code")
+  itemType       FreeAiItemType   @map("item_type")
+  pillar         String
+  title          String
+  description    String           @db.Text
+  applicability  String?          @db.Text
+  status         ComplianceStatus @default(PENDING_REVIEW)
+  ownerRole      String?          @map("owner_role")
+  evidence       String?          @db.Text
+  gapNotes       String?          @db.Text @map("gap_notes")
+  targetDate     DateTime?        @map("target_date")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, itemCode])
+  @@index([organizationId, pillar])
+  @@map("free_ai_items")
+}
+
+// ── 5. Model Risk Management — RBI Regulatory Principles 2026 ─────────────────
+
+enum ModelTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum ValidationOutcome {
+  PASS
+  PASS_WITH_CONDITIONS
+  FAIL
+  PENDING
+}
+
+model ModelRiskRecord {
+  id                  String            @id @default(uuid())
+  organizationId      String            @map("organization_id")
+  modelId             String?           @map("model_id")
+  modelName           String            @map("model_name")
+  modelOwner          String?           @map("model_owner")
+  businessUnit        String?           @map("business_unit")
+  tier                ModelTier         @default(TIER_2)
+  materialityScore    Int               @default(0) @map("materiality_score")
+  purpose             String?           @db.Text
+  lastValidatedAt     DateTime?         @map("last_validated_at")
+  nextValidationDue   DateTime?         @map("next_validation_due")
+  validationOutcome   ValidationOutcome @default(PENDING) @map("validation_outcome")
+  validatorName       String?           @map("validator_name")
+  independentReview   Boolean           @default(false) @map("independent_review")
+  conceptualSoundness String?           @db.Text @map("conceptual_soundness")
+  backtestingResult   String?           @db.Text @map("backtesting_result")
+  benchmarkResult     String?           @db.Text @map("benchmark_result")
+  ongoingMonitoring   String?           @db.Text @map("ongoing_monitoring")
+  limitations         String?           @db.Text
+  conditions          String?           @db.Text
+  openFindings        Int               @default(0) @map("open_findings")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  model        AIModel?     @relation(fields: [modelId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, tier])
+  @@map("model_risk_records")
+}
+
+// ── 6. Gap Assessment ─────────────────────────────────────────────────────────
+
+enum GapSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum GapAssessmentStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  SIGNED_OFF
+}
+
+model GapAssessment {
+  id             String              @id @default(uuid())
+  organizationId String              @map("organization_id")
+  name           String
+  framework      String
+  scope          String?             @db.Text
+  assessorName   String?             @map("assessor_name")
+  status         GapAssessmentStatus @default(DRAFT)
+  overallScore   Int                 @default(0) @map("overall_score")
+  startedAt      DateTime?           @map("started_at")
+  completedAt    DateTime?           @map("completed_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  findings     GapFinding[]
+
+  @@index([organizationId, framework])
+  @@map("gap_assessments")
+}
+
+model GapFinding {
+  id               String      @id @default(uuid())
+  assessmentId     String      @map("assessment_id")
+  requirementRef   String      @map("requirement_ref")
+  requirementTitle String      @map("requirement_title")
+  currentState     String?     @db.Text @map("current_state")
+  desiredState     String?     @db.Text @map("desired_state")
+  gapDescription   String?     @db.Text @map("gap_description")
+  severity         GapSeverity @default(MEDIUM)
+  maturityCurrent  Int         @default(0) @map("maturity_current")
+  maturityTarget   Int         @default(3) @map("maturity_target")
+  recommendation   String?     @db.Text
+  ownerRole        String?     @map("owner_role")
+  targetDate       DateTime?   @map("target_date")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  assessment GapAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId, severity])
+  @@map("gap_findings")
+}
+
+// ── 7. Control Testing & Validation ───────────────────────────────────────────
+
+enum TestMethod {
+  INQUIRY
+  OBSERVATION
+  INSPECTION
+  REPERFORMANCE
+}
+
+enum TestResult {
+  NOT_TESTED
+  EFFECTIVE
+  PARTIALLY_EFFECTIVE
+  INEFFECTIVE
+}
+
+model ControlTest {
+  id             String     @id @default(uuid())
+  organizationId String     @map("organization_id")
+  testRef        String     @map("test_ref")
+  controlRef     String     @map("control_ref")
+  controlTitle   String     @map("control_title")
+  framework      String
+  testObjective  String?    @db.Text @map("test_objective")
+  testProcedure  String?    @db.Text @map("test_procedure")
+  method         TestMethod @default(INSPECTION)
+  sampleSize     Int        @default(0) @map("sample_size")
+  samplesTested  Int        @default(0) @map("samples_tested")
+  exceptions     Int        @default(0)
+  result         TestResult @default(NOT_TESTED)
+  testedBy       String?    @map("tested_by")
+  testedAt       DateTime?  @map("tested_at")
+  evidence       String?    @db.Text
+  conclusion     String?    @db.Text
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, testRef])
+  @@index([organizationId, result])
+  @@map("control_tests")
+}
+
+// ── 8. NCR & CAPA Register ────────────────────────────────────────────────────
+
+enum NcrType {
+  MAJOR
+  MINOR
+  OBSERVATION
+  OFI
+}
+
+enum NcrStatus {
+  OPEN
+  UNDER_INVESTIGATION
+  CAPA_ASSIGNED
+  PENDING_VERIFICATION
+  CLOSED
+}
+
+enum CapaActionType {
+  CORRECTIVE
+  PREVENTIVE
+}
+
+enum CapaStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  VERIFIED
+  OVERDUE
+}
+
+model NonConformity {
+  id                  String    @id @default(uuid())
+  organizationId      String    @map("organization_id")
+  ncrRef              String    @map("ncr_ref")
+  title               String
+  description         String    @db.Text
+  type                NcrType   @default(MINOR)
+  status              NcrStatus @default(OPEN)
+  clauseRef           String?   @map("clause_ref")
+  source              String?
+  raisedBy            String?   @map("raised_by")
+  raisedAt            DateTime  @default(now()) @map("raised_at")
+  rootCause           String?   @db.Text @map("root_cause")
+  immediateCorrection String?   @db.Text @map("immediate_correction")
+  dueDate             DateTime? @map("due_date")
+  closedAt            DateTime? @map("closed_at")
+  verifiedBy          String?   @map("verified_by")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  capas        Capa[]
+
+  @@unique([organizationId, ncrRef])
+  @@index([organizationId, status])
+  @@map("non_conformities")
+}
+
+model Capa {
+  id                      String         @id @default(uuid())
+  ncrId                   String         @map("ncr_id")
+  capaRef                 String         @map("capa_ref")
+  actionType              CapaActionType @default(CORRECTIVE) @map("action_type")
+  description             String         @db.Text
+  ownerRole               String?        @map("owner_role")
+  dueDate                 DateTime?      @map("due_date")
+  status                  CapaStatus     @default(OPEN)
+  completedAt             DateTime?      @map("completed_at")
+  effectivenessCheck      String?        @db.Text @map("effectiveness_check")
+  effectivenessVerifiedAt DateTime?      @map("effectiveness_verified_at")
+  createdAt               DateTime       @default(now()) @map("created_at")
+  updatedAt               DateTime       @updatedAt @map("updated_at")
+
+  ncr NonConformity @relation(fields: [ncrId], references: [id], onDelete: Cascade)
+
+  @@index([ncrId])
+  @@map("capas")
+}
+
+// ── 9. Prioritized Remediation Roadmap ────────────────────────────────────────
+
+enum RemediationPriority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum RemediationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+  DEFERRED
+}
+
+enum RemediationHorizon {
+  QUICK_WIN
+  SHORT_TERM
+  MEDIUM_TERM
+  LONG_TERM
+}
+
+model RemediationItem {
+  id             String              @id @default(uuid())
+  organizationId String              @map("organization_id")
+  itemRef        String              @map("item_ref")
+  title          String
+  description    String?             @db.Text
+  priority       RemediationPriority @default(P3)
+  status         RemediationStatus   @default(NOT_STARTED)
+  horizon        RemediationHorizon  @default(SHORT_TERM)
+  workstream     String?
+  framework      String?
+  sourceRef      String?             @map("source_ref")
+  ownerRole      String?             @map("owner_role")
+  effortDays     Int                 @default(0) @map("effort_days")
+  progressPct    Int                 @default(0) @map("progress_pct")
+  startDate      DateTime?           @map("start_date")
+  targetDate     DateTime?           @map("target_date")
+  completedAt    DateTime?           @map("completed_at")
+  dependencies   String[]            @default([])
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, itemRef])
+  @@index([organizationId, priority])
+  @@map("remediation_items")
+}
+
+// ── 10. Integrated Technology / Cyber / AI / Data risk KRIs ───────────────────
+
+enum KriDomain {
+  TECHNOLOGY
+  CYBER
+  AI
+  DATA
+}
+
+enum KriStatus {
+  GREEN
+  AMBER
+  RED
+}
+
+enum KriTrend {
+  IMPROVING
+  STABLE
+  DETERIORATING
+}
+
+enum KriDirection {
+  LOWER_IS_BETTER
+  HIGHER_IS_BETTER
+}
+
+model KriDefinition {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  kriCode        String       @map("kri_code")
+  name           String
+  domain         KriDomain
+  description    String?      @db.Text
+  formula        String?      @db.Text
+  unit           String       @default("%")
+  frequency      String       @default("MONTHLY")
+  direction      KriDirection @default(LOWER_IS_BETTER)
+  greenThreshold Float        @default(0) @map("green_threshold")
+  amberThreshold Float        @default(0) @map("amber_threshold")
+  redThreshold   Float        @default(0) @map("red_threshold")
+  ownerRole      String?      @map("owner_role")
+  reportedTo     String?      @map("reported_to")
+  isActive       Boolean      @default(true) @map("is_active")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  readings     KriReading[]
+
+  @@unique([organizationId, kriCode])
+  @@index([organizationId, domain])
+  @@map("kri_definitions")
+}
+
+model KriReading {
+  id              String    @id @default(uuid())
+  kriDefinitionId String    @map("kri_definition_id")
+  periodLabel     String    @map("period_label")
+  value           Float
+  status          KriStatus @default(GREEN)
+  trend           KriTrend  @default(STABLE)
+  commentary      String?   @db.Text
+  recordedAt      DateTime  @default(now()) @map("recorded_at")
+
+  definition KriDefinition @relation(fields: [kriDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([kriDefinitionId, periodLabel])
+  @@index([kriDefinitionId])
+  @@map("kri_readings")
+}
+
+// ── 11. Training & Enablement ─────────────────────────────────────────────────
+
+enum AudienceGroup {
+  BOARD
+  EXECUTIVE
+  RISK_COMPLIANCE
+  TECHNOLOGY
+  DATA_SCIENCE
+  BUSINESS_UNIT
+  ALL_STAFF
+}
+
+enum TrainingStatus {
+  PLANNED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model TrainingProgram {
+  id              String         @id @default(uuid())
+  organizationId  String         @map("organization_id")
+  code            String
+  title           String
+  description     String?        @db.Text
+  audience        AudienceGroup  @default(ALL_STAFF)
+  status          TrainingStatus @default(PLANNED)
+  deliveryMode    String         @default("INSTRUCTOR_LED") @map("delivery_mode")
+  durationHours   Float          @default(1) @map("duration_hours")
+  scheduledDate   DateTime?      @map("scheduled_date")
+  completedDate   DateTime?      @map("completed_date")
+  targetAttendees Int            @default(0) @map("target_attendees")
+  actualAttendees Int            @default(0) @map("actual_attendees")
+  facilitator     String?
+  materialsUrl    String?        @map("materials_url")
+  frameworkRefs   String[]       @default([]) @map("framework_refs")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@map("training_programs")
 }
