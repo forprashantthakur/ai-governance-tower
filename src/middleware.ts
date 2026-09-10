@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt, extractBearerToken } from "./lib/auth/jwt";
 
 const PUBLIC_PATHS = new Set([
+  // Static demo page in public/ — shared with clients by link, so it must not
+  // sit behind the auth redirect. Marked noindex in the document itself.
+  "/cio-briefing.html",
   "/landing",
   "/login",
   "/register",
