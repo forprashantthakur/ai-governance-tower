@@ -127,18 +127,26 @@ export default function GovernanceProgrammePage() {
   const { get } = useApi();
   const [data, setData] = useState<ReadinessResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await get<ReadinessResponse>("/governance/readiness");
       setData(res);
-    } catch {
+      setErrMsg(null);
+    } catch (err) {
       setData(null);
+      setErrMsg(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  }, [get]);
+    // `get` is intentionally not a dependency. useApi() returns a fresh object
+    // on every render, so depending on it recreates this callback each render,
+    // which re-fires the effect below and loops requests until the middleware
+    // rate-limits them. Every other page in the app omits it for the same reason.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     load();
@@ -159,9 +167,17 @@ export default function GovernanceProgrammePage() {
           <CardContent className="py-12 text-center">
             <AlertTriangle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
             <p className="font-medium">Could not load programme readiness</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Please refresh the page to try again.
-            </p>
+            {errMsg && (
+              <p className="text-xs text-muted-foreground mt-2 font-mono break-words max-w-md mx-auto">
+                {errMsg}
+              </p>
+            )}
+            <button
+              onClick={load}
+              className="mt-4 text-sm text-primary hover:underline"
+            >
+              Try again
+            </button>
           </CardContent>
         </Card>
       </div>
