@@ -21,18 +21,18 @@ interface ModelOption { id: string; name: string; type: string; status: string; 
 type SelectionValue = "" | `project:${string}` | `model:${string}`;
 
 interface AssessmentData {
-  // §5.3
+  // Sec. 5.3
   intendedUses: string[];
   unintendedUses: string[];
-  // §5.5
+  // Sec. 5.5
   algorithmType: string;
   algorithmDescription: string;
   developmentApproach: string;
-  // §5.6
+  // Sec. 5.6
   geographicScope: string[];
   deploymentLanguages: string[];
   environmentDescription: string;
-  // §5.8
+  // Sec. 5.8
   accountability: string;
   transparency: string;
   fairness: string;

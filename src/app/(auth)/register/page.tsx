@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Shield, Building2, User } from "lucide-react";
+import { Shield, Building2, User, Mail, CheckCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ export default function RegisterPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   function validateStep1() {
     const e: Record<string, string> = {};
@@ -50,9 +52,32 @@ export default function RegisterPage() {
     return Object.keys(e).length === 0;
   }
 
-  function goToStep2(e: React.FormEvent) {
+  async function goToStep2(e: React.FormEvent) {
     e.preventDefault();
-    if (validateStep1()) setStep(2);
+    if (!validateStep1()) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+      const json = await res.json();
+      if (!json.data?.available) {
+        setErrors((prev) => ({
+          ...prev,
+          email: "This email is already registered. Sign in instead?",
+        }));
+        return;
+      }
+    } catch {
+      // Network error — let the final submit catch it
+    } finally {
+      setLoading(false);
+    }
+
+    setStep(2);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -79,6 +104,14 @@ export default function RegisterPage() {
         return;
       }
 
+      // New flow: email verification required before login
+      if (json.data?.requiresEmailVerification) {
+        setRegisteredEmail(json.data.email ?? form.email);
+        setEmailSent(true);
+        return;
+      }
+
+      // Fallback: legacy direct login (invite path)
       const { token, user } = json.data as AuthResponse;
       if (token && user) {
         setAuth(token, user as never);
@@ -88,7 +121,7 @@ export default function RegisterPage() {
           title: "Welcome!",
           message: `${form.orgName} workspace created. 14-day trial started.`,
         });
-        window.location.href = "/";
+        window.location.href = "/models";
       }
     } catch {
       addNotification({ type: "error", title: "Network error", message: "Please try again." });
@@ -102,6 +135,39 @@ export default function RegisterPage() {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((p) => ({ ...p, [key]: e.target.value })),
   });
+
+  // ── Email verification sent screen ────────────────────────────────────────
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-6 text-center">
+          <div className="flex justify-center">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Shield className="h-10 w-10 text-primary" />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-8 shadow-sm space-y-4">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+            <h2 className="text-xl font-bold">Check your email</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              We sent a verification link to{" "}
+              <span className="font-semibold text-foreground">{registeredEmail}</span>.
+              <br /><br />
+              Click the link in the email to activate your account and sign in.
+            </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center pt-2">
+              <Mail className="h-4 w-4" />
+              Check spam / junk folder if you don&apos;t see it within 2 minutes
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Already verified?{" "}
+            <Link href="/login" className="text-primary hover:underline">Sign in</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -151,7 +217,16 @@ export default function RegisterPage() {
                   <div className="space-y-2">
                     <Label htmlFor="email">Work Email</Label>
                     <Input id="email" type="email" placeholder="jane@company.com" {...field("email")} />
-                    {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                    {errors.email && (
+                      <p className="text-xs text-destructive">
+                        {errors.email.includes("already registered") ? (
+                          <>
+                            This email is already registered.{" "}
+                            <Link href="/login" className="underline font-medium">Sign in instead?</Link>
+                          </>
+                        ) : errors.email}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="department">Department (optional)</Label>
@@ -172,7 +247,9 @@ export default function RegisterPage() {
                     <Input id="confirmPassword" type="password" placeholder="Repeat password" {...field("confirmPassword")} />
                     {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
                   </div>
-                  <Button type="submit" className="w-full">Continue →</Button>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Checking…" : "Continue →"}
+                  </Button>
                 </form>
                 <p className="text-center text-sm text-muted-foreground mt-4">
                   Already have an account?{" "}

@@ -13,10 +13,11 @@ const UpdateConsentSchema = z.object({
 });
 
 // GET /api/consent/:id
-export const GET = withAuth(async (_req, { params }) => {
+export const GET = withAuth(async (_req, { params, organizationId }) => {
   try {
-    const record = await prisma.consentRecord.findUnique({
-      where: { id: params.id },
+    // findFirst with organizationId ensures cross-org reads return 404 instead of leaking data
+    const record = await prisma.consentRecord.findFirst({
+      where: { id: params.id, organizationId },
       include: {
         dataAsset: { select: { id: true, name: true, sensitivity: true, hasPii: true, piiFields: true } },
       },
@@ -29,9 +30,12 @@ export const GET = withAuth(async (_req, { params }) => {
 });
 
 // PATCH /api/consent/:id  (revoke, re-grant, expire)
-export const PATCH = withAuth(async (req, { params, user }) => {
+export const PATCH = withAuth(async (req, { params, user, organizationId }) => {
   try {
-    const existing = await prisma.consentRecord.findUnique({ where: { id: params.id } });
+    // Scope lookup to org — prevents cross-org mutations
+    const existing = await prisma.consentRecord.findFirst({
+      where: { id: params.id, organizationId },
+    });
     if (!existing) return notFound("ConsentRecord");
 
     const body = await req.json();
@@ -66,6 +70,7 @@ export const PATCH = withAuth(async (req, { params, user }) => {
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "UPDATE",
       resource: "ConsentRecord",
       resourceId: params.id,
@@ -81,15 +86,19 @@ export const PATCH = withAuth(async (req, { params, user }) => {
 }, "RISK_OFFICER");
 
 // DELETE /api/consent/:id
-export const DELETE = withAuth(async (req, { params, user }) => {
+export const DELETE = withAuth(async (req, { params, user, organizationId }) => {
   try {
-    const existing = await prisma.consentRecord.findUnique({ where: { id: params.id } });
+    // Scope lookup to org — prevents cross-org deletions
+    const existing = await prisma.consentRecord.findFirst({
+      where: { id: params.id, organizationId },
+    });
     if (!existing) return notFound("ConsentRecord");
 
     await prisma.consentRecord.delete({ where: { id: params.id } });
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "DELETE",
       resource: "ConsentRecord",
       resourceId: params.id,

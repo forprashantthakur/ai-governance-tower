@@ -10,14 +10,18 @@ export const dynamic = 'force-dynamic';
 const CreateAgentSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().optional(),
-  modelId: z.string().uuid(),
+  modelId: z.string().uuid().optional(),           // internal registry model (optional)
+  externalModel: z.string().max(200).optional(),   // external LLM name e.g. "gpt-4o"
   systemPrompt: z.string().optional(),
   tools: z.array(z.string()).default([]),
   version: z.string().default("1.0.0"),
   maxTokens: z.number().int().positive().max(128000).optional(),
   temperature: z.number().min(0).max(2).optional(),
   metadata: z.record(z.unknown()).optional(),
-});
+}).refine(
+  (d) => d.modelId || d.externalModel,
+  { message: "Either an internal model or an external LLM name is required" }
+);
 
 // GET /api/agents
 export const GET = withAuth(async (req, { organizationId }) => {

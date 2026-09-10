@@ -5,8 +5,12 @@ import Link from "next/link";
 import { Plus, FolderKanban, TrendingUp, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Project, ProjectHealthStatus, ProjectStatus } from "@/types";
+
+type PortfolioProject = Pick<Project, "id" | "name" | "status" | "currentPhase" | "healthScore" | "healthStatus" | "description" | "targetDate"> & {
+  _count?: { tasks: number; milestones: number };
+  updatedAt: string;
+};
 
 const PHASE_LABELS: Record<string, string> = {
   BUSINESS_CASE: "Business Case",
@@ -54,7 +58,7 @@ function HealthGauge({ score, status }: { score: number; status: ProjectHealthSt
   );
 }
 
-function ProjectCard({ project }: { project: Project & { _count?: { tasks: number; milestones: number } } }) {
+function ProjectCard({ project }: { project: PortfolioProject }) {
   return (
     <Link href={`/projects/${project.id}`}>
       <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 cursor-pointer group">
@@ -101,7 +105,7 @@ function ProjectCard({ project }: { project: Project & { _count?: { tasks: numbe
 }
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [allProjects, setAllProjects] = useState<PortfolioProject[]>([]);
   const [portfolio, setPortfolio] = useState<{
     totalProjects: number;
     avgHealthScore: number;
@@ -111,27 +115,52 @@ export default function ProjectsPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
+  const [healthFilter, setHealthFilter] = useState("");
 
   useEffect(() => {
     const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
-    const headers = { Authorization: `Bearer ${token}` };
-    Promise.all([
-      fetch(`/api/projects?limit=50${statusFilter ? `&status=${statusFilter}` : ""}`, { headers }),
-      fetch("/api/projects/portfolio", { headers }),
-    ])
-      .then(([r1, r2]) => Promise.all([r1.json(), r2.json()]))
-      .then(([p, port]) => {
-        setProjects(p.data?.items ?? []);
-        setPortfolio(port.data);
+    fetch("/api/projects/portfolio", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success) {
+          setAllProjects(res.data?.projects ?? []);
+          setPortfolio(res.data);
+        }
       })
       .finally(() => setLoading(false));
-  }, [statusFilter]);
+  }, []);
+
+  const projects = allProjects.filter((p) => {
+    if (statusFilter && p.status !== statusFilter) return false;
+    if (healthFilter && p.healthStatus !== healthFilter) return false;
+    return true;
+  });
 
   const stats = [
-    { label: "Total Projects", value: portfolio?.totalProjects ?? 0, icon: FolderKanban, color: "text-blue-400" },
-    { label: "Avg Health Score", value: portfolio?.avgHealthScore ?? 100, icon: TrendingUp, color: "text-green-400", suffix: "%" },
-    { label: "At Risk", value: portfolio?.atRiskCount ?? 0, icon: AlertTriangle, color: "text-amber-400" },
-    { label: "Active", value: portfolio?.byStatus?.["ACTIVE"] ?? 0, icon: CheckCircle2, color: "text-cyan-400" },
+    {
+      label: "Total Projects", value: portfolio?.totalProjects ?? 0,
+      icon: FolderKanban, color: "text-blue-400",
+      onClick: () => { setStatusFilter(""); setHealthFilter(""); },
+      active: !statusFilter && !healthFilter,
+    },
+    {
+      label: "Avg Health Score", value: portfolio?.avgHealthScore ?? 100,
+      icon: TrendingUp, color: "text-green-400", suffix: "%",
+      onClick: () => { setStatusFilter(""); setHealthFilter("HEALTHY"); },
+      active: healthFilter === "HEALTHY",
+    },
+    {
+      label: "At Risk", value: (portfolio?.atRiskCount ?? 0) + (portfolio?.criticalCount ?? 0),
+      icon: AlertTriangle, color: "text-amber-400",
+      onClick: () => { setStatusFilter(""); setHealthFilter("AT_RISK"); },
+      active: healthFilter === "AT_RISK",
+    },
+    {
+      label: "Active", value: portfolio?.byStatus?.["ACTIVE"] ?? 0,
+      icon: CheckCircle2, color: "text-cyan-400",
+      onClick: () => { setStatusFilter("ACTIVE"); setHealthFilter(""); },
+      active: statusFilter === "ACTIVE",
+    },
   ];
 
   return (
@@ -151,20 +180,27 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
-      {/* KPI Stats */}
+      {/* KPI Stats — clickable to filter */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
-          <Card key={s.label} className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-muted-foreground">{s.label}</span>
-                <s.icon className={`h-4 w-4 ${s.color}`} />
-              </div>
-              <div className={`text-2xl font-bold ${s.color}`}>
-                {s.value}{s.suffix}
-              </div>
-            </CardContent>
-          </Card>
+          <button
+            key={s.label}
+            onClick={s.onClick}
+            className={`text-left rounded-xl border p-4 transition-all hover:border-primary/60 hover:shadow-md hover:shadow-primary/5 ${
+              s.active ? "border-primary/60 bg-primary/5" : "bg-card border-border"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">{s.label}</span>
+              <s.icon className={`h-4 w-4 ${s.color}`} />
+            </div>
+            <div className={`text-2xl font-bold ${s.color}`}>
+              {s.value}{s.suffix ?? ""}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 opacity-0 group-hover:opacity-100">
+              Click to filter ↓
+            </p>
+          </button>
         ))}
       </div>
 
@@ -173,14 +209,14 @@ export default function ProjectsPage() {
         {["", "ACTIVE", "DRAFT", "ON_HOLD", "COMPLETED"].map((s) => (
           <button
             key={s}
-            onClick={() => setStatusFilter(s)}
+            onClick={() => { setStatusFilter(s); setHealthFilter(""); }}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-              statusFilter === s
+              statusFilter === s && !healthFilter
                 ? "bg-primary text-primary-foreground border-primary"
                 : "border-border text-muted-foreground hover:text-foreground"
             }`}
           >
-            {s === "" ? "All" : s.replace(/_/g, " ")}
+            {s === "" ? `All (${allProjects.length})` : `${s.replace(/_/g, " ")} (${portfolio?.byStatus?.[s] ?? 0})`}
           </button>
         ))}
       </div>

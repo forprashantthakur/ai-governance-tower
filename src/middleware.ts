@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt, extractBearerToken } from "./lib/auth/jwt";
 
 const PUBLIC_PATHS = new Set([
+  // Static demo page in public/ — shared with clients by link, so it must not
+  // sit behind the auth redirect. Marked noindex in the document itself.
+  "/cio-briefing.html",
   "/landing",
   "/login",
   "/register",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/verify-email",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
 ]);
 
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX ?? "100");
@@ -53,16 +62,43 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   // Allow public paths
   if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
 
-  // Protect dashboard routes
-  if (pathname.startsWith("/(dashboard)") || pathname === "/") {
+  // Root "/" — marketing landing for guests, dashboard for authenticated users
+  if (pathname === "/") {
     const token =
       req.cookies.get("auth_token")?.value ??
       extractBearerToken(req.headers.get("authorization"));
 
     if (!token) {
+      // No session → show marketing landing page
       return NextResponse.redirect(new URL("/landing", req.url));
     }
+    try {
+      await verifyJwt(token);
+      // Valid session → render the dashboard (let Next.js serve (dashboard)/page.tsx)
+      return NextResponse.next();
+    } catch {
+      // Expired/invalid session → clear cookie and show landing
+      const res = NextResponse.redirect(new URL("/landing", req.url));
+      res.cookies.delete("auth_token");
+      return res;
+    }
+  }
 
+  // Protect all other dashboard routes
+  if (
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/landing") &&
+    !pathname.startsWith("/login") &&
+    !pathname.startsWith("/register") &&
+    !pathname.startsWith("/_next")
+  ) {
+    const token =
+      req.cookies.get("auth_token")?.value ??
+      extractBearerToken(req.headers.get("authorization"));
+
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
     try {
       await verifyJwt(token);
     } catch {

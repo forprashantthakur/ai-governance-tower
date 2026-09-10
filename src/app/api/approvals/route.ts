@@ -22,9 +22,15 @@ const CreateSchema = z.object({
   steps: z.array(StepSchema).min(1),
 });
 
-export const GET = withAuth(async () => {
+export const GET = withAuth(async (_req, { organizationId }) => {
   try {
     const workflows = await prisma.approvalWorkflow.findMany({
+      where: {
+        OR: [
+          { model: { organizationId } },  // workflows linked to org's models
+          { modelId: null },               // org-less workflows (legacy)
+        ],
+      },
       include: {
         model: { select: { id: true, name: true, type: true, status: true } },
         requester: { select: { id: true, name: true } },
