@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10; // 10 = ~100ms on Vercel; 12 = ~700ms (unnecessary overhead)
 
 export async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, SALT_ROUNDS);

@@ -163,7 +163,8 @@ export interface Agent {
   id: string;
   name: string;
   description?: string;
-  modelId: string;
+  modelId?: string;
+  externalModel?: string;           // e.g. "gpt-4o", "claude-sonnet-4"
   model?: Pick<AIModel, "id" | "name" | "type">;
   status: AgentStatus;
   systemPrompt?: string;
@@ -453,6 +454,36 @@ export interface ProjectAIModel {
   role: string;
   notes?: string;
   createdAt: string;
+}
+
+export type ArtifactCategory =
+  | "BRD"
+  | "PROJECT_PLAN"
+  | "TEST_CASES"
+  | "FRD"
+  | "DESIGN_DOCUMENT"
+  | "BUSINESS_CASE"
+  | "MODEL_ARTIFACT"
+  | "TRAINING_DATA"
+  | "EVALUATION_REPORT"
+  | "COMPLIANCE_EVIDENCE"
+  | "OTHER";
+
+export interface ProjectArtifact {
+  id: string;
+  projectId: string;
+  name: string;
+  url: string;
+  size: number;
+  mimeType: string;
+  category: ArtifactCategory;
+  description?: string;
+  version?: string;
+  tags: string[];
+  uploadedBy: string;
+  uploader?: { id: string; name: string };
+  uploadedAt: string;
+  updatedAt: string;
 }
 
 export interface ProjectTemplate {

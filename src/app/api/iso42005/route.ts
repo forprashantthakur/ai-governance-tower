@@ -8,18 +8,18 @@ export const dynamic = "force-dynamic";
 
 const UpsertSchema = z.object({
   modelId: z.string().uuid(),
-  // §5.3
+  // Sec. 5.3
   intendedUses: z.array(z.string()).optional(),
   unintendedUses: z.array(z.string()).optional(),
-  // §5.5
+  // Sec. 5.5
   algorithmType: z.string().optional(),
   algorithmDescription: z.string().optional(),
   developmentApproach: z.string().optional(),
-  // §5.6
+  // Sec. 5.6
   geographicScope: z.array(z.string()).optional(),
   deploymentLanguages: z.array(z.string()).optional(),
   environmentDescription: z.string().optional(),
-  // §5.8 impact dimensions
+  // Sec. 5.8 impact dimensions
   accountability: z.string().optional(),
   transparency: z.string().optional(),
   fairness: z.string().optional(),
@@ -66,7 +66,7 @@ export const GET = withAuth(async (req: NextRequest) => {
   }
 });
 
-// POST /api/iso42005 — upsert full impact assessment (§5.3 + §5.5 + §5.6 + §5.8)
+// POST /api/iso42005 — upsert full impact assessment (Sec. 5.3 + Sec. 5.5 + Sec. 5.6 + Sec. 5.8)
 export const POST = withAuth(async (req: NextRequest) => {
   try {
     const body = await req.json();

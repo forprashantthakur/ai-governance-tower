@@ -590,7 +590,7 @@ export default function DataGovernancePage() {
             <p className="text-xs text-muted-foreground mt-0.5">
               {piiAssets.length} PII data asset{piiAssets.length > 1 ? "s" : ""} feeding{" "}
               {modelsWithPii.length} AI model{modelsWithPii.length > 1 ? "s" : ""}. Ensure valid
-              consent records and purpose limitation per §6–8 DPDP Act.
+              consent records and purpose limitation per Sec. 6–8 DPDP Act.
             </p>
           </div>
         </div>

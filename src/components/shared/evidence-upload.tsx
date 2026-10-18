@@ -189,7 +189,7 @@ export function EvidenceUpload({
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
         <Paperclip className="h-3.5 w-3.5" />
         {label}
-        {section && <span className="text-primary font-mono">§{section}</span>}
+        {section && <span className="text-primary font-mono">Sec. {section}</span>}
       </p>
 
       {/* Drop zone */}
@@ -259,7 +259,7 @@ export function EvidenceUpload({
                     month: "short",
                     year: "numeric",
                   })}
-                  {f.section && <> &bull; §{f.section}</>}
+                  {f.section && <> &bull; Sec. {f.section}</>}
                 </p>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

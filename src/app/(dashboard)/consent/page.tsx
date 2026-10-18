@@ -147,7 +147,7 @@ function AddConsentModal({
           {/* DPDP note */}
           <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-yellow-500/5 border border-yellow-500/20 text-xs text-yellow-300">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-            <span>Under DPDP Act 2023 §6, consent must be free, specific, informed, and unambiguous. Record the data principal's identifier and consent scope.</span>
+            <span>Under DPDP Act 2023 Sec. 6, consent must be free, specific, informed, and unambiguous. Record the data principal's identifier and consent scope.</span>
           </div>
 
           {/* Data Asset */}
@@ -193,9 +193,9 @@ function AddConsentModal({
                   onChange={(e) => set("consentType", e.target.value)}
                   className="w-full appearance-none bg-background border border-border rounded-md px-3 py-2 text-sm pr-8 focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  <option value="DATA_PROCESSING">Data Processing (§6)</option>
-                  <option value="AI_DECISION">AI Decision-Making (§7)</option>
-                  <option value="DATA_SHARING">Data Sharing (§8)</option>
+                  <option value="DATA_PROCESSING">Data Processing (Sec. 6)</option>
+                  <option value="AI_DECISION">AI Decision-Making (Sec. 7)</option>
+                  <option value="DATA_SHARING">Data Sharing (Sec. 8)</option>
                   <option value="MARKETING">Marketing</option>
                 </select>
                 <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -439,10 +439,10 @@ export default function ConsentPage() {
       <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-primary/20 bg-primary/5 text-sm">
         <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-primary">Consent Management — DPDP Act 2023 §6–9</p>
+          <p className="font-semibold text-primary">Consent Management — DPDP Act 2023 Sec. 6–9</p>
           <p className="text-xs text-muted-foreground mt-0.5">
             Track, grant, and revoke data principal consent for each data asset and AI processing activity.
-            Consent must be specific, informed, and revocable at any time (§6). Withdrawal is as easy as granting it (§6(4)).
+            Consent must be specific, informed, and revocable at any time (Sec. 6). Withdrawal is as easy as granting it (Sec. 6(4)).
           </p>
         </div>
       </div>
@@ -476,7 +476,7 @@ export default function ConsentPage() {
         <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-orange-500/30 bg-orange-500/5 text-sm">
           <AlertTriangle className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
           <p className="text-xs">
-            <span className="font-semibold text-orange-300">{summary.EXPIRED} expired consent record{summary.EXPIRED !== 1 ? "s" : ""}</span> — under DPDP §6(3), processing must stop when consent expires. Review and re-obtain or stop the processing activity.
+            <span className="font-semibold text-orange-300">{summary.EXPIRED} expired consent record{summary.EXPIRED !== 1 ? "s" : ""}</span> — under DPDP Sec. 6(3), processing must stop when consent expires. Review and re-obtain or stop the processing activity.
           </p>
         </div>
       )}
@@ -485,7 +485,7 @@ export default function ConsentPage() {
         <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-red-500/20 bg-red-500/5 text-sm">
           <XCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
           <p className="text-xs">
-            <span className="font-semibold text-red-300">{summary.REVOKED} revoked consent{summary.REVOKED !== 1 ? "s" : ""}</span> — data principal has withdrawn consent. Ensure processing has ceased and erasure requests (DPDP §13) are handled within 30 days.
+            <span className="font-semibold text-red-300">{summary.REVOKED} revoked consent{summary.REVOKED !== 1 ? "s" : ""}</span> — data principal has withdrawn consent. Ensure processing has ceased and erasure requests (DPDP Sec. 13) are handled within 30 days.
           </p>
         </div>
       )}
@@ -610,12 +610,12 @@ export default function ConsentPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
-              { section: "§6(1)", title: "Valid Consent", desc: "Must be free, specific, informed, and unambiguous. Obtained before or at time of processing." },
-              { section: "§6(3)", title: "Purpose Limitation", desc: "Consent is valid only for the stated purpose. Cannot process for a different purpose without fresh consent." },
-              { section: "§6(4)", title: "Right to Withdraw", desc: "Data principal can withdraw consent at any time. Withdrawal must be as easy as granting it." },
-              { section: "§7",   title: "Legitimate Uses", desc: "Certain processing (state functions, medical emergency, employment) may not require consent." },
-              { section: "§8",   title: "Obligations on Fiduciary", desc: "Must maintain accuracy, keep only what's needed, implement security safeguards, and erase upon withdrawal." },
-              { section: "§13",  title: "Right to Erasure", desc: "Data principal may request erasure of personal data. Fiduciary must comply within 30 days." },
+              { section: "Sec. 6(1)", title: "Valid Consent", desc: "Must be free, specific, informed, and unambiguous. Obtained before or at time of processing." },
+              { section: "Sec. 6(3)", title: "Purpose Limitation", desc: "Consent is valid only for the stated purpose. Cannot process for a different purpose without fresh consent." },
+              { section: "Sec. 6(4)", title: "Right to Withdraw", desc: "Data principal can withdraw consent at any time. Withdrawal must be as easy as granting it." },
+              { section: "Sec. 7",   title: "Legitimate Uses", desc: "Certain processing (state functions, medical emergency, employment) may not require consent." },
+              { section: "Sec. 8",   title: "Obligations on Fiduciary", desc: "Must maintain accuracy, keep only what's needed, implement security safeguards, and erase upon withdrawal." },
+              { section: "Sec. 13",  title: "Right to Erasure", desc: "Data principal may request erasure of personal data. Fiduciary must comply within 30 days." },
             ].map((item) => (
               <div key={item.section} className="flex gap-3 p-3 rounded-lg bg-muted/30 border border-border">
                 <span className="text-xs font-mono font-bold text-primary shrink-0 mt-0.5">{item.section}</span>
