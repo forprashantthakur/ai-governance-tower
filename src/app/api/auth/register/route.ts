@@ -47,8 +47,16 @@ const NewOrgSchema = z.object({
 
 // ── Path 2: Accept an invite and join existing org ────────────────────────────
 
+// The password is either the existing account's current password (checked
+// against its hash) or the new account's password (checked against the
+// sign-up rules below) — so only the new-account path applies complexity.
 const AcceptInviteSchema = z.object({
   inviteToken:  z.string().uuid(),
+  name:         z.string().max(100).optional(),
+  password:     z.string().min(1).max(200),
+});
+
+const NewAccountFields = z.object({
   name:         z.string().min(2).max(100),
   password:     z.string()
                   .min(8)
@@ -93,10 +101,12 @@ export async function POST(req: NextRequest) {
         }
       } else {
         // New user — create account
+        const fields = NewAccountFields.safeParse({ name, password });
+        if (!fields.success) return badRequest("Validation failed", fields.error.flatten());
         const passwordHash = await hashPassword(password);
         user = await prisma.user.create({
           data: {
-            name,
+            name: fields.data.name,
             email: invite.email.toLowerCase(),
             passwordHash,
             emailVerified: true, // invite email = email verified

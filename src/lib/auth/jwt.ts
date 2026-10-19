@@ -24,7 +24,8 @@ function getSigningKey(): Uint8Array {
     cachedKey = new TextEncoder().encode(configured);
     return cachedKey;
   }
-  if (process.env.NODE_ENV === "production") {
+  // Any deployed environment (production build, or any Vercel deployment) must configure it.
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
     // Fail closed: never sign or accept tokens with a guessable key.
     throw new Error(
       `JWT_SECRET must be set to at least ${MIN_SECRET_LENGTH} characters in production`

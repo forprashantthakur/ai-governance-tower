@@ -37,7 +37,7 @@ export const PATCH = withAuth(async (req: NextRequest, { params, organizationId 
   } catch (err) {
     return serverError(err);
   }
-}, "ADMIN");
+}, "RISK_OFFICER");
 
 export const DELETE = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
@@ -47,4 +47,4 @@ export const DELETE = withAuth(async (_req: NextRequest, { params, organizationI
   } catch (err) {
     return serverError(err);
   }
-}, "ADMIN");
+}, "RISK_OFFICER");

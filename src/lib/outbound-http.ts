@@ -24,8 +24,9 @@ for (const [addr, prefix] of [
   ["203.0.113.0", 24], ["224.0.0.0", 4], ["240.0.0.0", 4],
 ] as const) blocked.addSubnet(addr, prefix, "ipv4");
 for (const [addr, prefix] of [
-  ["::", 128], ["::1", 128], ["64:ff9b::", 96], ["100::", 64], ["2001::", 23],
-  ["2001:db8::", 32], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8],
+  ["::", 96], ["::1", 128], ["64:ff9b::", 96], ["64:ff9b:1::", 48], ["100::", 64],
+  ["2001::", 23], ["2001:db8::", 32], ["2002::", 16], ["fc00::", 7], ["fe80::", 10],
+  ["fec0::", 10], ["ff00::", 8],
 ] as const) blocked.addSubnet(addr, prefix, "ipv6");
 
 export function isBlockedAddress(address: string): boolean {
@@ -110,7 +111,18 @@ export async function safePostJson(
   }
   const body = JSON.stringify(payload);
 
-  return new Promise<OutboundResult>((resolve) => {
+  return new Promise<OutboundResult>((resolveOnce) => {
+    // `timeout` below is an idle timeout; this is the overall deadline.
+    let settled = false;
+    const resolve = (r: OutboundResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      resolveOnce(r);
+    };
+    const deadline = setTimeout(() => {
+      req.destroy(new Error("Request timed out"));
+    }, timeoutMs);
     const req = https.request(
       url,
       {

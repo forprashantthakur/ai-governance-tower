@@ -156,7 +156,12 @@ async function buildWorkflow(req: NextRequest) {
     return NextResponse.json({ success: false, error: "AI did not return valid JSON" }, { status: 500 });
   }
 
-  const aiResult = JSON.parse(stripped.slice(start, end + 1));
+  let aiResult: ReturnType<typeof JSON.parse>;
+  try {
+    aiResult = JSON.parse(stripped.slice(start, end + 1));
+  } catch {
+    return NextResponse.json({ success: false, error: "AI did not return valid JSON" }, { status: 502 });
+  }
 
   // Build production-ready n8n import JSON
   const NODE_W = 240;

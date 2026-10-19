@@ -50,9 +50,19 @@ export const PATCH = withAuth(async (req: NextRequest, { params, user, organizat
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
     const d = parsed.data;
 
+    const isApprover = APPROVER_ROLES.has(user.orgRole);
     const approving = d.status !== undefined && APPROVED_STATUSES.has(d.status) && !APPROVED_STATUSES.has(existing.status);
-    if (approving && !APPROVER_ROLES.has(user.orgRole)) {
+    if (approving && !isApprover) {
       return forbidden("Only an ADMIN or OWNER can mark a policy approved or published");
+    }
+    if (!isApprover && (d.approvedBy !== undefined || d.approvedAt !== undefined)) {
+      return forbidden("Only an ADMIN or OWNER can record who approved a policy");
+    }
+    // An approved/published document can't be silently rewritten: non-approvers
+    // move it back to review first (a status-only change), then edit.
+    const substantive = [d.title, d.type, d.version, d.summary, d.content].some((v) => v !== undefined);
+    if (!isApprover && APPROVED_STATUSES.has(existing.status) && substantive) {
+      return forbidden("This policy is approved. Move it back to In review before editing it.");
     }
 
     const updated = await prisma.policyDocument.update({

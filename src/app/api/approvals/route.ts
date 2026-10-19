@@ -46,8 +46,9 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
     const { steps, ...wf } = parsed.data;
     if (wf.modelId && !(await findModelInOrg(wf.modelId, organizationId))) return notFound("Model");
-    if (!(await allActiveMembers(steps.map((s) => s.assigneeId), organizationId)))
-      return badRequest("Every assignee must be a member of this organization");
+    // Assignees must be able to decide their step (the decision endpoint needs RISK_OFFICER+).
+    if (!(await allActiveMembers(steps.map((s) => s.assigneeId), organizationId, ["OWNER", "ADMIN", "RISK_OFFICER"])))
+      return badRequest("Every assignee must be a Risk Officer, Admin or Owner in this organization");
     const workflow = await prisma.approvalWorkflow.create({
       data: {
         ...wf,

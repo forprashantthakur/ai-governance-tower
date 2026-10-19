@@ -7,6 +7,7 @@
  * parent. Callers return 404 when a helper returns null, so other tenants'
  * ids are indistinguishable from ids that do not exist.
  */
+import type { OrgMemberRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /** The project, if it belongs to the organization. */
@@ -37,31 +38,35 @@ export async function isActiveMember(userId: string | undefined | null, organiza
   return !!m;
 }
 
-/** True when every non-empty user id is an active member of the organization. */
-export async function allActiveMembers(userIds: (string | undefined | null)[], organizationId: string) {
+/**
+ * True when every non-empty user id is an active member of the organization
+ * (optionally holding one of `roles`).
+ */
+export async function allActiveMembers(
+  userIds: (string | undefined | null)[],
+  organizationId: string,
+  roles?: OrgMemberRole[]
+) {
   const ids = Array.from(new Set(userIds.filter((u): u is string => !!u)));
   if (ids.length === 0) return true;
   const count = await prisma.organizationMember.count({
-    where: { organizationId, isActive: true, userId: { in: ids } },
+    where: { organizationId, isActive: true, userId: { in: ids }, ...(roles && { role: { in: roles } }) },
   });
   return count === ids.length;
 }
 
 /**
  * Where-clause for approval workflows visible to an organization.
- * Older rows were created without organizationId; those stay visible to the
- * organization of their model or, for model-less rows, of their requester.
+ * Older rows were created without organizationId; those linked to a model
+ * stay visible to the model's organization.
  */
 export function approvalWorkflowsInOrg(organizationId: string) {
   return {
     OR: [
       { organizationId },
       { organizationId: null, model: { organizationId } },
-      {
-        organizationId: null,
-        modelId: null,
-        requester: { memberships: { some: { organizationId, isActive: true } } },
-      },
+      // Model-less rows created before organizationId was stored are hidden
+      // until backfilled by scripts/security-backfill.sql.
     ],
   };
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { parsePaging } from "@/lib/pagination";
 import { httpUrl } from "@/lib/safe-url";
 import {
   ok,
@@ -41,8 +42,7 @@ const CreateModelSchema = z.object({
 export const GET = withAuth(async (req, { user, organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
-    const limit = Math.min(100, parseInt(searchParams.get("limit") ?? "20"));
+    const { page, limit } = parsePaging(searchParams, { defaultLimit: 20, maxLimit: 100 });
     const search = searchParams.get("search") ?? "";
     const type = searchParams.get("type");
     const status = searchParams.get("status");

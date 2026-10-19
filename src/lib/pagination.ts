@@ -7,7 +7,7 @@ export function parsePaging(
     const n = Number.parseInt(v ?? "", 10);
     return Number.isFinite(n) ? n : d;
   };
-  const page = Math.max(1, int(searchParams.get("page"), 1));
+  const page = Math.min(10_000, Math.max(1, int(searchParams.get("page"), 1)));
   const limit = Math.min(maxLimit, Math.max(1, int(searchParams.get("limit"), defaultLimit)));
   return { page, limit, skip: (page - 1) * limit };
 }

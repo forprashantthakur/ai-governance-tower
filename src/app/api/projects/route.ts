@@ -41,7 +41,7 @@ export const GET = withAuth(async (req: NextRequest, { user, organizationId }) =
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const search = searchParams.get("search");
-    const { page, limit } = parsePaging(searchParams, { defaultLimit: 20, maxLimit: 100 });
+    const { page, limit } = parsePaging(searchParams, { defaultLimit: 20, maxLimit: 200 });
 
     const where: Record<string, unknown> = { organizationId };
     if (status) where.status = status;

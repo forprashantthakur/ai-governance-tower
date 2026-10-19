@@ -17,11 +17,12 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
   }
 
   // Verify HMAC-SHA256 signature — reject immediately on mismatch
-  const valid = verifyRazorpaySignature(
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature
-  );
+  let valid: boolean;
+  try {
+    valid = verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+  } catch (err) {
+    return serverError(err); // e.g. RAZORPAY_KEY_SECRET not configured
+  }
   if (!valid) {
     return badRequest("Payment verification failed: invalid signature.");
   }

@@ -53,7 +53,7 @@ beforeEach(async () => {
 
 describe("removed back doors", () => {
   it.each([
-    "admin/list-users", "admin/list-models", "admin/seed-demo", "admin/seed-agents",
+    "admin/list-users", "admin/list-models", "admin/seed-demo", "admin/seed-agents", "admin/migrate-to-org",
     "seed", "seed/full", "seed/monitoring",
   ])("/api/%s no longer exists", (route) => {
     expect(existsSync(join(__dirname, "../../app/api", route, "route.ts"))).toBe(false);

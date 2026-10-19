@@ -59,4 +59,4 @@ export const POST = withAuth(async (req: NextRequest, { params, organizationId }
   } catch (err) {
     return serverError(err);
   }
-}, "ADMIN");
+}, "RISK_OFFICER");

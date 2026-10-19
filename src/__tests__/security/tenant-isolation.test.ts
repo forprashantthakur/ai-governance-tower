@@ -214,11 +214,27 @@ describe("approvals", () => {
     expect(ids).not.toContain("wf-globex-legacy");
   });
 
-  it("legacy model-less workflows stay visible to the requester's organization", async () => {
+  it("legacy model-less workflows reappear for their organization once backfilled", async () => {
     const { GET } = await import("@/app/api/approvals/route");
-    const res = await GET(req("/api/approvals", { headers: await as("u-globex-owner", GLOBEX, "OWNER") }), { params: {} });
-    const ids = (await res.json()).data.map((w: any) => w.id);
-    expect(ids).toEqual(["wf-globex-legacy"]);
+    const headers = await as("u-globex-owner", GLOBEX, "OWNER");
+    const before = (await (await GET(req("/api/approvals", { headers }), { params: {} })).json()).data;
+    expect(before).toEqual([]); // hidden, not leaked, until scripts/security-backfill.sql runs
+    fake.tables.approvalWorkflow.find((w) => w.id === "wf-globex-legacy")!.organizationId = GLOBEX;
+    const after = (await (await GET(req("/api/approvals", { headers }), { params: {} })).json()).data;
+    expect(after.map((w: any) => w.id)).toEqual(["wf-globex-legacy"]);
+  });
+
+  it("approval steps can only be assigned to people who can decide them", async () => {
+    const { POST } = await import("@/app/api/approvals/route");
+    const res = await POST(
+      req("/api/approvals", {
+        method: "POST",
+        headers: await as("u-acme-ro", ACME, "RISK_OFFICER"),
+        body: { title: "x", steps: [{ stepType: "LEGAL", label: "Legal", assigneeId: "00000000-0000-4000-8000-000000000000" }] },
+      }),
+      { params: {} }
+    );
+    expect(res.status).toBe(400);
   });
 
   it("another organization's step can't be decided", async () => {

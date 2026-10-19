@@ -3,7 +3,6 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { httpUrl } from "@/lib/safe-url";
 import { findProjectInOrg } from "@/lib/tenant";
 import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 import { fireWebhooks } from "@/lib/n8n-trigger";
@@ -13,7 +12,7 @@ export const dynamic = "force-dynamic";
 const LogRunSchema = z.object({
   hyperparams: z.record(z.unknown()).optional(),
   metrics: z.record(z.number()).optional(),
-  artifacts: z.array(z.object({ name: z.string(), type: z.string(), url: httpUrl() })).optional(),
+  artifacts: z.array(z.object({ name: z.string(), type: z.string(), url: z.string().max(2048) })).optional(),
   status: z.string().optional(),
   duration: z.number().optional(),
   notes: z.string().optional(),

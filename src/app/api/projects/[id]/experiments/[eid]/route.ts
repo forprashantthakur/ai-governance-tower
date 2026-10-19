@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { httpUrl } from "@/lib/safe-url";
 import { findProjectInOrg } from "@/lib/tenant";
 import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 
@@ -14,7 +13,7 @@ const UpdateExperimentSchema = z.object({
   status: z.string().optional(),
   hyperparams: z.record(z.unknown()).optional(),
   metrics: z.record(z.number()).optional(),
-  artifacts: z.array(z.object({ name: z.string(), type: z.string(), url: httpUrl() })).optional(),
+  artifacts: z.array(z.object({ name: z.string(), type: z.string(), url: z.string().max(2048) })).optional(),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),
   modelRef: z.string().optional(),
