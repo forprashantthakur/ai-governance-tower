@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { created, badRequest, notFound, serverError } from "@/lib/api-response";
+import { created, badRequest, notFound, serverError, conflict } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +48,7 @@ export const POST = withAuth(async (req: NextRequest, { params, organizationId }
       where: { id: params.id, organizationId },
     });
     if (!assessment) return notFound("GapAssessment");
+    if (assessment.status === "SIGNED_OFF") return conflict("This assessment is signed off; its findings can no longer be changed");
 
     const parsed = CreateFindingSchema.safeParse(await req.json());
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());

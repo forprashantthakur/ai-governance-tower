@@ -43,15 +43,24 @@ export const PLAN_CONFIG: Record<"STARTER" | "PROFESSIONAL", PlanConfig> = {
   },
 };
 
+export function isPaidPlan(plan: unknown): plan is keyof typeof PLAN_CONFIG {
+  return typeof plan === "string" && Object.prototype.hasOwnProperty.call(PLAN_CONFIG, plan);
+}
+
+export const PLAN_RANK: Record<string, number> = { TRIAL: 1, STARTER: 2, PROFESSIONAL: 3, ENTERPRISE: 4 };
+
 export function verifyRazorpaySignature(
   orderId: string,
   paymentId: string,
   signature: string
 ): boolean {
-  const body = `${orderId}|${paymentId}`;
-  const expected = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-    .update(body)
-    .digest("hex");
-  return expected === signature;
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) throw new Error("RAZORPAY_KEY_SECRET must be set");
+  const expected = Buffer.from(
+    crypto.createHmac("sha256", secret).update(`${orderId}|${paymentId}`).digest("hex"),
+    "utf8"
+  );
+  const given = Buffer.from(String(signature), "utf8");
+  // Constant-time comparison so the signature can't be guessed byte by byte.
+  return given.length === expected.length && crypto.timingSafeEqual(given, expected);
 }

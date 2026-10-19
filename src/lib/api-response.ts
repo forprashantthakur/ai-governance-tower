@@ -44,10 +44,9 @@ export function forbidden(message = "Forbidden"): NextResponse<ApiError> {
 }
 
 export function notFound(resource = "Resource"): NextResponse<ApiError> {
-  return NextResponse.json(
-    { success: false, error: `${resource} not found` },
-    { status: 404 }
-  );
+  // Accept both notFound("Project") and notFound("Project not found").
+  const message = /not found$/i.test(resource) ? resource : `${resource} not found`;
+  return NextResponse.json({ success: false, error: message }, { status: 404 });
 }
 
 export function conflict(message: string): NextResponse<ApiError> {
@@ -55,6 +54,13 @@ export function conflict(message: string): NextResponse<ApiError> {
 }
 
 export function serverError(err: unknown): NextResponse<ApiError> {
+  // Map well-known client-caused failures to 4xx instead of a generic 500.
+  if (err instanceof SyntaxError) return badRequest("Request body is not valid JSON");
+  const code = (err as { code?: unknown } | null)?.code;
+  if (code === "P2025") return notFound();
+  if (code === "P2002") return conflict("A record with these values already exists");
+  if (code === "P2003") return badRequest("A referenced record does not exist");
+
   const message =
     process.env.NODE_ENV === "development" && err instanceof Error
       ? err.message

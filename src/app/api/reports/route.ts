@@ -24,7 +24,7 @@ export const GET = withAuth(async (_req, { organizationId }) => {
         schedules: { select: { id: true, isActive: true, frequency: true, recipients: true, nextRunAt: true } },
       },
       orderBy: { createdAt: "desc" },
-    }).catch(() => []);
+    });
     return ok(reports);
   } catch (err) { return serverError(err); }
 });

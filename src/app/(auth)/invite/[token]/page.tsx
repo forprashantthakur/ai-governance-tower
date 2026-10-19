@@ -172,6 +172,9 @@ export default function AcceptInvitePage() {
                   onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                 />
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+                <p className="text-xs text-muted-foreground">
+                  Already have an account with this email? Enter its current password.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>

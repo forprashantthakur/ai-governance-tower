@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { parsePaging } from "@/lib/pagination";
 import { ok, badRequest, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { BUILT_IN_TEMPLATES } from "@/lib/project-templates";
@@ -40,8 +41,7 @@ export const GET = withAuth(async (req: NextRequest, { user, organizationId }) =
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const search = searchParams.get("search");
-    const page = parseInt(searchParams.get("page") ?? "1");
-    const limit = parseInt(searchParams.get("limit") ?? "20");
+    const { page, limit } = parsePaging(searchParams, { defaultLimit: 20, maxLimit: 100 });
 
     const where: Record<string, unknown> = { organizationId };
     if (status) where.status = status;

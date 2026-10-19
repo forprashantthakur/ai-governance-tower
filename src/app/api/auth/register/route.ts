@@ -2,9 +2,10 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/auth/password";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { isReservedSlug } from "@/lib/demo";
 import { signJwt } from "@/lib/auth/jwt";
-import { created, badRequest, conflict, notFound, serverError } from "@/lib/api-response";
+import { created, badRequest, conflict, notFound, unauthorized, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { sendVerificationEmail } from "@/lib/email";
 
@@ -20,6 +21,7 @@ function slugify(name: string): string {
 }
 
 async function uniqueSlug(base: string): Promise<string> {
+  if (isReservedSlug(base)) base = `org-${base}`;
   let slug = base;
   let i = 0;
   while (await prisma.organization.findUnique({ where: { slug } })) {
@@ -83,7 +85,13 @@ export async function POST(req: NextRequest) {
       // Check if user already exists (existing user joining new org)
       let user = await prisma.user.findUnique({ where: { email: invite.email.toLowerCase() } });
 
-      if (!user) {
+      if (user) {
+        // Existing account: only its owner may accept, proven by its current password.
+        // Otherwise whoever holds the invite link could get a session as this user.
+        if (!user.isActive || !(await verifyPassword(password, user.passwordHash))) {
+          return unauthorized("This email already has an account. Enter that account's current password to accept the invite.");
+        }
+      } else {
         // New user — create account
         const passwordHash = await hashPassword(password);
         user = await prisma.user.create({
@@ -124,6 +132,7 @@ export async function POST(req: NextRequest) {
 
       await logAudit({
         userId: user.id,
+        organizationId: membership.organizationId,
         action: "CREATE",
         resource: "OrganizationMember",
         resourceId: membership.id,
@@ -200,6 +209,7 @@ export async function POST(req: NextRequest) {
 
     await logAudit({
       userId: user.id,
+      organizationId: org.id,
       action: "CREATE",
       resource: "Organization",
       resourceId: org.id,

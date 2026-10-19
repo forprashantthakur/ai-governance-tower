@@ -5,6 +5,9 @@ const PUBLIC_PATHS = new Set([
   // Static demo page in public/ — shared with clients by link, so it must not
   // sit behind the auth redirect. Marked noindex in the document itself.
   "/cio-briefing.html",
+  // Marketing demos embedded on / linked from the public landing page.
+  "/demo-marketing.html",
+  "/demo-projects.html",
   "/landing",
   "/login",
   "/register",
@@ -17,6 +20,10 @@ const PUBLIC_PATHS = new Set([
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
 ]);
+
+// Path prefixes that must be reachable without a session.
+// Invite links are opened by people who don't have an account yet.
+const PUBLIC_PREFIXES = ["/invite/"];
 
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX ?? "100");
 const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? "60000");
@@ -43,8 +50,10 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
 
   // Rate limiting for API routes
   if (pathname.startsWith("/api/")) {
+    // On Vercel, req.ip is set by the platform and can't be spoofed by the
+    // client; X-Forwarded-For is only a fallback for other hosts.
     const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
+      req.ip ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
 
     if (!checkRateLimit(ip)) {
       return NextResponse.json(
@@ -61,6 +70,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
 
   // Allow public paths
   if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
+  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
   // Root "/" — marketing landing for guests, dashboard for authenticated users
   if (pathname === "/") {

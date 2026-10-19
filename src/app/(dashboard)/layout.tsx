@@ -8,6 +8,16 @@ import { useUIStore } from "@/store/ui.store";
 import { cn } from "@/lib/utils";
 import { Shield } from "lucide-react";
 
+/** True when the JWT's exp claim is in the past (signature is checked server-side). */
+function isExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload.exp === "number" && payload.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -26,7 +36,7 @@ export default function DashboardLayout({
         const parsed = JSON.parse(stored);
         const token = parsed?.state?.token;
         const user = parsed?.state?.user;
-        if (token && user) {
+        if (token && user && !isExpired(token)) {
           // Re-sync Zustand store from localStorage
           setAuth(token, user);
           setAuthenticated(true);

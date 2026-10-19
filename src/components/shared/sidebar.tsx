@@ -230,7 +230,11 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-          onClick={clearAuth}
+          onClick={() => {
+            clearAuth();
+            // Leave the dashboard immediately rather than showing stale data.
+            window.location.assign("/login");
+          }}
           title={sidebarCollapsed ? "Sign out" : undefined}
         >
           <LogOut className="h-4 w-4 shrink-0" />

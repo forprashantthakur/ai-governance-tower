@@ -29,13 +29,15 @@ export async function withRetry<T>(
       return await fn();
     } catch (err: unknown) {
       lastErr = err;
+      // Retry only when the database was never reached (cold start), so a
+      // write that may already have been applied is never sent twice.
+      const code = (err as { code?: unknown } | null)?.code;
       const msg = err instanceof Error ? err.message : String(err);
       const isConnErr =
-        msg.includes("P1001") ||
-        msg.includes("P1002") ||
-        msg.includes("connect") ||
-        msg.includes("ECONNREFUSED") ||
-        msg.includes("timeout");
+        code === "P1001" ||
+        code === "P1002" ||
+        code === "P1017" ||
+        /\bP100[12]\b|ECONNREFUSED|Can't reach database server/.test(msg);
       if (i < retries - 1 && isConnErr) {
         await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
         continue;

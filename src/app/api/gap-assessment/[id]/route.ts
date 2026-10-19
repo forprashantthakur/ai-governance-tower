@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-response";
+import { ok, badRequest, conflict, forbidden, noContent, notFound, serverError } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +43,7 @@ export const GET = withAuth(async (_req: NextRequest, { params, organizationId }
 });
 
 // PATCH /api/gap-assessment/:id
-export const PATCH = withAuth(async (req: NextRequest, { params, organizationId }) => {
+export const PATCH = withAuth(async (req: NextRequest, { params, user, organizationId }) => {
   try {
     // Scope lookup to org — prevents cross-org mutations
     const existing = await prisma.gapAssessment.findFirst({
@@ -54,6 +54,14 @@ export const PATCH = withAuth(async (req: NextRequest, { params, organizationId 
     const parsed = UpdateAssessmentSchema.safeParse(await req.json());
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
     const { startedAt, completedAt, status, ...rest } = parsed.data;
+
+    // Sign-off is a decision for ADMIN/OWNER, and a signed-off assessment is locked.
+    if (existing.status === "SIGNED_OFF") {
+      return conflict("This assessment is signed off and can no longer be changed");
+    }
+    if (status === "SIGNED_OFF" && !["OWNER", "ADMIN"].includes(user.orgRole)) {
+      return forbidden("Only an ADMIN or OWNER can sign off an assessment");
+    }
 
     // Auto-stamp completedAt when the assessment is finished, unless caller set it explicitly
     const autoCompletedAt =

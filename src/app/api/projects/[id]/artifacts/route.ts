@@ -3,7 +3,8 @@ import { put } from "@vercel/blob";
 import { ArtifactCategory } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, created, badRequest, serverError } from "@/lib/api-response";
+import { findProjectInOrg } from "@/lib/tenant";
+import { ok, created, badRequest, serverError, notFound } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ const ALLOWED_TYPES: Record<string, boolean> = {
   "image/png": true,
   "image/jpeg": true,
   "image/gif": true,
-  "image/svg+xml": true,
+  // SVG is not accepted: it can carry script and blobs are served inline.
   // ML model files
   "application/octet-stream": true,   // .pkl, .onnx, .h5, .pt, .bin
   // Archives
@@ -44,8 +45,9 @@ const ARTIFACT_CATEGORIES = new Set<string>(Object.values(ArtifactCategory));
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 
 // ─── GET /api/projects/[id]/artifacts ─────────────────────────────────────────
-export const GET = withAuth(async (req: NextRequest, { params }) => {
+export const GET = withAuth(async (req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") as ArtifactCategory | null;
     const q = searchParams.get("q") || undefined;
@@ -92,9 +94,9 @@ export const GET = withAuth(async (req: NextRequest, { params }) => {
 });
 
 // ─── POST /api/projects/[id]/artifacts ────────────────────────────────────────
-export const POST = withAuth(
-  async (req: NextRequest, { user, params }) => {
+export const POST = withAuth(async (req: NextRequest, { user, params, organizationId }) => {
     try {
+      if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
       const formData = await req.formData();
       const file = formData.get("file") as File | null;
       if (!file) return badRequest("No file provided");
@@ -124,7 +126,7 @@ export const POST = withAuth(
       const blob = await put(
         `artifacts/${params!.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._\-]/g, "_")}`,
         file,
-        { access: "public", contentType: file.type }
+        { access: "public", contentType: file.type, addRandomSuffix: true }
       );
 
       const artifact = await withRetry(() =>

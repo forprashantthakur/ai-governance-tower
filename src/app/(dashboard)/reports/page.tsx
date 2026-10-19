@@ -8,6 +8,7 @@ import {
   ChevronRight, X, Eye, Send, ToggleLeft, ToggleRight,
 } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
+import { escapeHtml } from "@/lib/safe-url";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,7 +89,7 @@ function printReport(title: string, contentEl: HTMLElement | null) {
   if (!win) return;
   win.document.write(`<!DOCTYPE html><html><head>
 <meta charset="utf-8"/>
-<title>${title}</title>
+<title>${escapeHtml(title)}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;color:#111827;background:#fff;padding:16mm 14mm;font-size:13px;line-height:1.5}

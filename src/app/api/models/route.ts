@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { httpUrl } from "@/lib/safe-url";
 import {
   ok,
   created,
@@ -24,7 +25,7 @@ const CreateModelSchema = z.object({
   department: z.string().optional(),
   vendor: z.string().optional(),
   framework: z.string().optional(),
-  endpoint: z.string().url().optional().or(z.literal("")),
+  endpoint: httpUrl().optional().or(z.literal("")),
   tags: z.array(z.string()).default([]),
   isPiiProcessing: z.boolean().default(false),
   isFinancial: z.boolean().default(false),

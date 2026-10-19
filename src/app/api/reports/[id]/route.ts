@@ -13,24 +13,26 @@ const UpdateSchema = z.object({
   sections: z.array(z.string()).optional(),
 });
 
-export const GET = withAuth(async (_req: NextRequest, { params }) => {
+export const GET = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
-    const report = await prisma.report.findUnique({
-      where: { id: params.id },
+    const report = await prisma.report.findFirst({
+      where: { id: params.id, organizationId },
       include: { creator: { select: { id: true, name: true } }, schedules: true },
-    }).catch(() => null);
+    });
     if (!report) return notFound("Report");
     return ok(report);
   } catch (err) { return serverError(err); }
 });
 
-export const PATCH = withAuth(async (req: NextRequest, { params }) => {
+export const PATCH = withAuth(async (req: NextRequest, { params, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = UpdateSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    const existing = await prisma.report.findFirst({ where: { id: params.id, organizationId }, select: { id: true } });
+    if (!existing) return notFound("Report");
     const report = await prisma.report.update({
-      where: { id: params.id },
+      where: { id: existing.id },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: parsed.data as any,
       include: { creator: { select: { id: true, name: true } }, schedules: true },
@@ -39,9 +41,10 @@ export const PATCH = withAuth(async (req: NextRequest, { params }) => {
   } catch (err) { return serverError(err); }
 }, "RISK_OFFICER");
 
-export const DELETE = withAuth(async (_req: NextRequest, { params }) => {
+export const DELETE = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
-    await prisma.report.delete({ where: { id: params.id } }).catch(() => {});
+    const res = await prisma.report.deleteMany({ where: { id: params.id, organizationId } });
+    if (res.count === 0) return notFound("Report");
     return noContent();
   } catch (err) { return serverError(err); }
 }, "RISK_OFFICER");

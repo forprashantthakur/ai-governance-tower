@@ -16,6 +16,11 @@ import { signJwt } from "@/lib/auth/jwt";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 async function makeToken(role: "RISK_OFFICER" | "OWNER" | "VIEWER" | "ADMIN" | "AUDITOR" = "RISK_OFFICER") {
+  // withAuth re-reads the membership from the database on every request.
+  (prisma.organizationMember.findFirst as jest.Mock).mockResolvedValue({
+    role,
+    organization: { plan: "PROFESSIONAL" },
+  });
   return signJwt({
     userId: "user-1",
     email: "test@example.com",

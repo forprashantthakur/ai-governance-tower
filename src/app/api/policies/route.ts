@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, created, badRequest, conflict, serverError } from "@/lib/api-response";
+import { ok, created, badRequest, conflict, forbidden, serverError } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -82,10 +82,13 @@ export const GET = withAuth(async (req: NextRequest, { organizationId }) => {
 });
 
 // POST /api/policies
-export const POST = withAuth(async (req: NextRequest, { organizationId }) => {
+export const POST = withAuth(async (req: NextRequest, { user, organizationId }) => {
   try {
     const parsed = CreateSchema.safeParse(await req.json());
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (["APPROVED", "PUBLISHED"].includes(parsed.data.status) && !["OWNER", "ADMIN"].includes(user.orgRole)) {
+      return forbidden("Only an ADMIN or OWNER can create a policy as approved or published");
+    }
 
     const existing = await prisma.policyDocument.findFirst({
       where: { organizationId, docCode: parsed.data.docCode },

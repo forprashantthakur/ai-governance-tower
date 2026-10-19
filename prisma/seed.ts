@@ -5,6 +5,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 
 const prisma = new PrismaClient();
 
@@ -12,7 +13,11 @@ async function main() {
   console.log("🌱 Seeding AI Governance Control Tower...\n");
 
   // ─── Users ─────────────────────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash("Admin@1234!", 12);
+  // Never ship a known default password: take it from SEED_PASSWORD or
+  // generate a random one and print it once below.
+  const seedPassword =
+    process.env.SEED_PASSWORD ?? `Seed-${randomBytes(9).toString("base64url")}1!`;
+  const passwordHash = await bcrypt.hash(seedPassword, 12);
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@governance.ai" },
@@ -656,7 +661,11 @@ async function main() {
   console.log("  Admin:        admin@governance.ai");
   console.log("  Risk Officer: risk@governance.ai");
   console.log("  Auditor:      audit@governance.ai");
-  console.log("  Password:     Admin@1234!");
+  console.log(
+    process.env.SEED_PASSWORD
+      ? "  Password:     (value of SEED_PASSWORD)"
+      : `  Password:     ${seedPassword}   (randomly generated — store it now)`
+  );
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 }
 

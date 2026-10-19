@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest, serverError } from "@/lib/api-response";
+import { httpUrl } from "@/lib/safe-url";
+import { findProjectInOrg } from "@/lib/tenant";
+import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -12,29 +14,31 @@ const UpdateExperimentSchema = z.object({
   status: z.string().optional(),
   hyperparams: z.record(z.unknown()).optional(),
   metrics: z.record(z.number()).optional(),
-  artifacts: z.array(z.object({ name: z.string(), type: z.string(), url: z.string() })).optional(),
+  artifacts: z.array(z.object({ name: z.string(), type: z.string(), url: httpUrl() })).optional(),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),
   modelRef: z.string().optional(),
 });
 
-export const GET = withAuth(async (_req: NextRequest, { params }) => {
+export const GET = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const experiment = await withRetry(() =>
-      prisma.experiment.findUnique({
-        where: { id: params!.eid },
+      prisma.experiment.findFirst({
+        where: { id: params!.eid, projectId: params!.id },
         include: { runs: { orderBy: { runNumber: "asc" } } },
       })
     );
-    if (!experiment) return ok(null);
+    if (!experiment) return notFound("Experiment");
     return ok(experiment);
   } catch (err) {
     return serverError(err);
   }
 });
 
-export const PATCH = withAuth(async (req: NextRequest, { params }) => {
+export const PATCH = withAuth(async (req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const body = await req.json();
     const parsed = UpdateExperimentSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
@@ -44,7 +48,7 @@ export const PATCH = withAuth(async (req: NextRequest, { params }) => {
 
     const experiment = await withRetry(() =>
       prisma.experiment.update({
-        where: { id: params!.eid },
+        where: { id: params!.eid, projectId: params!.id },
         data,
         include: { runs: { orderBy: { runNumber: "asc" } } },
       })
@@ -53,4 +57,4 @@ export const PATCH = withAuth(async (req: NextRequest, { params }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "RISK_OFFICER");

@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, created, badRequest, serverError } from "@/lib/api-response";
+import { ok, created, badRequest, notFound, serverError } from "@/lib/api-response";
+import { findModelInOrg } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -18,24 +19,26 @@ const CreateSchema = z.object({
   isAddressed: z.boolean().optional(),
 });
 
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const modelId = searchParams.get("modelId");
     const scenarios = await prisma.misuseScenario.findMany({
-      where: modelId ? { modelId } : undefined,
+      where: { model: { organizationId }, ...(modelId && { modelId }) },
       include: { model: { select: { id: true, name: true } } },
       orderBy: [{ severity: "desc" }, { likelihood: "desc" }],
-    }).catch(() => []);
+      take: 500,
+    });
     return ok(scenarios);
   } catch (err) { return serverError(err); }
 });
 
-export const POST = withAuth(async (req: NextRequest) => {
+export const POST = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const body = await req.json();
     const parsed = CreateSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (!(await findModelInOrg(parsed.data.modelId, organizationId))) return notFound("Model");
     const scenario = await prisma.misuseScenario.create({ data: { ...parsed.data, affectedGroups: parsed.data.affectedGroups ?? [] } });
     return created(scenario);
   } catch (err) { return serverError(err); }

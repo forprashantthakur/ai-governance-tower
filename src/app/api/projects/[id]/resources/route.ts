@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest, serverError } from "@/lib/api-response";
+import { findProjectInOrg, isActiveMember } from "@/lib/tenant";
+import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +16,9 @@ const AddResourceSchema = z.object({
   hourlyRate: z.number().optional(),
 });
 
-export const GET = withAuth(async (_req: NextRequest, { params }) => {
+export const GET = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const resources = await withRetry(() =>
       prisma.projectResource.findMany({
         where: { projectId: params!.id },
@@ -30,11 +32,14 @@ export const GET = withAuth(async (_req: NextRequest, { params }) => {
   }
 });
 
-export const POST = withAuth(async (req: NextRequest, { params }) => {
+export const POST = withAuth(async (req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const body = await req.json();
     const parsed = AddResourceSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (!(await isActiveMember(parsed.data.userId, organizationId)))
+      return badRequest("User is not a member of this organization");
 
     const resource = await withRetry(() =>
       prisma.projectResource.create({
@@ -54,4 +59,4 @@ export const POST = withAuth(async (req: NextRequest, { params }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "ADMIN");

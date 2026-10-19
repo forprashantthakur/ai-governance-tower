@@ -4,6 +4,11 @@
  * role enforcement, plan enforcement, and backward-compat overloads.
  */
 
+const mockFindMembership = jest.fn();
+jest.mock("@/lib/prisma", () => ({
+  prisma: { organizationMember: { findFirst: (...a: unknown[]) => mockFindMembership(...a) } },
+}));
+
 import { NextRequest } from "next/server";
 import { withAuth } from "@/lib/with-auth";
 import { signJwt } from "@/lib/auth/jwt";
@@ -16,15 +21,18 @@ function makeRequest(authHeader?: string): NextRequest {
 }
 
 async function makeToken(overrides: Partial<Parameters<typeof signJwt>[0]> = {}) {
-  return signJwt({
+  const claims = {
     userId: "user-1",
     email: "user@example.com",
     name: "Test User",
     organizationId: "org-abc",
-    orgRole: "RISK_OFFICER",
-    plan: "PROFESSIONAL",
+    orgRole: "RISK_OFFICER" as const,
+    plan: "PROFESSIONAL" as const,
     ...overrides,
-  });
+  };
+  // By default the database agrees with the token.
+  mockFindMembership.mockResolvedValue({ role: claims.orgRole, organization: { plan: claims.plan } });
+  return signJwt(claims);
 }
 
 const okHandler = jest.fn().mockResolvedValue(
@@ -84,7 +92,8 @@ describe("withAuth() — legacy token without organizationId", () => {
   it("returns 401 with 'Session expired' message", async () => {
     // Sign a token without organizationId (simulate pre-migration token)
     const { SignJWT } = await import("jose");
-    const secret = new TextEncoder().encode("fallback-dev-secret-min-32-chars-!!");
+    // Same key the app uses outside production (JWT_SECRET is unset in tests).
+    const secret = new TextEncoder().encode("dev-only-insecure-jwt-secret-do-not-deploy");
     const oldToken = await new SignJWT({ userId: "old-user", email: "a@b.com" })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
@@ -207,5 +216,36 @@ describe("withAuth() — params forwarding", () => {
     await route(makeRequest(`Bearer ${token}`), { params: { id: "model-99" } });
     const ctx = okHandler.mock.calls[0][1];
     expect(ctx.params).toEqual({ id: "model-99" });
+  });
+});
+
+// ─── Membership is re-checked against the database ────────────────────────
+describe("withAuth() — live membership check", () => {
+  it("returns 401 when the membership was removed after sign-in", async () => {
+    const token = await makeToken({ orgRole: "OWNER" });
+    mockFindMembership.mockResolvedValue(null);
+    const route = withAuth(okHandler);
+    const res = await route(makeRequest(`Bearer ${token}`), { params: {} });
+    expect(res.status).toBe(401);
+    expect(okHandler).not.toHaveBeenCalled();
+  });
+
+  it("uses the current role from the database, not the token's", async () => {
+    const token = await makeToken({ orgRole: "ADMIN" });
+    mockFindMembership.mockResolvedValue({ role: "VIEWER", organization: { plan: "PROFESSIONAL" } });
+    const route = withAuth(okHandler, "ADMIN");
+    const res = await route(makeRequest(`Bearer ${token}`), { params: {} });
+    expect(res.status).toBe(403);
+  });
+
+  it("scopes the lookup to the token's user and organization", async () => {
+    const token = await makeToken();
+    const route = withAuth(okHandler);
+    await route(makeRequest(`Bearer ${token}`), { params: {} });
+    expect(mockFindMembership).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ userId: "user-1", organizationId: "org-abc", isActive: true }),
+      })
+    );
   });
 });

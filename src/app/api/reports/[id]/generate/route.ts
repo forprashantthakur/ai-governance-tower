@@ -5,10 +5,13 @@ import { ok, notFound, serverError } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
-export const GET = withAuth(async (_req: NextRequest, { params }) => {
+export const GET = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
-    const report = await prisma.report.findUnique({ where: { id: params.id } }).catch(() => null);
+    const report = await prisma.report.findFirst({ where: { id: params.id, organizationId } });
     if (!report) return notFound("Report");
+    // Every query below is limited to the caller's organization.
+    const inOrg = { organizationId };
+    const modelInOrg = { model: { organizationId } };
 
     const filters = (report.filters as Record<string, string>) ?? {};
     const fromDate = filters.from ? new Date(filters.from) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
@@ -19,11 +22,11 @@ export const GET = withAuth(async (_req: NextRequest, { params }) => {
 
     if (report.type === "EXECUTIVE_SUMMARY") {
       const [models, latestRisks, complianceSummary, recentAudit, agentCount] = await Promise.all([
-        prisma.aIModel.findMany({ select: { type: true, status: true, department: true, isPiiProcessing: true, isCritical: true } }),
-        prisma.riskAssessment.findMany({ distinct: ["modelId"], orderBy: { createdAt: "desc" }, select: { riskLevel: true, overallScore: true, modelId: true } }),
-        prisma.complianceControl.groupBy({ by: ["status"], _count: { status: true } }).catch(() => []),
-        prisma.auditLog.count({ where: dateFilter }).catch(() => 0),
-        prisma.agent.count().catch(() => 0),
+        prisma.aIModel.findMany({ where: inOrg, select: { type: true, status: true, department: true, isPiiProcessing: true, isCritical: true } }),
+        prisma.riskAssessment.findMany({ where: modelInOrg, distinct: ["modelId"], orderBy: { createdAt: "desc" }, select: { riskLevel: true, overallScore: true, modelId: true } }),
+        prisma.complianceControl.groupBy({ by: ["status"], where: modelInOrg, _count: { status: true } }),
+        prisma.auditLog.count({ where: { ...dateFilter, ...inOrg } }),
+        prisma.agent.count({ where: inOrg }),
       ]);
       const byType = models.reduce((a: Record<string,number>, m) => { a[m.type] = (a[m.type]||0)+1; return a; }, {});
       const byStatus = models.reduce((a: Record<string,number>, m) => { a[m.status] = (a[m.status]||0)+1; return a; }, {});
@@ -36,7 +39,7 @@ export const GET = withAuth(async (_req: NextRequest, { params }) => {
 
     if (report.type === "RISK_ASSESSMENT") {
       const assessments = await prisma.riskAssessment.findMany({
-        where: dateFilter,
+        where: { ...dateFilter, ...modelInOrg },
         include: { model: { select: { id: true, name: true, type: true, status: true, department: true } }, assessor: { select: { name: true } } },
         orderBy: { overallScore: "desc" },
       });
@@ -47,9 +50,10 @@ export const GET = withAuth(async (_req: NextRequest, { params }) => {
 
     if (report.type === "COMPLIANCE_STATUS") {
       const controls = await prisma.complianceControl.findMany({
+        where: modelInOrg,
         include: { model: { select: { id: true, name: true, type: true } } },
         orderBy: [{ framework: "asc" }, { status: "asc" }],
-      }).catch(() => []);
+      });
       const byFramework: Record<string, { PASS:number; FAIL:number; PARTIAL:number; PENDING_REVIEW:number; NOT_APPLICABLE:number }> = {};
       controls.forEach(c => {
         if (!byFramework[c.framework]) byFramework[c.framework] = { PASS:0, FAIL:0, PARTIAL:0, PENDING_REVIEW:0, NOT_APPLICABLE:0 };
@@ -62,7 +66,7 @@ export const GET = withAuth(async (_req: NextRequest, { params }) => {
 
     if (report.type === "AI_INVENTORY") {
       const models = await prisma.aIModel.findMany({
-        where: dateFilter,
+        where: { ...dateFilter, ...inOrg },
         include: {
           owner: { select: { name: true } },
           approver: { select: { name: true } },
@@ -76,8 +80,9 @@ export const GET = withAuth(async (_req: NextRequest, { params }) => {
 
     if (report.type === "ISO42005_ASSESSMENT") {
       const assessments = await prisma.impactAssessment.findMany({
+        where: modelInOrg,
         include: { model: { select: { id: true, name: true, type: true, status: true } } },
-      }).catch(() => []);
+      });
       data = { assessments, total: assessments.length };
     }
 
