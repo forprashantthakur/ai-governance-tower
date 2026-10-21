@@ -103,7 +103,7 @@ export default function BillingPage() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = useAuthStore.getState().token;
       const res = await fetch("/api/billing/status", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -120,7 +120,7 @@ export default function BillingPage() {
   const handleUpgrade = async (planKey: string) => {
     setLoadingPlan(planKey);
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = useAuthStore.getState().token;
 
       // Step 1: Create order on server
       const orderRes = await fetch("/api/billing/create-order", {

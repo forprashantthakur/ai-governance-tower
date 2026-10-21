@@ -50,10 +50,9 @@ export default function AcceptInvitePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!form.name.trim()) errs.name = "Name is required";
-    if (!form.password || form.password.length < 8) errs.password = "Password must be at least 8 characters";
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(form.password))
-      errs.password = "Must include uppercase, lowercase, number and special character";
+    // New accounts need a name and a strong password; existing accounts just
+    // enter their current password. The server applies the right rule.
+    if (!form.password) errs.password = "Password is required";
     if (form.password !== form.confirmPassword) errs.confirmPassword = "Passwords do not match";
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
@@ -172,6 +171,9 @@ export default function AcceptInvitePage() {
                   onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                 />
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+                <p className="text-xs text-muted-foreground">
+                  Already have an account with this email? Enter its current password.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>

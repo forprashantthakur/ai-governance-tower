@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { findModelInOrg } from "@/lib/tenant";
 import { ok, created, badRequest, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -157,6 +158,8 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { modelId, lastValidatedAt, nextValidationDue, ...rest } = parsed.data;
+    if (modelId && !(await findModelInOrg(modelId, organizationId)))
+      return badRequest("Model not found in this organization");
 
     const row = await prisma.modelRiskRecord.create({
       data: {

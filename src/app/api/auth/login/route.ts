@@ -118,6 +118,7 @@ export async function POST(req: NextRequest) {
     prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => null);
     logAudit({
       userId: user.id,
+      organizationId: membership.organizationId,
       action: "LOGIN",
       resource: "User",
       resourceId: user.id,

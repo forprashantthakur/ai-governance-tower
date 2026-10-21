@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest, serverError } from "@/lib/api-response";
+import { findProjectInOrg } from "@/lib/tenant";
+import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,9 @@ const UpdateResourceSchema = z.object({
   hourlyRate: z.number().optional(),
 });
 
-export const PATCH = withAuth(async (req: NextRequest, { params }) => {
+export const PATCH = withAuth(async (req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const body = await req.json();
     const parsed = UpdateResourceSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
@@ -26,7 +28,7 @@ export const PATCH = withAuth(async (req: NextRequest, { params }) => {
 
     const resource = await withRetry(() =>
       prisma.projectResource.update({
-        where: { id: params!.rid },
+        where: { id: params!.rid, projectId: params!.id },
         data,
         include: { user: { select: { id: true, name: true, email: true, role: true } } },
       })
@@ -35,13 +37,14 @@ export const PATCH = withAuth(async (req: NextRequest, { params }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "RISK_OFFICER");
 
-export const DELETE = withAuth(async (_req: NextRequest, { params }) => {
+export const DELETE = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
-    await prisma.projectResource.delete({ where: { id: params!.rid } });
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
+    await prisma.projectResource.delete({ where: { id: params!.rid, projectId: params!.id } });
     return ok({ deleted: true });
   } catch (err) {
     return serverError(err);
   }
-});
+}, "RISK_OFFICER");

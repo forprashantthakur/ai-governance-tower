@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { findDataAssetInOrg } from "@/lib/tenant";
 import { ok, created, badRequest, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -78,6 +79,8 @@ export const POST = withAuth(async (req, { user, organizationId }) => {
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { grantedAt, expiresAt, ...rest } = parsed.data;
+    if (rest.dataAssetId && !(await findDataAssetInOrg(rest.dataAssetId, organizationId)))
+      return badRequest("Data asset not found in this organization");
 
     const record = await prisma.consentRecord.create({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

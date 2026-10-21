@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { findModelInOrg } from "@/lib/tenant";
 import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
@@ -32,21 +33,21 @@ const UpsertSchema = z.object({
 });
 
 // GET /api/iso42005?modelId=<id>
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const modelId = searchParams.get("modelId");
     if (!modelId) return badRequest("modelId required");
 
-    const model = await prisma.aIModel.findUnique({
-      where: { id: modelId },
+    const model = await prisma.aIModel.findFirst({
+      where: { id: modelId, organizationId },
       select: {
         id: true, name: true, type: true, status: true,
         explainability: true, humanOversight: true,
         isPiiProcessing: true, isFinancial: true, isCritical: true,
       },
     });
-    if (!model) return notFound("Model not found");
+    if (!model) return notFound("Model");
 
     // Tables may not exist yet if prisma db push hasn't run — return empty gracefully
     let impact = null;
@@ -67,13 +68,14 @@ export const GET = withAuth(async (req: NextRequest) => {
 });
 
 // POST /api/iso42005 — upsert full impact assessment (Sec. 5.3 + Sec. 5.5 + Sec. 5.6 + Sec. 5.8)
-export const POST = withAuth(async (req: NextRequest) => {
+export const POST = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const body = await req.json();
     const parsed = UpsertSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { modelId, ...data } = parsed.data;
+    if (!(await findModelInOrg(modelId, organizationId))) return notFound("Model");
 
     try {
       const impact = await prisma.impactAssessment.upsert({

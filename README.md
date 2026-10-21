@@ -75,13 +75,11 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## Demo Credentials
+## Demo Accounts
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin@governance.ai | Admin@1234! |
-| Risk Officer | risk@governance.ai | Admin@1234! |
-| Auditor | audit@governance.ai | Admin@1234! |
+`npm run db:seed` creates three local demo accounts: `admin@governance.ai`, `risk@governance.ai` and `audit@governance.ai`.
+They share one password, taken from the `SEED_PASSWORD` environment variable or, if that is unset, generated randomly and printed once by the seed script.
+Never run the seed script against production.
 
 ---
 

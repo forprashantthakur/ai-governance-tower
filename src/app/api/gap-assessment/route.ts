@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, created, badRequest, serverError } from "@/lib/api-response";
+import { ok, created, badRequest, serverError, forbidden } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -66,10 +66,13 @@ export const GET = withAuth(async (req: NextRequest, { organizationId }) => {
 });
 
 // POST /api/gap-assessment
-export const POST = withAuth(async (req: NextRequest, { organizationId }) => {
+export const POST = withAuth(async (req: NextRequest, { user, organizationId }) => {
   try {
     const parsed = CreateAssessmentSchema.safeParse(await req.json());
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (parsed.data.status === "SIGNED_OFF" && !["OWNER", "ADMIN"].includes(user.orgRole)) {
+      return forbidden("Only an ADMIN or OWNER can sign off an assessment");
+    }
 
     const { startedAt, ...rest } = parsed.data;
 

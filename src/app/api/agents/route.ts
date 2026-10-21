@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { findModelInOrg } from "@/lib/tenant";
 import { ok, created, badRequest, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -55,6 +56,8 @@ export const POST = withAuth(async (req, { user, organizationId }) => {
     const body = await req.json();
     const parsed = CreateAgentSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (parsed.data.modelId && !(await findModelInOrg(parsed.data.modelId, organizationId)))
+      return badRequest("Model not found in this organization");
 
     const agent = await prisma.agent.create({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

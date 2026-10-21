@@ -164,13 +164,13 @@ This handbook covers:
 
 ### 3.3 Default User Accounts (Seed Data)
 
-| Email | Password | Role |
-|---|---|---|
-| `admin@governance.ai` | `Admin@1234!` | Admin |
-| `risk@governance.ai` | `Admin@1234!` | Risk Officer |
-| `audit@governance.ai` | `Admin@1234!` | Auditor |
+| Email | Role |
+|---|---|
+| `admin@governance.ai` | Admin |
+| `risk@governance.ai` | Risk Officer |
+| `audit@governance.ai` | Auditor |
 
-> ⚠️ **IMPORTANT:** Change all default passwords immediately after first login in production.
+The seed password comes from the `SEED_PASSWORD` environment variable, or is generated randomly and printed once when you run `npm run db:seed`. These accounts are for local development only — never seed a production database.
 
 ---
 
@@ -184,7 +184,7 @@ This handbook covers:
 
 **Step 3:** Enter your credentials:
 - Email: `admin@governance.ai`
-- Password: `Admin@1234!`
+- Password: the seed password (see section 3.3)
 
 **Step 4:** Click **Sign In**
 

@@ -1,19 +1,19 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { parsePaging } from "@/lib/pagination";
 import { ok, notFound, serverError } from "@/lib/api-response";
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/agents/:id/logs
-export const GET = withAuth(async (req, { params }) => {
+export const GET = withAuth(async (req, { params, organizationId }) => {
   try {
-    const agent = await prisma.agent.findUnique({ where: { id: params.id } });
+    const agent = await prisma.agent.findFirst({ where: { id: params.id, organizationId }, select: { id: true } });
     if (!agent) return notFound("Agent");
 
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
-    const limit = Math.min(100, parseInt(searchParams.get("limit") ?? "20"));
+    const { page, limit } = parsePaging(searchParams, { defaultLimit: 20, maxLimit: 100 });
     const flagged = searchParams.get("flagged") === "true";
 
     const [logs, total] = await Promise.all([
@@ -38,4 +38,4 @@ export const GET = withAuth(async (req, { params }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "AUDITOR");

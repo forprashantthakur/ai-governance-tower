@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { OrgMemberRole, PlanTier } from "@prisma/client";
 import { verifyJwt, extractBearerToken, type JwtUserPayload } from "./auth/jwt";
+import { prisma } from "./prisma";
 import { unauthorized, forbidden } from "./api-response";
 
 export type RouteContext = {
@@ -64,6 +65,24 @@ export function withAuth(
     if (!user.organizationId) {
       return unauthorized("Session expired — please sign in again");
     }
+
+    // The token's role and plan are a snapshot from sign-in. Re-read them so a
+    // removed or demoted member, a deactivated user or organization, or a plan
+    // change takes effect immediately instead of when the token expires.
+    const membership = await prisma.organizationMember.findFirst({
+      where: {
+        userId: user.userId,
+        organizationId: user.organizationId,
+        isActive: true,
+        user: { isActive: true },
+        organization: { isActive: true },
+      },
+      select: { role: true, organization: { select: { plan: true } } },
+    });
+    if (!membership) {
+      return unauthorized("Your access to this organization has ended — please sign in again");
+    }
+    user = { ...user, orgRole: membership.role, plan: membership.organization.plan };
 
     // Role check
     if (opts.requiredRole) {

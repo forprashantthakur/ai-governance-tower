@@ -4,6 +4,7 @@ import { ArtifactCategory } from "@prisma/client";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { findProjectInOrg } from "@/lib/tenant";
 import { ok, badRequest, notFound, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -18,9 +19,9 @@ const UpdateSchema = z.object({
 });
 
 // ─── PATCH /api/projects/[id]/artifacts/[aid] ─────────────────────────────────
-export const PATCH = withAuth(
-  async (req: NextRequest, { user, params }) => {
+export const PATCH = withAuth(async (req: NextRequest, { user, params, organizationId }) => {
     try {
+      if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
       const body = await req.json();
       const parsed = UpdateSchema.safeParse(body);
       if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
@@ -65,9 +66,9 @@ export const PATCH = withAuth(
 );
 
 // ─── DELETE /api/projects/[id]/artifacts/[aid] ────────────────────────────────
-export const DELETE = withAuth(
-  async (req: NextRequest, { user, params }) => {
+export const DELETE = withAuth(async (req: NextRequest, { user, params, organizationId }) => {
     try {
+      if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
       const existing = await withRetry(() =>
         prisma.projectArtifact.findFirst({
           where: { id: params!.aid, projectId: params!.id },

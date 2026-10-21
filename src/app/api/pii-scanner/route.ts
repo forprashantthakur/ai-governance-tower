@@ -186,7 +186,7 @@ const PII_RULES: PiiRule[] = [
     reason: "Column name matches income/salary data",
   },
   {
-    patterns: [/credit[_\s-]?score/i, /cibil/i, /loan[_\s-]?id/i, /emi/i],
+    patterns: [/credit[_\s-]?score/i, /cibil/i, /loan[_\s-]?id/i, /\bemi\b/i],
     piiCategory: "Financial — Credit Information",
     dpdpCategory: "Personal Data — Financial (DPDP Sec. 4)",
     isSpecialCategory: false,
@@ -318,7 +318,7 @@ const PII_RULES: PiiRule[] = [
     reason: "Column name matches US Social Security Number",
   },
   {
-    patterns: [/location/i, /geo[_\s-]?loc/i, /lat(itude)?/i, /lon(gitude)?/i, /gps/i, /coordinates/i],
+    patterns: [/location/i, /geo[_\s-]?loc/i, /\blat(itude)?\b/i, /\b(lon|lng)(gitude)?\b/i, /\bgps\b/i, /coordinates/i],
     piiCategory: "Location — Geo-coordinates",
     dpdpCategory: "Personal Data — Location (DPDP Sec. 4)",
     isSpecialCategory: false,
@@ -458,6 +458,19 @@ function normalize(col: string): string {
   return col.toLowerCase().replace(/[_\s-]+/g, "_");
 }
 
+/**
+ * Column name split into space-separated words ("customerName", "customer_name"
+ * → "customer name"). `_` is a word character in regex, so word-boundary rules
+ * like /\bname\b/ only match snake_case and camelCase names in this form.
+ */
+function words(col: string): string {
+  return col
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .toLowerCase()
+    .replace(/[_\s.-]+/g, " ")
+    .trim();
+}
+
 // ── Detection Core ────────────────────────────────────────────────────────────
 
 function detectPii(
@@ -465,10 +478,11 @@ function detectPii(
   sampleValue?: string
 ): Omit<PiiDetectionResult, "columnName"> {
   const norm = normalize(columnName);
+  const spaced = words(columnName);
 
   // 1. Name-based rule matching
   for (const rule of PII_RULES) {
-    const matched = rule.patterns.some((p) => p.test(columnName) || p.test(norm));
+    const matched = rule.patterns.some((p) => p.test(columnName) || p.test(norm) || p.test(spaced));
     if (matched) {
       return {
         normalizedName: norm,

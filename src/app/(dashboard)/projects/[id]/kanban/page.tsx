@@ -136,13 +136,16 @@ export default function KanbanPage() {
     if (!draggingId) return;
     const prev = kanbanTasks.find((t) => t.id === draggingId)?.status;
     if (prev === status) { setDraggingId(null); return; }
-    updateTaskStatus(draggingId, status);
+    const taskId = draggingId;
+    updateTaskStatus(taskId, status);
     setDraggingId(null);
-    fetch(`/api/projects/${params.id}/tasks/${draggingId}`, {
+    // Optimistic move; put the card back if the server refuses (e.g. read-only role).
+    const revert = () => { if (prev) updateTaskStatus(taskId, prev); };
+    fetch(`/api/projects/${params.id}/tasks/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` },
       body: JSON.stringify({ status }),
-    }).catch(() => { if (prev) updateTaskStatus(draggingId!, prev); });
+    }).then((r) => { if (!r.ok) revert(); }).catch(revert);
   }
 
   async function addTask(status: TaskStatus) {

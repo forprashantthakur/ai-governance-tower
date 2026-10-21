@@ -3,7 +3,8 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest, serverError } from "@/lib/api-response";
+import { findProjectInOrg } from "@/lib/tenant";
+import { ok, badRequest, serverError, notFound } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +18,9 @@ const CreateWorkflowSchema = z.object({
   }),
 });
 
-export const GET = withAuth(async (_req: NextRequest, { params }) => {
+export const GET = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const workflows = await withRetry(() =>
       prisma.workflowCanvas.findMany({
         where: { projectId: params!.id },
@@ -31,8 +33,9 @@ export const GET = withAuth(async (_req: NextRequest, { params }) => {
   }
 });
 
-export const POST = withAuth(async (req: NextRequest, { user, params }) => {
+export const POST = withAuth(async (req: NextRequest, { user, params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     const body = await req.json();
     const parsed = CreateWorkflowSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
@@ -56,4 +59,4 @@ export const POST = withAuth(async (req: NextRequest, { user, params }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "RISK_OFFICER");

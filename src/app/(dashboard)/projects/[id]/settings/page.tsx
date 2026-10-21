@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { N8nWebhook, N8nTriggerEvent, ProjectAIModel, AIModel } from "@/types";
+import { useUIStore } from "@/store/ui.store";
+
+/** Show the API's error (e.g. a role the user doesn't have) instead of pretending it worked. */
+async function failed(res: Response, title: string): Promise<boolean> {
+  if (res.ok) return false;
+  const body = await res.json().catch(() => ({}));
+  useUIStore.getState().addNotification({ type: "error", title, message: body.error ?? `Request failed (${res.status})` });
+  return true;
+}
 
 const EVENT_LABELS: Record<N8nTriggerEvent, string> = {
   PHASE_COMPLETE: "Phase Complete",
@@ -64,22 +73,25 @@ export default function ProjectSettingsPage() {
         headers: { ...getH(), "Content-Type": "application/json" },
         body: JSON.stringify(webhookForm),
       });
+      if (await failed(res, "Could not add webhook")) return;
       const data = await res.json();
       if (data.data) { setWebhooks(w => [...w, data.data]); setShowWebhookForm(false); }
     } finally { setSaving(false); }
   }
 
   async function deleteWebhook(wid: string) {
-    await fetch(`/api/projects/${params.id}/webhooks/${wid}`, { method: "DELETE", headers: getH() });
+    const res = await fetch(`/api/projects/${params.id}/webhooks/${wid}`, { method: "DELETE", headers: getH() });
+    if (await failed(res, "Could not delete webhook")) return;
     setWebhooks(w => w.filter(x => x.id !== wid));
   }
 
   async function toggleWebhook(wid: string, isActive: boolean) {
-    await fetch(`/api/projects/${params.id}/webhooks/${wid}`, {
+    const res = await fetch(`/api/projects/${params.id}/webhooks/${wid}`, {
       method: "PATCH",
       headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({ isActive }),
     });
+    if (await failed(res, "Could not update webhook")) return;
     setWebhooks(w => w.map(x => x.id === wid ? { ...x, isActive } : x));
   }
 
@@ -88,6 +100,10 @@ export default function ProjectSettingsPage() {
     const res = await fetch(`/api/projects/${params.id}/webhooks/${wid}/trigger`, {
       method: "POST", headers: getH(),
     });
+    if (await failed(res, "Could not send test event")) {
+      setTestResult(r => ({ ...r, [wid]: { status: "error", loading: false } }));
+      return;
+    }
     const data = await res.json();
     setTestResult(r => ({ ...r, [wid]: { status: data.data?.lastStatus ?? "error", loading: false } }));
   }
@@ -98,6 +114,7 @@ export default function ProjectSettingsPage() {
       headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({ modelId, role: "output" }),
     });
+    if (await failed(res, "Could not link model")) return;
     const data = await res.json();
     if (data.data) {
       const m = allModels.find(x => x.id === modelId);
@@ -106,7 +123,8 @@ export default function ProjectSettingsPage() {
   }
 
   async function unlinkModel(modelId: string) {
-    await fetch(`/api/projects/${params.id}/models/${modelId}`, { method: "DELETE", headers: getH() });
+    const res = await fetch(`/api/projects/${params.id}/models/${modelId}`, { method: "DELETE", headers: getH() });
+    if (await failed(res, "Could not unlink model")) return;
     setLinkedModels(l => l.filter(x => x.modelId !== modelId));
   }
 

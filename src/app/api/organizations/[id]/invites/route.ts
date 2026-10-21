@@ -8,6 +8,8 @@ import { logAudit, getClientIp } from "@/lib/audit-logger";
 
 export const dynamic = "force-dynamic";
 
+const ROLE_LEVEL: Record<OrgMemberRole, number> = { OWNER: 5, ADMIN: 4, RISK_OFFICER: 3, AUDITOR: 2, VIEWER: 1 };
+
 const InviteSchema = z.object({
   email: z.string().email(),
   role: z.nativeEnum(OrgMemberRole).default("VIEWER"),
@@ -26,6 +28,10 @@ export const POST = withAuth(async (req: NextRequest, { params, user, organizati
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { email, role } = parsed.data;
+    // Nobody can grant a role above their own (an ADMIN cannot create OWNERs).
+    if (ROLE_LEVEL[role] > (ROLE_LEVEL[user.orgRole] ?? 0)) {
+      return forbidden("You cannot invite someone with a higher role than your own");
+    }
 
     // Check org user limit
     const org = await prisma.organization.findUnique({

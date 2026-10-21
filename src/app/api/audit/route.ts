@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
-import { Prisma } from "@prisma/client";
+import { Prisma, AuditAction } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, serverError } from "@/lib/api-response";
+import { parsePaging } from "@/lib/pagination";
+import { ok, badRequest, serverError } from "@/lib/api-response";
 
 export const dynamic = 'force-dynamic';
 
@@ -10,13 +11,19 @@ export const dynamic = 'force-dynamic';
 export const GET = withAuth(async (req, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
-    const limit = Math.min(200, parseInt(searchParams.get("limit") ?? "50"));
+    const { page, limit } = parsePaging(searchParams, { defaultLimit: 50, maxLimit: 200 });
     const userId = searchParams.get("userId");
     const resource = searchParams.get("resource");
     const action = searchParams.get("action");
     const from = searchParams.get("from");
     const to = searchParams.get("to");
+
+    const fromDate = from ? new Date(from) : null;
+    const toDate = to ? new Date(to) : null;
+    if ((fromDate && isNaN(fromDate.getTime())) || (toDate && isNaN(toDate.getTime())))
+      return badRequest("from/to must be valid dates");
+    if (action && !(Object.values(AuditAction) as string[]).includes(action))
+      return badRequest("Unknown action");
 
     const where: Prisma.AuditLogWhereInput = {
       organizationId,
@@ -26,8 +33,8 @@ export const GET = withAuth(async (req, { organizationId }) => {
       ...(from || to
         ? {
             createdAt: {
-              ...(from && { gte: new Date(from) }),
-              ...(to && { lte: new Date(to) }),
+              ...(fromDate && { gte: fromDate }),
+              ...(toDate && { lte: toDate }),
             },
           }
         : {}),

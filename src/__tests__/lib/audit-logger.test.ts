@@ -154,6 +154,11 @@ describe("getClientIp()", () => {
     expect(getClientIp(req)).toBe("1.2.3.4");
   });
 
+  it("prefers the platform-set address over a client-supplied x-forwarded-for", () => {
+    const req = makeReq({ "x-forwarded-for": "6.6.6.6", "x-vercel-forwarded-for": "203.0.113.9" });
+    expect(getClientIp(req)).toBe("203.0.113.9");
+  });
+
   // Edge: IPv6
   it("handles IPv6 address", () => {
     const req = makeReq({ "x-forwarded-for": "2001:db8::1" });

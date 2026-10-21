@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { TrainingProgram } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { httpUrl } from "@/lib/safe-url";
 import { ok, created, badRequest, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -24,7 +25,7 @@ const CreateSchema = z.object({
   targetAttendees: z.coerce.number().int().min(0).default(0),
   actualAttendees: z.coerce.number().int().min(0).default(0),
   facilitator: z.string().max(200).optional(),
-  materialsUrl: z.string().max(500).optional(),
+  materialsUrl: httpUrl().optional().or(z.literal("")),
   frameworkRefs: z.array(z.string()).default([]),
 });
 

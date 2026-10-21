@@ -17,11 +17,12 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
   }
 
   // Verify HMAC-SHA256 signature — reject immediately on mismatch
-  const valid = verifyRazorpaySignature(
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature
-  );
+  let valid: boolean;
+  try {
+    valid = verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+  } catch (err) {
+    return serverError(err); // e.g. RAZORPAY_KEY_SECRET not configured
+  }
   if (!valid) {
     return badRequest("Payment verification failed: invalid signature.");
   }
@@ -48,7 +49,16 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
     return serverError(new Error("Unknown plan in payment record"));
   }
 
-  const planExpiresAt = new Date();
+  // Renewing the same plan extends from the current expiry, so early renewals
+  // don't lose the days already paid for.
+  const org = await prisma.organization.findUnique({
+    where: { id: user.organizationId },
+    select: { plan: true, planExpiresAt: true },
+  });
+  const now = new Date();
+  const base =
+    org?.plan === payment.plan && org.planExpiresAt && org.planExpiresAt > now ? org.planExpiresAt : now;
+  const planExpiresAt = new Date(base);
   planExpiresAt.setDate(planExpiresAt.getDate() + config.planExpiryDays);
 
   try {
@@ -80,4 +90,4 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "ADMIN");

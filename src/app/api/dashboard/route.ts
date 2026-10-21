@@ -23,7 +23,7 @@ export const GET = withAuth(async (_req, { organizationId }) => {
       activeAlerts,
       recentLogs,
       usageTrend,
-      topRiskyModels,
+      latestRiskPerModel,
     ] = await Promise.all([
       prisma.aIModel.count({ where: { organizationId } }),
       prisma.aIModel.count({ where: { organizationId, status: "ACTIVE" } }),
@@ -61,12 +61,11 @@ export const GET = withAuth(async (_req, { organizationId }) => {
         ORDER BY date ASC
       `,
 
-      // Top 5 risky models (org-scoped)
+      // Latest assessment per model (org-scoped); ranked below to find the top 5.
       prisma.riskAssessment.findMany({
         where: { model: { organizationId } },
-        orderBy: { overallScore: "desc" },
+        orderBy: { createdAt: "desc" },
         distinct: ["modelId"],
-        take: 5,
         select: {
           overallScore: true,
           riskLevel: true,
@@ -74,6 +73,11 @@ export const GET = withAuth(async (_req, { organizationId }) => {
         },
       }),
     ]);
+
+    // Rank by each model's *current* score, not its highest historical one.
+    const topRiskyModels = [...latestRiskPerModel]
+      .sort((a, b) => b.overallScore - a.overallScore)
+      .slice(0, 5);
 
     const riskDistribution = riskCounts.reduce(
       (acc, r) => {
