@@ -32,7 +32,23 @@ const nextConfig = {
       { source: "/:path*", headers: securityHeaders },
       {
         source: "/api/:path*",
-        headers: [{ key: "Cache-Control", value: "no-store" }],
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          // API responses are never search results.
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+    ];
+  },
+  // One canonical host: www.aigovernancetower.com currently serves a duplicate
+  // copy of the site, which splits search ranking between two hosts.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.aigovernancetower.com" }],
+        destination: "https://aigovernancetower.com/:path*",
+        permanent: true,
       },
     ];
   },

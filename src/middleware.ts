@@ -19,6 +19,10 @@ const PUBLIC_PATHS = new Set([
   "/api/auth/verify-email",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
+  // Crawler and share-preview files
+  "/robots.txt",
+  "/sitemap.xml",
+  "/opengraph-image",
 ]);
 
 // Path prefixes that must be reachable without a session.
@@ -71,6 +75,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   // Allow public paths
   if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
+  if (pathname.startsWith("/opengraph-image")) return NextResponse.next();
 
   // Root "/" — marketing landing for guests, dashboard for authenticated users
   if (pathname === "/") {
@@ -78,17 +83,18 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
       req.cookies.get("auth_token")?.value ??
       extractBearerToken(req.headers.get("authorization"));
 
+    // Guests (and search engines) get the marketing page AT "/" via a rewrite,
+    // not a redirect, so the homepage URL itself is what gets indexed.
     if (!token) {
-      // No session → show marketing landing page
-      return NextResponse.redirect(new URL("/landing", req.url));
+      return NextResponse.rewrite(new URL("/landing", req.url));
     }
     try {
       await verifyJwt(token);
       // Valid session → render the dashboard (let Next.js serve (dashboard)/page.tsx)
       return NextResponse.next();
     } catch {
-      // Expired/invalid session → clear cookie and show landing
-      const res = NextResponse.redirect(new URL("/landing", req.url));
+      // Expired/invalid session → clear cookie and show the marketing page
+      const res = NextResponse.rewrite(new URL("/landing", req.url));
       res.cookies.delete("auth_token");
       return res;
     }
@@ -122,5 +128,6 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  // Static files (images, icons, robots.txt, sitemap.xml) skip the middleware.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|txt|xml|webmanifest)$).*)"],
 };

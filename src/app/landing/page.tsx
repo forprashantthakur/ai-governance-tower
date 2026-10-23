@@ -458,7 +458,7 @@ export default function LandingPage() {
         {/* NAV */}
         <nav className="lp-nav">
           <div className="lp-nav-inner">
-            <a href="/landing" className="lp-logo">
+            <a href="/" className="lp-logo">
               <img src="/logo.png" alt="AI Governance Control Tower" style={{width:"320px", height:"108px", objectFit:"contain", objectPosition:"left center", display:"block"}} />
             </a>
             <ul className="lp-nav-links" style={{display:"flex",alignItems:"center",gap:"1.75rem",listStyle:"none"}}>
@@ -1418,7 +1418,7 @@ export default function LandingPage() {
         <footer className="lp-footer">
           <div className="lp-footer-grid">
             <div>
-              <a href="/landing" className="lp-logo" style={{marginLeft:"0"}}>
+              <a href="/" className="lp-logo" style={{marginLeft:"0"}}>
                 <img src="/logo.png" alt="AI Governance Control Tower" style={{width:"220px", height:"80px", objectFit:"contain", objectPosition:"left center", display:"block"}} />
               </a>
               <p className="lp-footer-desc">Enterprise AI Governance platform for DPDP, ISO 42001, GDPR, and EU AI Act compliance. Monitor, govern, and explain every AI decision at scale.</p>
