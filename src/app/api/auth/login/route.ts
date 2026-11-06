@@ -3,8 +3,8 @@ import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { signSessionToken } from "@/lib/auth/issue-session";
-import { setSessionCookie } from "@/lib/auth/session";
-import { consume, isOverLimit, limitByIp, resetLimit, tooManyRequests } from "@/lib/rate-limit";
+import { rejectCrossSiteAuthRequest, setSessionCookie } from "@/lib/auth/session";
+import { beginPasswordAttempt } from "@/lib/rate-limit";
 import { ok, badRequest, unauthorized, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -19,23 +19,19 @@ const LoginSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Another site must not be able to sign a visitor into some account (login CSRF).
+    const refused = rejectCrossSiteAuthRequest(req, { requireJson: true });
+    if (refused) return refused;
+
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { email, password, organizationId: preferredOrgId } = parsed.data;
 
-    // Brute-force protection: per client address, and per account for failed attempts.
-    const ipLimited = await limitByIp(req, "login", 30, 15 * 60);
-    if (ipLimited) return ipLimited;
-    const failKey = `login-fail:${email.toLowerCase()}`;
-    const failures = await isOverLimit(failKey, 10, 15 * 60);
-    if (!failures.allowed) {
-      return tooManyRequests(
-        failures.retryAfterSec,
-        "Too many failed sign-in attempts for this account. Try again in 15 minutes or reset your password."
-      );
-    }
+    // Password-guessing protection (see beginPasswordAttempt for the limits).
+    const attempt = await beginPasswordAttempt(req, email);
+    if (attempt.blocked) return attempt.blocked;
 
     const user = await withRetry(() =>
       prisma.user.findUnique({
@@ -62,16 +58,16 @@ export async function POST(req: NextRequest) {
     );
 
     if (!user || !user.isActive) {
-      await consume(failKey, 10, 15 * 60);
+      await attempt.failed();
       return unauthorized("Invalid credentials");
     }
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
-      await consume(failKey, 10, 15 * 60);
+      await attempt.failed();
       return unauthorized("Invalid credentials");
     }
-    await resetLimit(failKey);
+    await attempt.succeeded();
 
     // Block login only for NEW unverified users (those with a pending verificationToken).
     // Legacy users (created before email verification was added) have verificationToken = null

@@ -51,6 +51,33 @@ interface Handler {
   file: ts.SourceFile;
 }
 
+/** `export { handler as GET }` hides whether the handler is wrapped; routes must use `export const GET = withAuth(...)`. */
+function reExportedMethods(file: ts.SourceFile): string[] {
+  const out: string[] = [];
+  for (const stmt of file.statements) {
+    if (ts.isExportDeclaration(stmt) && stmt.exportClause && ts.isNamedExports(stmt.exportClause)) {
+      for (const el of stmt.exportClause.elements) if (HTTP_METHODS.has(el.name.text)) out.push(el.name.text);
+    }
+  }
+  return out;
+}
+
+/** Source text of a handler body without audit-log calls (which mention organizationId but scope nothing). */
+function bodyTextWithoutAuditCalls(body: ts.Node, src: ts.SourceFile): string {
+  const skip: Array<[number, number]> = [];
+  (function visit(n: ts.Node) {
+    if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === "logAudit") {
+      skip.push([n.getStart(src), n.getEnd()]);
+      return;
+    }
+    ts.forEachChild(n, visit);
+  })(body);
+  let text = body.getText(src);
+  const base = body.getStart(src);
+  for (const [a, b] of skip.sort((x, y) => y[0] - x[0])) text = text.slice(0, a - base) + text.slice(b - base);
+  return text;
+}
+
 function exportedHandlers(file: ts.SourceFile): Handler[] {
   const out: Handler[] = [];
   for (const stmt of file.statements) {
@@ -96,6 +123,7 @@ describe("API route guards", () => {
       for (const h of exportedHandlers(src)) {
         if (!withAuthInner(h.init)) unguarded.push(`${h.method} ${rel}`);
       }
+      for (const m of reExportedMethods(src)) unguarded.push(`${m} ${rel} (re-exported; use export const ${m} = withAuth(...))`);
     }
     expect(unguarded).toEqual([]);
   });
@@ -109,7 +137,7 @@ describe("API route guards", () => {
         if (!fn || !fn.body) continue;
         const key = `${h.method} ${rel}`;
         if (NO_ORG_SCOPE_NEEDED[key]) continue;
-        const body = fn.body.getText(src);
+        const body = bodyTextWithoutAuditCalls(fn.body, src);
         if (!/\borganizationId\b|InOrg\(|inOrg\(/.test(body)) unscoped.push(key);
       }
     }

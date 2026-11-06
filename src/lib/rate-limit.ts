@@ -43,9 +43,15 @@ async function redisAdd(key: string, windowSec: number, by: number): Promise<{ c
     );
     if (!res) return null;
     const count = Number(res[1]?.[1]);
-    const ttl = Number(res[2]?.[1]);
+    let ttl = Number(res[2]?.[1]);
     if (!Number.isFinite(count)) return null;
-    return { count, ttl: ttl > 0 ? ttl : windowSec };
+    if (!(ttl > 0)) {
+      // A counter must never outlive its window (e.g. if the key expired
+      // between SET NX and INCRBY and was recreated without a TTL).
+      await withTimeout(redis.expire(key, windowSec), REDIS_TIMEOUT_MS);
+      ttl = windowSec;
+    }
+    return { count, ttl };
   } catch {
     return null;
   }
@@ -101,6 +107,64 @@ export function tooManyRequests(retryAfterSec: number, message = "Too many attem
 export async function limitByIp(req: Request, bucket: string, limit: number, windowSec: number) {
   const r = await consume(`${bucket}:ip:${getClientIp(req)}`, limit, windowSec);
   return r.allowed ? null : tooManyRequests(r.retryAfterSec);
+}
+
+const noop = async () => undefined;
+
+/**
+ * Password-guessing protection for one account, used by sign-in and by
+ * invite acceptance for existing accounts.
+ *
+ * - Per account and client address: 10 attempts per 15 minutes. Counted
+ *   before the password is checked, so parallel guesses can't get past it.
+ * - Per account from all addresses: 50 attempts per hour, against guessing
+ *   spread over many addresses. A successful sign-in or a password reset
+ *   clears both account counters.
+ * - Per client address, failures only: 50 per 15 minutes, against one address
+ *   trying many accounts. Successful sign-ins don't count, so an office
+ *   behind one address isn't blocked.
+ */
+export async function beginPasswordAttempt(req: Request, email: string) {
+  const ip = getClientIp(req);
+  const account = email.toLowerCase();
+  const ipFailKey = `pw-ip-fail:${ip}`;
+  const pairKey = `pw:${account}:${ip}`;
+  const accountKey = `pw:${account}`;
+
+  const ipState = await isOverLimit(ipFailKey, 50, 15 * 60);
+  if (!ipState.allowed) {
+    return { blocked: tooManyRequests(ipState.retryAfterSec), succeeded: noop, failed: noop };
+  }
+  const pair = await consume(pairKey, 10, 15 * 60);
+  const acct = await consume(accountKey, 50, 60 * 60);
+  if (!pair.allowed || !acct.allowed) {
+    const retry = Math.max(pair.allowed ? 0 : pair.retryAfterSec, acct.allowed ? 0 : acct.retryAfterSec);
+    return {
+      blocked: tooManyRequests(
+        retry,
+        "Too many sign-in attempts for this account. Try again later, or reset your password to unlock it now."
+      ),
+      succeeded: noop,
+      failed: noop,
+    };
+  }
+  return {
+    blocked: null,
+    succeeded: async () => {
+      await resetLimit(pairKey);
+      await resetLimit(accountKey);
+    },
+    failed: async () => {
+      await consume(ipFailKey, 50, 15 * 60);
+    },
+  };
+}
+
+/** Unlocks an account after a password reset (account-wide and for the resetting address). */
+export async function clearPasswordLockout(req: Request, email: string) {
+  const account = email.toLowerCase();
+  await resetLimit(`pw:${account}`);
+  await resetLimit(`pw:${account}:${getClientIp(req)}`);
 }
 
 /** Test hook: forget all in-memory counters. */

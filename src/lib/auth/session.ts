@@ -9,7 +9,7 @@
  * Edge-safe: used by the middleware as well as route handlers.
  */
 import { decodeJwt } from "jose";
-import type { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { extractBearerToken } from "./jwt";
 
 export const SESSION_COOKIE = "auth_token";
@@ -73,8 +73,8 @@ function hostOf(url: string): string | null {
  * our own pages; SameSite=Lax already blocks most of these, this is the
  * second layer.
  */
-export function isCrossSiteRequest(req: NextRequest): boolean {
-  if (!UNSAFE_METHODS.has(req.method.toUpperCase())) return false;
+export function isCrossSiteRequest(req: NextRequest, opts: { anyMethod?: boolean } = {}): boolean {
+  if (!opts.anyMethod && !UNSAFE_METHODS.has(req.method.toUpperCase())) return false;
 
   const fetchSite = req.headers.get("sec-fetch-site");
   if (fetchSite) return fetchSite !== "same-origin" && fetchSite !== "none";
@@ -97,4 +97,28 @@ export function isCrossSiteRequest(req: NextRequest): boolean {
   }
   // No browser provenance headers at all: not a browser-initiated cross-site request.
   return false;
+}
+
+/**
+ * Guard for the public auth endpoints that set or clear the session cookie
+ * (sign-in, sign-up, invite acceptance, email verification, sign-out, password
+ * reset). Without it another site could sign a visitor into an attacker's
+ * account ("login CSRF") or sign them out. Also requires a JSON body for
+ * POSTs, which a plain HTML form can't send.
+ * Returns an error response to send, or null to continue.
+ */
+export function rejectCrossSiteAuthRequest(
+  req: NextRequest,
+  opts: { requireJson?: boolean } = {}
+): NextResponse | null {
+  if (isCrossSiteRequest(req, { anyMethod: true })) {
+    return NextResponse.json({ success: false, error: "Cross-site request refused" }, { status: 403 });
+  }
+  if (opts.requireJson && UNSAFE_METHODS.has(req.method.toUpperCase())) {
+    const type = (req.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+    if (type !== "application/json") {
+      return NextResponse.json({ success: false, error: "Content-Type must be application/json" }, { status: 415 });
+    }
+  }
+  return null;
 }

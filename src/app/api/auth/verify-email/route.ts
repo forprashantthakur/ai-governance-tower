@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { signSessionToken } from "@/lib/auth/issue-session";
-import { setSessionCookie } from "@/lib/auth/session";
+import { rejectCrossSiteAuthRequest, setSessionCookie } from "@/lib/auth/session";
 import { limitByIp } from "@/lib/rate-limit";
 import { ok, badRequest } from "@/lib/api-response";
 
@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
 
 // GET /api/auth/verify-email?token=xxx
 export async function GET(req: NextRequest) {
+  // Called by our /verify-email page. A direct link from another site must not
+  // be able to sign the visitor into whichever account the token belongs to.
+  const refused = rejectCrossSiteAuthRequest(req);
+  if (refused) return refused;
   const limited = await limitByIp(req, "verify-email", 30, 60 * 60);
   if (limited) return limited;
 

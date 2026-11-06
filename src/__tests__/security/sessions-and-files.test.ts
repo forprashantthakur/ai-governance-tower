@@ -6,6 +6,8 @@ import bcrypt from "bcryptjs";
 
 const mockPrisma = {
   user: { findUnique: jest.fn(), update: jest.fn().mockResolvedValue({}) },
+  passwordResetToken: { findUnique: jest.fn(), update: jest.fn().mockResolvedValue({}) },
+  $transaction: jest.fn().mockResolvedValue([]),
   organizationMember: { findFirst: jest.fn() },
   evidenceFile: { findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn(), delete: jest.fn() },
   complianceControl: { count: jest.fn().mockResolvedValue(1) },
@@ -58,10 +60,10 @@ function userRecord(email: string) {
   };
 }
 
-const login = (email: string, password: string) =>
+const login = (email: string, password: string, headers: Record<string, string> = {}) =>
   new NextRequest("http://app.example/api/auth/login", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify({ email, password }),
   });
 
@@ -95,19 +97,117 @@ describe("sign-in issues an HttpOnly session cookie", () => {
     expect(blocked.headers.get("retry-after")).toBeTruthy();
   });
 
-  it("limits sign-in attempts per client address", async () => {
+  it("limits failed sign-ins per client address (one address trying many accounts)", async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null);
     const { POST } = await import("@/app/api/auth/login/route");
     const statuses: number[] = [];
-    for (let i = 0; i < 31; i++) statuses.push((await POST(login(`nobody${i}@acme.test`, "x"))).status);
-    expect(statuses.slice(0, 30).every((s) => s === 401)).toBe(true);
-    expect(statuses[30]).toBe(429);
+    for (let i = 0; i < 51; i++) statuses.push((await POST(login(`nobody${i}@acme.test`, "x"))).status);
+    expect(statuses.slice(0, 50).every((s) => s === 401)).toBe(true);
+    expect(statuses[50]).toBe(429);
+  });
+
+  it("successful sign-ins from one office address don't use up a limit", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userRecord("office@acme.test"));
+    const { POST } = await import("@/app/api/auth/login/route");
+    for (let i = 0; i < 60; i++) {
+      expect((await POST(login("office@acme.test", PASSWORD))).status).toBe(200);
+    }
+  });
+
+  it("parallel guesses can't get past the per-account limit", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userRecord("race@acme.test"));
+    const bcryptCompare = jest.spyOn(bcrypt, "compare");
+    const { POST } = await import("@/app/api/auth/login/route");
+    const results = await Promise.all(Array.from({ length: 25 }, () => POST(login("race@acme.test", "wrong"))));
+    const statuses = results.map((r) => r.status);
+    expect(statuses.filter((s) => s === 401).length).toBe(10);
+    expect(statuses.filter((s) => s === 429).length).toBe(15);
+    expect(bcryptCompare.mock.calls.length).toBeLessThanOrEqual(10);
+    bcryptCompare.mockRestore();
+  });
+
+  it("a password reset lifts the lockout", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userRecord("reset@acme.test"));
+    const login$ = (await import("@/app/api/auth/login/route")).POST;
+    for (let i = 0; i < 10; i++) await login$(login("reset@acme.test", "wrong"));
+    expect((await login$(login("reset@acme.test", PASSWORD))).status).toBe(429);
+
+    mockPrisma.passwordResetToken.findUnique.mockResolvedValue({
+      id: "t-1", userId: "u-1", usedAt: null, expiresAt: new Date(Date.now() + 60_000),
+      user: { id: "u-1", email: "reset@acme.test" },
+    });
+    const reset$ = (await import("@/app/api/auth/reset-password/route")).POST;
+    const reset = await reset$(
+      new NextRequest("http://app.example/api/auth/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: "a".repeat(64), password: "New-Passw0rd!xyz" }),
+      })
+    );
+    expect(reset.status).toBe(200);
+    expect((await login$(login("reset@acme.test", PASSWORD))).status).toBe(200);
   });
 
   it("sign-out clears the cookie", async () => {
     const { POST } = await import("@/app/api/auth/logout/route");
-    const res = await POST();
+    const res = await POST(new NextRequest("http://app.example/api/auth/logout", { method: "POST" }));
     expect(res.headers.get("set-cookie")).toMatch(/auth_token=;.*Max-Age=0/i);
+  });
+});
+
+describe("other sites can't sign a visitor in or out (login CSRF)", () => {
+  it("refuses a cross-site sign-in and sets no cookie", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userRecord("csrf@acme.test"));
+    const { POST } = await import("@/app/api/auth/login/route");
+    const res = await POST(login("csrf@acme.test", PASSWORD, { "sec-fetch-site": "cross-site", origin: "https://evil.example" }));
+    expect(res.status).toBe(403);
+    expect(res.headers.get("set-cookie")).toBeNull();
+  });
+
+  it("refuses a sign-in posted as a plain form body", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userRecord("form@acme.test"));
+    const { POST } = await import("@/app/api/auth/login/route");
+    const res = await POST(
+      new NextRequest("http://app.example/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "text/plain" },
+        body: JSON.stringify({ email: "form@acme.test", password: PASSWORD }),
+      })
+    );
+    expect(res.status).toBe(415);
+    expect(res.headers.get("set-cookie")).toBeNull();
+  });
+
+  it("refuses an email-verification link followed from another site", async () => {
+    const { GET } = await import("@/app/api/auth/verify-email/route");
+    const res = await GET(
+      new NextRequest("http://app.example/api/auth/verify-email?token=abc", {
+        headers: { "sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate" },
+      })
+    );
+    expect(res.status).toBe(403);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("refuses a cross-site sign-out", async () => {
+    const { POST } = await import("@/app/api/auth/logout/route");
+    const res = await POST(
+      new NextRequest("http://app.example/api/auth/logout", { method: "POST", headers: { origin: "https://evil.example", host: "app.example" } })
+    );
+    expect(res.status).toBe(403);
+    expect(res.headers.get("set-cookie")).toBeNull();
+  });
+
+  it("refuses cross-site sign-up and invite acceptance", async () => {
+    const { POST } = await import("@/app/api/auth/register/route");
+    const res = await POST(
+      new NextRequest("http://app.example/api/auth/register", {
+        method: "POST",
+        headers: { "content-type": "application/json", "sec-fetch-site": "cross-site" },
+        body: JSON.stringify({ inviteToken: "11111111-1111-4111-8111-111111111111", name: "X", password: "y" }),
+      })
+    );
+    expect(res.status).toBe(403);
   });
 });
 

@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { isReservedSlug } from "@/lib/demo";
 import { signSessionToken } from "@/lib/auth/issue-session";
-import { setSessionCookie } from "@/lib/auth/session";
-import { consume, isOverLimit, limitByIp, resetLimit, tooManyRequests } from "@/lib/rate-limit";
+import { rejectCrossSiteAuthRequest, setSessionCookie } from "@/lib/auth/session";
+import { beginPasswordAttempt, limitByIp } from "@/lib/rate-limit";
 import { created, badRequest, conflict, notFound, unauthorized, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { sendVerificationEmail } from "@/lib/email";
@@ -70,13 +70,17 @@ const NewAccountFields = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const limited = await limitByIp(req, "register", 20, 60 * 60);
-    if (limited) return limited;
+    // Another site must not be able to create a session for a visitor (login CSRF).
+    const refused = rejectCrossSiteAuthRequest(req, { requireJson: true });
+    if (refused) return refused;
 
     const body = await req.json();
 
     // ── Invite-based registration ──────────────────────────────────────────────
     if (body.inviteToken) {
+      // Generous: a whole team may accept invites from one office address.
+      const limited = await limitByIp(req, "accept-invite", 100, 60 * 60);
+      if (limited) return limited;
       const parsed = AcceptInviteSchema.safeParse(body);
       if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
@@ -101,15 +105,14 @@ export async function POST(req: NextRequest) {
       if (user) {
         // Existing account: only its owner may accept, proven by its current password.
         // Otherwise whoever holds the invite link could get a session as this user.
-        // Failed attempts count against the same lockout as sign-in.
-        const failKey = `login-fail:${user.email.toLowerCase()}`;
-        const failures = await isOverLimit(failKey, 10, 15 * 60);
-        if (!failures.allowed) return tooManyRequests(failures.retryAfterSec);
+        // Attempts count against the same password-guessing limits as sign-in.
+        const attempt = await beginPasswordAttempt(req, user.email);
+        if (attempt.blocked) return attempt.blocked;
         if (!user.isActive || !(await verifyPassword(password, user.passwordHash))) {
-          await consume(failKey, 10, 15 * 60);
+          await attempt.failed();
           return unauthorized("This email already has an account. Enter that account's current password to accept the invite.");
         }
-        await resetLimit(failKey);
+        await attempt.succeeded();
       } else {
         // New user — create account
         const fields = NewAccountFields.safeParse({ name, password });
@@ -178,6 +181,8 @@ export async function POST(req: NextRequest) {
     }
 
     // ── New org self-registration ─────────────────────────────────────────────
+    const limited = await limitByIp(req, "register", 20, 60 * 60);
+    if (limited) return limited;
     const parsed = NewOrgSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 

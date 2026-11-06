@@ -52,7 +52,8 @@ export const PATCH = withAuth(async (req: NextRequest, { user, params, organizat
         action: "UPDATE",
         resource: "ProjectArtifact",
         resourceId: params!.aid,
-        before: existing,
+        // The storage URL stays out of the audit log (it's returned to readers of /api/audit).
+        before: { ...existing, url: undefined, size: Number(existing.size) },
         after: parsed.data,
         ipAddress: getClientIp(req),
       });
@@ -96,7 +97,8 @@ export const DELETE = withAuth(async (req: NextRequest, { user, params, organiza
         action: "DELETE",
         resource: "ProjectArtifact",
         resourceId: params!.aid,
-        before: existing,
+        // The storage URL stays out of the audit log (it's returned to readers of /api/audit).
+        before: { ...existing, url: undefined, size: Number(existing.size) },
         ipAddress: getClientIp(req),
       });
 

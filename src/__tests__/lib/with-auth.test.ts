@@ -256,6 +256,23 @@ describe("withAuth() — live membership check", () => {
   });
 });
 
+describe("withAuth() — signature check", () => {
+  it("rejects a well-formed token signed with another key", async () => {
+    const { SignJWT } = await import("jose");
+    const forged = await new SignJWT({ userId: "user-1", organizationId: "org-abc", orgRole: "OWNER", plan: "ENTERPRISE", sv: "x" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .setIssuer("ai-governance-tower")
+      .setAudience("ai-governance-tower-client")
+      .sign(new TextEncoder().encode("some-other-secret-that-is-at-least-32-chars"));
+    const res = await withAuth(okHandler)(makeRequest(`Bearer ${forged}`), { params: {} });
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toMatch(/invalid|expired/i);
+    expect(okHandler).not.toHaveBeenCalled();
+  });
+});
+
 // ─── Cookie sessions, CSRF and revocation ──────────────────────────────────
 function cookieRequest(token: string, init: { method?: string; headers?: Record<string, string> } = {}) {
   const headers = new Headers(init.headers);

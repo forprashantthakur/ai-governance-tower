@@ -14,7 +14,8 @@ interface AuthState {
   _hasHydrated: boolean;
 
   setAuth: (user: AuthUser) => void;
-  clearAuth: () => void;
+  /** Ends the session on the server (removes the HttpOnly cookie) and clears local state. */
+  clearAuth: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   setHasHydrated: (state: boolean) => void;
 }
@@ -29,13 +30,21 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (user) => set({ user, isAuthenticated: true, isLoading: false }),
 
-      clearAuth: () => {
-        // The session cookie is HttpOnly, so ask the server to remove it.
-        if (typeof window !== "undefined") {
-          // keepalive lets the request finish even if the page navigates away.
-          fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => undefined);
-        }
+      clearAuth: async () => {
         set({ user: null, isAuthenticated: false });
+        if (typeof window === "undefined") return;
+        // The session cookie is HttpOnly, so only the server can remove it.
+        // Wait for it (one retry) so the page never looks signed out while the
+        // cookie is still valid.
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const res = await fetch("/api/auth/logout", { method: "POST", keepalive: true });
+            if (res.ok) return;
+          } catch {
+            // retry once
+          }
+        }
+        console.warn("[auth] Sign-out request failed; the session cookie may still be set.");
       },
 
       setLoading: (isLoading) => set({ isLoading }),
