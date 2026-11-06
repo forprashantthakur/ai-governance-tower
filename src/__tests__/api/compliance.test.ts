@@ -13,9 +13,16 @@ import { NextRequest } from "next/server";
 import { POST, GET } from "@/app/api/compliance/route";
 import { prisma } from "@/lib/prisma";
 import { signJwt } from "@/lib/auth/jwt";
+import { sessionFingerprint } from "@/lib/auth/fingerprint";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 async function makeToken(role: "RISK_OFFICER" | "OWNER" | "VIEWER" | "ADMIN" | "AUDITOR" = "RISK_OFFICER") {
+  // withAuth re-reads the membership from the database on every request.
+  (prisma.organizationMember.findFirst as jest.Mock).mockResolvedValue({
+    role,
+    organization: { plan: "PROFESSIONAL" },
+    user: { passwordHash: "test-hash" },
+  });
   return signJwt({
     userId: "user-1",
     email: "test@example.com",
@@ -23,6 +30,7 @@ async function makeToken(role: "RISK_OFFICER" | "OWNER" | "VIEWER" | "ADMIN" | "
     organizationId: "org-1",
     orgRole: role,
     plan: "PROFESSIONAL",
+    sv: sessionFingerprint("test-hash"),
   });
 }
 

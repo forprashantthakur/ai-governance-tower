@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { OrgMemberRole, PlanTier } from "@prisma/client";
-import { verifyJwt, extractBearerToken, type JwtUserPayload } from "./auth/jwt";
+import { verifyJwt, type JwtUserPayload } from "./auth/jwt";
+import { getRequestToken, isCrossSiteRequest } from "./auth/session";
+import { fingerprintMatches } from "./auth/fingerprint";
+import { prisma } from "./prisma";
 import { unauthorized, forbidden } from "./api-response";
 
 export type RouteContext = {
@@ -35,6 +38,60 @@ export interface WithAuthOptions {
   requiredPlan?: PlanTier;
 }
 
+/**
+ * Verifies the caller's session (HttpOnly cookie, or a Bearer header for
+ * non-browser clients) and re-reads their membership, so a removed or demoted
+ * member, a deactivated user or organization, a plan change or a password
+ * change takes effect on the next request rather than when the token expires.
+ */
+export async function authenticateRequest(
+  req: NextRequest
+): Promise<{ user: JwtUserPayload; error?: undefined } | { user?: undefined; error: NextResponse }> {
+  const found = getRequestToken(req);
+  if (!found) return { error: unauthorized("No token provided") };
+
+  // A cookie is sent by the browser automatically, so a state-changing request
+  // authenticated by cookie must come from our own pages (CSRF protection).
+  if (found.source === "cookie" && isCrossSiteRequest(req)) {
+    return { error: forbidden("Cross-site request refused") };
+  }
+
+  let user: JwtUserPayload;
+  try {
+    user = await verifyJwt(found.token);
+  } catch {
+    return { error: unauthorized("Invalid or expired token") };
+  }
+
+  // Tokens issued before the SaaS migration lack organizationId, and tokens
+  // issued before session fingerprints lack sv — both must sign in again.
+  if (!user.organizationId || !user.sv) {
+    return { error: unauthorized("Session expired — please sign in again") };
+  }
+
+  const membership = await prisma.organizationMember.findFirst({
+    where: {
+      userId: user.userId,
+      organizationId: user.organizationId,
+      isActive: true,
+      user: { isActive: true },
+      organization: { isActive: true },
+    },
+    select: {
+      role: true,
+      organization: { select: { plan: true } },
+      user: { select: { passwordHash: true } },
+    },
+  });
+  if (!membership) {
+    return { error: unauthorized("Your access to this organization has ended — please sign in again") };
+  }
+  if (!membership.user?.passwordHash || !fingerprintMatches(user.sv, membership.user.passwordHash)) {
+    return { error: unauthorized("Your password was changed — please sign in again") };
+  }
+  return { user: { ...user, orgRole: membership.role, plan: membership.organization.plan } };
+}
+
 export function withAuth(
   handler: RouteHandler,
   options?: WithAuthOptions | OrgMemberRole  // backward-compat: accept bare role string
@@ -49,21 +106,9 @@ export function withAuth(
     req: NextRequest,
     ctx: { params: Record<string, string> }
   ): Promise<NextResponse> => {
-    const token = extractBearerToken(req.headers.get("authorization"));
-    if (!token) return unauthorized("No token provided");
-
-    let user: JwtUserPayload;
-    try {
-      user = await verifyJwt(token);
-    } catch {
-      return unauthorized("Invalid or expired token");
-    }
-
-    // Every valid JWT must carry organizationId (new tokens after SaaS migration)
-    // Tokens issued before migration lack this field — reject them so users re-login.
-    if (!user.organizationId) {
-      return unauthorized("Session expired — please sign in again");
-    }
+    const auth = await authenticateRequest(req);
+    if (auth.error) return auth.error;
+    const user = auth.user;
 
     // Role check
     if (opts.requiredRole) {

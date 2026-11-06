@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StatCard } from "@/components/shared/stat-card";
+import { safeHref } from "@/lib/safe-url";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -416,9 +417,9 @@ function ProgrammeRow({ p, onClick }: { p: TrainingProgram; onClick: () => void 
             <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {p.durationHours}h</span>
             <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {dateLabel}: {fmtDate(dateValue)}</span>
             {p.facilitator && <span>Facilitator: {p.facilitator}</span>}
-            {p.materialsUrl && (
+            {safeHref(p.materialsUrl) && (
               <a
-                href={p.materialsUrl}
+                href={safeHref(p.materialsUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}

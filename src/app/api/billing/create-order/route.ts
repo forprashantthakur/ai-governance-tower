@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { withAuth } from "@/lib/with-auth";
-import { getRazorpay, PLAN_CONFIG } from "@/lib/razorpay";
+import { randomBytes } from "crypto";
+import { getRazorpay, PLAN_CONFIG, PLAN_RANK, isPaidPlan } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 import { ok, badRequest, serverError } from "@/lib/api-response";
 
@@ -8,14 +9,25 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
   const body = await req.json().catch(() => ({}));
   const { plan } = body as { plan?: string };
 
-  if (!plan || !(plan in PLAN_CONFIG)) {
+  if (!isPaidPlan(plan)) {
     return badRequest("Invalid plan. Must be STARTER or PROFESSIONAL.");
   }
 
-  const config = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG];
+  const config = PLAN_CONFIG[plan];
 
   try {
-    const receipt = `org_${user.organizationId}_${Date.now()}`.slice(0, 40);
+    // Don't let an active higher plan be replaced by a cheaper one.
+    const org = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+      select: { plan: true, planExpiresAt: true },
+    });
+    const active = !org?.planExpiresAt || org.planExpiresAt > new Date();
+    if (org && active && (PLAN_RANK[org.plan] ?? 0) > PLAN_RANK[plan]) {
+      return badRequest(`Your organization is already on the ${org.plan} plan.`);
+    }
+
+    // Razorpay receipts are limited to 40 characters and should be unique.
+    const receipt = `rcpt_${Date.now().toString(36)}_${randomBytes(6).toString("hex")}`;
 
     const order = await getRazorpay().orders.create({
       amount: config.amountPaise,
@@ -24,7 +36,7 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
       notes: {
         organizationId: String(user.organizationId),
         plan: String(plan),
-        userId: String(user.id),
+        userId: String(user.userId),
       },
     });
 
@@ -32,7 +44,7 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
       data: {
         organizationId: user.organizationId,
         razorpayOrderId: order.id,
-        plan: plan as "STARTER" | "PROFESSIONAL",
+        plan,
         amountPaise: config.amountPaise,
         status: "CREATED",
       },
@@ -48,4 +60,4 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "ADMIN");

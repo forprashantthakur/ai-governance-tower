@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const GET = withAuth(async (_req: NextRequest, { organizationId }) => {
   try {
-    const [projects, taskCounts] = await Promise.all([
+    const [projects] = await Promise.all([
       withRetry(() =>
         prisma.project.findMany({
           where: { organizationId },
@@ -26,7 +26,6 @@ export const GET = withAuth(async (_req: NextRequest, { organizationId }) => {
           orderBy: { updatedAt: "desc" },
         })
       ),
-      prisma.projectTask.groupBy({ by: ["status"], _count: true }),
     ]);
 
     const byStatus: Record<string, number> = {};

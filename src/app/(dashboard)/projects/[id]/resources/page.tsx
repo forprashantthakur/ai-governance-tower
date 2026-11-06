@@ -32,7 +32,6 @@ export default function ResourcesPage() {
   const [error, setError] = useState("");
 
   const getH = () => ({
-    Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}`,
   });
 
   useEffect(() => {
@@ -75,7 +74,7 @@ export default function ResourcesPage() {
         setSelectedUser(null);
         setUserSearch("");
       } else {
-        setError(data.message ?? "Failed to add member");
+        setError(data.error ?? data.message ?? "Failed to add member");
       }
     } finally {
       setSaving(false);
@@ -83,16 +82,24 @@ export default function ResourcesPage() {
   }
 
   async function removeResource(rid: string) {
-    await fetch(`/api/projects/${params.id}/resources/${rid}`, { method: "DELETE", headers: getH() });
+    const res = await fetch(`/api/projects/${params.id}/resources/${rid}`, { method: "DELETE", headers: getH() });
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).error ?? "Failed to remove member");
+      return;
+    }
     setResources((r) => r.filter((x) => x.id !== rid));
   }
 
   async function updateAllocation(rid: string, allocationPct: number) {
-    await fetch(`/api/projects/${params.id}/resources/${rid}`, {
+    const res = await fetch(`/api/projects/${params.id}/resources/${rid}`, {
       method: "PATCH",
       headers: { ...getH(), "Content-Type": "application/json" },
       body: JSON.stringify({ allocationPct }),
     });
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).error ?? "Failed to update allocation");
+      return;
+    }
     setResources((r) => r.map((x) => (x.id === rid ? { ...x, allocationPct } : x)));
   }
 

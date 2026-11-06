@@ -35,8 +35,13 @@ export const POST = withAuth(async (req: NextRequest, { params, organizationId }
         : status;
 
     // Sequential, human-readable CAPA reference scoped to the parent NCR
-    const count = await prisma.capa.count({ where: { ncrId: params.id } });
-    const capaRef = `${ncr.ncrRef}-C${count + 1}`;
+    // Highest existing number + 1 (a row count repeats numbers after a delete).
+    const siblings = await prisma.capa.findMany({ where: { ncrId: params.id }, select: { capaRef: true } });
+    const maxSeq = siblings.reduce((m: number, c: { capaRef: string | null }) => {
+      const n = Number.parseInt((c.capaRef ?? "").split("-C").pop() ?? "", 10);
+      return Number.isFinite(n) && n > m ? n : m;
+    }, 0);
+    const capaRef = `${ncr.ncrRef}-C${maxSeq + 1}`;
 
     const capa = await prisma.capa.create({
       data: {

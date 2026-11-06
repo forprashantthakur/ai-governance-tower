@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { findModelInOrg } from "@/lib/tenant";
 import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -43,6 +44,8 @@ export const PATCH = withAuth(async (req, { params, user, organizationId }) => {
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { modelId, lastValidatedAt, nextValidationDue, ...rest } = parsed.data;
+    if (modelId && !(await findModelInOrg(modelId, organizationId)))
+      return badRequest("Model not found in this organization");
 
     const updated = await prisma.modelRiskRecord.update({
       where: { id: params.id },

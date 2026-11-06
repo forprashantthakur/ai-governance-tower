@@ -23,8 +23,10 @@ import type {
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, serverError } from "@/lib/api-response";
-import { signJwt } from "@/lib/auth/jwt";
+import { ok, forbidden, serverError, unauthorized } from "@/lib/api-response";
+import { signSessionToken } from "@/lib/auth/issue-session";
+import { setSessionCookie } from "@/lib/auth/session";
+import { DEMO_ORG_NAME, demoOrgSlugFor } from "@/lib/demo";
 import { POLICY_CATALOG, RACI_CATALOG } from "@/lib/frameworks/policy-catalog";
 import { AIMS_CLAUSES, ANNEX_A_CONTROLS } from "@/lib/frameworks/iso42001";
 import { FREE_AI_CATALOG } from "@/lib/frameworks/free-ai";
@@ -44,8 +46,6 @@ export const dynamic = "force-dynamic";
  * change a status/count assignment without re-checking the totals.
  */
 
-const DEMO_ORG_SLUG = "demo-bank-cio";
-const DEMO_ORG_NAME = "Demo Bank — CIO Walkthrough";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const now = () => Date.now();
@@ -2148,12 +2148,14 @@ async function seedTraining(organizationId: string) {
 export const POST = withAuth(async (_req: NextRequest, { user }) => {
   try {
     // Step 1 — find-or-create the demo org and ensure the caller is its OWNER.
-    let demoOrg = await prisma.organization.findUnique({ where: { slug: DEMO_ORG_SLUG } });
+    // One demo organization per user — never shared between customers.
+    const slug = demoOrgSlugFor(user.userId);
+    let demoOrg = await prisma.organization.findUnique({ where: { slug } });
     if (!demoOrg) {
       demoOrg = await prisma.organization.create({
         data: {
           name: DEMO_ORG_NAME,
-          slug: DEMO_ORG_SLUG,
+          slug,
           plan: "PROFESSIONAL",
           maxUsers: 25,
           maxModels: 100,
@@ -2162,11 +2164,18 @@ export const POST = withAuth(async (_req: NextRequest, { user }) => {
       });
     }
 
-    await prisma.organizationMember.upsert({
+    const existingMembership = await prisma.organizationMember.findUnique({
       where: { organizationId_userId: { organizationId: demoOrg.id, userId: user.userId } },
-      update: { role: "OWNER", isActive: true },
-      create: { organizationId: demoOrg.id, userId: user.userId, role: "OWNER" },
     });
+    // Never re-activate or promote a membership someone else changed.
+    if (existingMembership && !existingMembership.isActive) {
+      return forbidden("Your access to the demo organization has been removed");
+    }
+    const membership =
+      existingMembership ??
+      (await prisma.organizationMember.create({
+        data: { organizationId: demoOrg.id, userId: user.userId, role: "OWNER" },
+      }));
 
     const orgId = demoOrg.id;
 
@@ -2186,25 +2195,29 @@ export const POST = withAuth(async (_req: NextRequest, { user }) => {
     const remediation = await seedRemediation(orgId);
     const training = await seedTraining(orgId);
 
-    const token = await signJwt({
-      userId: user.userId,
-      email: user.email,
-      name: user.name,
+    const account = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { id: true, email: true, name: true, passwordHash: true },
+    });
+    if (!account) return unauthorized("User not found");
+    const token = await signSessionToken({
+      user: account,
       organizationId: orgId,
-      orgRole: "OWNER",
-      plan: "PROFESSIONAL",
+      orgRole: membership.role,
+      plan: demoOrg.plan,
     });
 
-    return ok({
-      token,
+    // Switch the browser's session to the demo organization (HttpOnly cookie).
+    const res = ok({
+      authenticated: true,
       user: {
         id: user.userId,
         email: user.email,
         name: user.name,
-        role: "ADMIN",
+        role: membership.role,
         organizationId: orgId,
-        orgRole: "OWNER",
-        plan: "PROFESSIONAL",
+        orgRole: membership.role,
+        plan: demoOrg.plan,
         organization: { id: demoOrg.id, name: demoOrg.name, slug: demoOrg.slug, plan: demoOrg.plan },
       },
       organizationId: orgId,
@@ -2223,6 +2236,7 @@ export const POST = withAuth(async (_req: NextRequest, { user }) => {
         training,
       },
     });
+    return setSessionCookie(res, token);
   } catch (err) {
     return serverError(err);
   }

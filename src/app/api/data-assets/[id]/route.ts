@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
+import { findDataAssetInOrg } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,10 @@ const UpdateAssetSchema = z.object({
 });
 
 // GET /api/data-assets/:id
-export const GET = withAuth(async (_req, { params }) => {
+export const GET = withAuth(async (_req, { params, organizationId }) => {
   try {
-    const asset = await prisma.dataAsset.findUnique({
-      where: { id: params.id },
+    const asset = await prisma.dataAsset.findFirst({
+      where: { id: params.id, organizationId },
       include: {
         models: {
           include: { model: { select: { id: true, name: true, type: true, status: true } } },
@@ -43,9 +44,9 @@ export const GET = withAuth(async (_req, { params }) => {
 });
 
 // PATCH /api/data-assets/:id
-export const PATCH = withAuth(async (req, { params, user }) => {
+export const PATCH = withAuth(async (req, { params, user, organizationId }) => {
   try {
-    const existing = await prisma.dataAsset.findUnique({ where: { id: params.id } });
+    const existing = await findDataAssetInOrg(params.id, organizationId);
     if (!existing) return notFound("DataAsset");
 
     const body = await req.json();
@@ -53,12 +54,13 @@ export const PATCH = withAuth(async (req, { params, user }) => {
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const updated = await prisma.dataAsset.update({
-      where: { id: params.id },
+      where: { id: existing.id },
       data: parsed.data,
     });
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "UPDATE",
       resource: "DataAsset",
       resourceId: params.id,
@@ -74,15 +76,16 @@ export const PATCH = withAuth(async (req, { params, user }) => {
 }, "RISK_OFFICER");
 
 // DELETE /api/data-assets/:id
-export const DELETE = withAuth(async (req, { params, user }) => {
+export const DELETE = withAuth(async (req, { params, user, organizationId }) => {
   try {
-    const existing = await prisma.dataAsset.findUnique({ where: { id: params.id } });
+    const existing = await findDataAssetInOrg(params.id, organizationId);
     if (!existing) return notFound("DataAsset");
 
-    await prisma.dataAsset.delete({ where: { id: params.id } });
+    await prisma.dataAsset.delete({ where: { id: existing.id } });
 
     await logAudit({
       userId: user.userId,
+      organizationId,
       action: "DELETE",
       resource: "DataAsset",
       resourceId: params.id,

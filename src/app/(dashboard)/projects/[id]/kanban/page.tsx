@@ -120,8 +120,7 @@ export default function KanbanPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
-    fetch(`/api/projects/${params.id}/tasks`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/projects/${params.id}/tasks`, { headers: {} })
       .then((r) => r.json())
       .then((d) => { setKanbanTasks(d.data ?? []); setLoading(false); });
   }, [params.id]);
@@ -136,23 +135,25 @@ export default function KanbanPage() {
     if (!draggingId) return;
     const prev = kanbanTasks.find((t) => t.id === draggingId)?.status;
     if (prev === status) { setDraggingId(null); return; }
-    updateTaskStatus(draggingId, status);
+    const taskId = draggingId;
+    updateTaskStatus(taskId, status);
     setDraggingId(null);
-    fetch(`/api/projects/${params.id}/tasks/${draggingId}`, {
+    // Optimistic move; put the card back if the server refuses (e.g. read-only role).
+    const revert = () => { if (prev) updateTaskStatus(taskId, prev); };
+    fetch(`/api/projects/${params.id}/tasks/${taskId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    }).catch(() => { if (prev) updateTaskStatus(draggingId!, prev); });
+    }).then((r) => { if (!r.ok) revert(); }).catch(revert);
   }
 
   async function addTask(status: TaskStatus) {
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
       const res = await fetch(`/api/projects/${params.id}/tasks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: form.title.trim(),
           description: form.description || undefined,

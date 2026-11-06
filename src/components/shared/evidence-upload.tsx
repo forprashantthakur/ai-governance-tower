@@ -3,12 +3,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, FileText, Trash2, ExternalLink, Loader2, Paperclip } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
-import { useAuthStore } from "@/store/auth.store";
 
 interface EvidenceFile {
   id: string;
   name: string;
-  url: string;
+  /** Checked download route (the storage URL is never sent to the browser). */
+  downloadUrl: string;
   size: number;
   mimeType: string;
   section?: string;
@@ -57,7 +57,6 @@ export function EvidenceUpload({
   compact = false,
 }: EvidenceUploadProps) {
   const api = useApi();
-  const token = useAuthStore((s) => s.token);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<EvidenceFile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -101,7 +100,7 @@ export function EvidenceUpload({
 
       const res = await fetch("/api/upload", {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: {},
         body: form,
       });
 
@@ -149,7 +148,7 @@ export function EvidenceUpload({
           files.map((f) => (
             <a
               key={f.id}
-              href={f.url}
+              href={f.downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
@@ -264,11 +263,10 @@ export function EvidenceUpload({
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <a
-                  href={f.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={f.downloadUrl}
+                  download
                   className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                  title="Open file"
+                  title="Download file"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>

@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { isActiveMember } from "@/lib/tenant";
+import { httpUrl } from "@/lib/safe-url";
 import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { deleteCachePattern, orgKey } from "@/lib/redis";
@@ -16,7 +18,7 @@ const UpdateModelSchema = z.object({
   department: z.string().optional(),
   vendor: z.string().optional(),
   framework: z.string().optional(),
-  endpoint: z.string().url().optional().or(z.literal("")),
+  endpoint: httpUrl().optional().or(z.literal("")),
   tags: z.array(z.string()).optional(),
   isPiiProcessing: z.boolean().optional(),
   isFinancial: z.boolean().optional(),
@@ -60,11 +62,17 @@ export const PATCH = withAuth(async (req, { params, user, organizationId }) => {
     const body = await req.json();
     const parsed = UpdateModelSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (parsed.data.approverId && !(await isActiveMember(parsed.data.approverId, organizationId)))
+      return badRequest("Approver must be a member of this organization");
 
     const updated = await prisma.aIModel.update({
       where: { id: params.id },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: { ...parsed.data, endpoint: parsed.data.endpoint || null } as any,
+      data: {
+        ...parsed.data,
+        // Only touch endpoint when the request includes it ("" clears it).
+        ...(parsed.data.endpoint !== undefined && { endpoint: parsed.data.endpoint || null }),
+      } as any,
       include: {
         owner: { select: { id: true, name: true, email: true } },
         approver: { select: { id: true, name: true, email: true } },

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { httpUrl } from "@/lib/safe-url";
 import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -23,7 +24,7 @@ const UpdateSchema = z.object({
   targetAttendees: z.coerce.number().int().min(0).optional(),
   actualAttendees: z.coerce.number().int().min(0).optional(),
   facilitator: z.string().max(200).nullable().optional(),
-  materialsUrl: z.string().max(500).nullable().optional(),
+  materialsUrl: httpUrl().nullable().optional().or(z.literal("")),
   frameworkRefs: z.array(z.string()).optional(),
 });
 

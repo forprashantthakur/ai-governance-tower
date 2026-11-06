@@ -99,21 +99,40 @@ export const POST = withAuth(async (req: NextRequest, { organizationId }) => {
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
     const { raisedAt, dueDate, ...rest } = parsed.data;
 
-    // Auto-generate a sequential, org-scoped NCR reference: NCR-<year>-<seq>
+    // Auto-generate a sequential, org-scoped NCR reference: NCR-<year>-<seq>.
+    // Based on the highest existing number for the year (not a row count, which
+    // collides after a delete), retried if a concurrent request took it first.
     const year = new Date().getFullYear();
-    const count = await prisma.nonConformity.count({ where: { organizationId } });
-    const ncrRef = `NCR-${year}-${String(count + 1).padStart(3, "0")}`;
-
-    const ncr = await prisma.nonConformity.create({
-      data: {
-        ...rest,
-        ncrRef,
-        organizationId, // ← org isolation
-        raisedAt: raisedAt ? new Date(raisedAt) : new Date(),
-        dueDate: dueDate ? new Date(dueDate) : null,
-      },
-      include: { capas: { orderBy: { createdAt: "asc" } } },
-    });
+    const prefix = `NCR-${year}-`;
+    const createWithRef = async () => {
+      const existingRefs = await prisma.nonConformity.findMany({
+        where: { organizationId, ncrRef: { startsWith: prefix } },
+        select: { ncrRef: true },
+      });
+      const maxSeq = existingRefs.reduce((m: number, r: { ncrRef: string }) => {
+        const n = Number.parseInt(r.ncrRef.slice(prefix.length), 10);
+        return Number.isFinite(n) && n > m ? n : m;
+      }, 0);
+      return prisma.nonConformity.create({
+        data: {
+          ...rest,
+          ncrRef: `${prefix}${String(maxSeq + 1).padStart(3, "0")}`,
+          organizationId, // ← org isolation
+          raisedAt: raisedAt ? new Date(raisedAt) : new Date(),
+          dueDate: dueDate ? new Date(dueDate) : null,
+        },
+        include: { capas: { orderBy: { createdAt: "asc" } } },
+      });
+    };
+    let ncr;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        ncr = await createWithRef();
+        break;
+      } catch (e) {
+        if ((e as { code?: string }).code !== "P2002" || attempt >= 2) throw e;
+      }
+    }
 
     return created(ncr);
   } catch (err) {

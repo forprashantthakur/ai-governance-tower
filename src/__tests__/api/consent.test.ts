@@ -13,9 +13,18 @@ import { NextRequest } from "next/server";
 import { POST, GET } from "@/app/api/consent/route";
 import { prisma } from "@/lib/prisma";
 import { signJwt } from "@/lib/auth/jwt";
+import { sessionFingerprint } from "@/lib/auth/fingerprint";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 async function makeToken(role: "RISK_OFFICER" | "OWNER" | "VIEWER" | "ADMIN" | "AUDITOR" = "RISK_OFFICER") {
+  // withAuth re-reads the membership from the database on every request.
+  (prisma.organizationMember.findFirst as jest.Mock).mockResolvedValue({
+    role,
+    organization: { plan: "PROFESSIONAL" },
+    user: { passwordHash: "test-hash" },
+  });
+  // The referenced data asset belongs to the caller's organization.
+  (prisma.dataAsset.findFirst as jest.Mock).mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440000", organizationId: "org-1" });
   return signJwt({
     userId: "user-1",
     email: "test@example.com",
@@ -23,6 +32,7 @@ async function makeToken(role: "RISK_OFFICER" | "OWNER" | "VIEWER" | "ADMIN" | "
     organizationId: "org-1",
     orgRole: role,
     plan: "PROFESSIONAL",
+    sv: sessionFingerprint("test-hash"),
   });
 }
 
@@ -305,5 +315,18 @@ describe("GET /api/consent", () => {
     const res = await GET(makeGetRequest({ limit: 50 }, token), { params: {} });
     const json = await res.json();
     expect(json.data.pages).toBe(3); // ceil(105/50) = 3
+  });
+});
+
+describe("POST /api/consent — tenant isolation", () => {
+  it("returns 400 when the data asset belongs to another organization", async () => {
+    const token = await makeToken();
+    (prisma.dataAsset.findFirst as jest.Mock).mockResolvedValue(null);
+    const res = await POST(makePostRequest(VALID_CONSENT_BODY, token), { params: {} });
+    expect(res.status).toBe(400);
+    expect(prisma.consentRecord.create).not.toHaveBeenCalled();
+    expect(prisma.dataAsset.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ organizationId: "org-1" }) })
+    );
   });
 });

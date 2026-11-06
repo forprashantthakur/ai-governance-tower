@@ -58,8 +58,8 @@ cp .env.example .env
 # Generate Prisma client
 npm run db:generate
 
-# Run migrations
-npm run db:migrate
+# Create the tables (local development database)
+npm run db:push
 
 # Seed with demo data
 npm run db:seed
@@ -75,13 +75,11 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## Demo Credentials
+## Demo Accounts
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin@governance.ai | Admin@1234! |
-| Risk Officer | risk@governance.ai | Admin@1234! |
-| Auditor | audit@governance.ai | Admin@1234! |
+`npm run db:seed` creates three local demo accounts: `admin@governance.ai`, `risk@governance.ai` and `audit@governance.ai`.
+They share one password, taken from the `SEED_PASSWORD` environment variable or, if that is unset, generated randomly and printed once by the seed script.
+Never run the seed script against production.
 
 ---
 
@@ -155,9 +153,10 @@ ai-governance-tower/
 ### Auth
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| POST | `/api/auth/login` | None | Login with email + password |
-| POST | `/api/auth/register` | None | Register new user |
-| GET | `/api/auth/me` | Bearer | Get current user |
+| POST | `/api/auth/login` | None | Sign in; sets the HttpOnly session cookie |
+| POST | `/api/auth/register` | None | Register new user / accept an invite |
+| POST | `/api/auth/logout` | None | Clears the session cookie |
+| GET | `/api/auth/me` | Session | Current user and organization |
 
 ### AI Models
 | Method | Endpoint | Role | Description |
@@ -225,13 +224,17 @@ Framework for AI impact assessments — mapped to model risk assessments.
 
 ## Security
 
-- All API routes protected with JWT Bearer tokens
-- RBAC enforced at route level (`withAuth` HOC)
-- Rate limiting: 100 req/min per IP (configurable)
-- Zod input validation on all POST/PATCH endpoints
-- Audit log on every mutating operation
-- Secure HTTP headers (CSP, HSTS, X-Frame-Options)
-- Passwords hashed with bcrypt (12 rounds)
+- **Sessions** live in an HttpOnly, Secure, SameSite=Lax cookie that page scripts can't read. Cookie-authenticated state-changing requests from other sites are refused. Non-browser clients can send `Authorization: Bearer <token>`.
+- **Revocation:** every request re-reads the caller's membership, role and plan; removing or deactivating a member, deactivating the organization, or changing the password ends existing sessions immediately.
+- **Tenant isolation:** every record is checked against the caller's organization (other organizations' ids return 404). `src/__tests__/security/route-guards.test.ts` fails CI if a route skips `withAuth` or never scopes by organization.
+- **RBAC** enforced at route level (`withAuth`).
+- **Rate limits** on sign-in (per address, and per account after 10 failures), sign-up, password reset and other public auth endpoints, shared across instances through Redis when `REDIS_URL` is set.
+- **Files** (evidence, project artifacts) are stored in a private Vercel Blob store and served only through permission-checked download routes.
+- **Outbound webhooks** must be public https URLs; private and internal addresses are refused.
+- Zod input validation on POST/PATCH endpoints; audit log on mutating operations.
+- Security headers on every response (CSP, HSTS, X-Frame-Options, nosniff).
+- Passwords hashed with bcrypt.
+- The server refuses to start in production without a 32+ character `JWT_SECRET`.
 
 ---
 
@@ -241,22 +244,25 @@ See `.env.example` for all required variables. Key ones:
 
 ```env
 DATABASE_URL=postgresql://...
-REDIS_URL=redis://localhost:6379
-JWT_SECRET=your-secret-min-32-chars
-OPENAI_API_KEY=sk-...
-LANGFUSE_SECRET_KEY=sk-lf-...   # optional
+JWT_SECRET=...                        # required, 32+ random characters
+PRIVATE_BLOB_READ_WRITE_TOKEN=...     # private Vercel Blob store for uploaded files
+REDIS_URL=redis://...                 # shared rate limits and cache (recommended)
+RESEND_API_KEY=re_...                 # verification and password-reset email
 ```
 
 ---
 
 ## Production Deployment
 
-1. Set `NODE_ENV=production`
-2. Use `npm run build && npm start`
-3. Run `npm run db:migrate` before deploy
-4. Configure Redis cluster for multi-instance deployments
-5. Set secure `JWT_SECRET` (minimum 32 characters, randomly generated)
-6. Enable SSL for PostgreSQL and Redis connections
+1. Set `JWT_SECRET` (32+ random characters) and `PRIVATE_BLOB_READ_WRITE_TOKEN` in every environment.
+2. `npm run build` no longer touches the database. Schema changes ship as migration files, reviewed in the pull request, and are applied as a separate release step **before** deploying: `npm run db:deploy` (`prisma migrate deploy`).
+3. One-time setup of the migration history (the old build used `prisma db push`, so the committed migrations were incomplete):
+   - `npm run db:baseline` generates `prisma/migrations/0_baseline` from `schema.prisma` and archives the old migrations. Commit the result.
+   - Against the existing production database, once: `DATABASE_URL="<production url>" npx prisma migrate resolve --applied 0_baseline` (records the baseline as applied; it doesn't run it).
+   - CI then checks on every pull request that the migrations produce exactly `schema.prisma`.
+4. Use a separate database for preview deployments, so a pull request can never change production data.
+5. Configure Redis (`REDIS_URL`) so rate limits hold across serverless instances.
+6. Enable SSL for PostgreSQL and Redis connections.
 
 ---
 

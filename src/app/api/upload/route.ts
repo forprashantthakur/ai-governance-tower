@@ -1,8 +1,30 @@
-import { NextRequest } from "next/server";
-import { put } from "@vercel/blob";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  storePrivateFile,
+  deleteStoredFile,
+  withoutStorageUrl,
+  StorageNotConfiguredError,
+  STORAGE_NOT_CONFIGURED_MESSAGE,
+} from "@/lib/file-storage";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest, serverError } from "@/lib/api-response";
+import { evidenceInOrg } from "@/lib/tenant";
+import { ok, badRequest, notFound, serverError } from "@/lib/api-response";
+
+
+/** Every parent id supplied must belong to the caller's organization. */
+async function parentsInOrg(
+  ids: { controlId?: string; riskId?: string; modelId?: string; dataAssetId?: string },
+  organizationId: string
+) {
+  const checks = await Promise.all([
+    ids.controlId ? prisma.complianceControl.count({ where: { id: ids.controlId, model: { organizationId } } }) : 1,
+    ids.riskId ? prisma.riskAssessment.count({ where: { id: ids.riskId, model: { organizationId } } }) : 1,
+    ids.modelId ? prisma.aIModel.count({ where: { id: ids.modelId, organizationId } }) : 1,
+    ids.dataAssetId ? prisma.dataAsset.count({ where: { id: ids.dataAssetId, organizationId } }) : 1,
+  ]);
+  return checks.every((c) => c === 1);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +45,7 @@ const MAX_SIZE = 20 * 1024 * 1024; // 20 MB
 
 // POST /api/upload
 // multipart/form-data: file, controlId?, riskId?, modelId?, dataAssetId?, section?, description?
-export const POST = withAuth(async (req: NextRequest, { user }) => {
+export const POST = withAuth(async (req: NextRequest, { user, organizationId }) => {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -43,21 +65,24 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
     const section      = (formData.get("section")     as string | null) || undefined;
     const description  = (formData.get("description") as string | null) || undefined;
 
-    // Upload to Vercel Blob
-    const blob = await put(
-      `evidence/${user.userId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
+    if (!controlId && !riskId && !modelId && !dataAssetId)
+      return badRequest("Attach the file to a control, risk assessment, model or data asset");
+    if (!(await parentsInOrg({ controlId, riskId, modelId, dataAssetId }, organizationId)))
+      return notFound("Parent record");
+
+    // Private storage: the file can only be read through GET /api/upload/:id,
+    // which checks the caller's organization first.
+    const storedUrl = await storePrivateFile(
+      `evidence/${organizationId}/${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
       file,
-      {
-        access: "public",
-        contentType: file.type,
-      }
+      file.type
     );
 
     // Persist metadata to DB
     const evidenceFile = await prisma.evidenceFile.create({
       data: {
         name: file.name,
-        url: blob.url,
+        url: storedUrl,
         size: file.size,
         mimeType: file.type,
         uploadedBy: user.userId,
@@ -70,11 +95,14 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
       },
     });
 
-    return ok(evidenceFile);
+    return ok(withoutStorageUrl(evidenceFile, `/api/upload/${evidenceFile.id}`));
   } catch (err: unknown) {
+    if (err instanceof StorageNotConfiguredError) {
+      return NextResponse.json({ success: false, error: STORAGE_NOT_CONFIGURED_MESSAGE }, { status: 503 });
+    }
     const msg = err instanceof Error ? err.message : "";
     // Surface known configuration / table errors clearly regardless of NODE_ENV
-    if (msg.includes("BLOB_READ_WRITE_TOKEN") || msg.includes("blob")) {
+    if (msg.includes("BLOB_READ_WRITE_TOKEN")) {
       return badRequest(
         "Vercel Blob storage is not configured. Go to your Vercel project → Storage → Blob and create a store, then redeploy."
       );
@@ -89,7 +117,7 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
 }, "RISK_OFFICER");
 
 // GET /api/upload?controlId=&riskId=&modelId=&dataAssetId=
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const controlId   = searchParams.get("controlId")   || undefined;
@@ -108,10 +136,15 @@ export const GET = withAuth(async (req: NextRequest) => {
           ...(riskId      && { riskId }),
           ...(modelId     && { modelId }),
           ...(dataAssetId && { dataAssetId }),
+          ...evidenceInOrg(organizationId),
         },
+        take: 500,
         orderBy: { uploadedAt: "desc" },
       });
-      return ok({ files, total: files.length });
+      return ok({
+        files: files.map((f) => withoutStorageUrl(f, `/api/upload/${f.id}`)),
+        total: files.length,
+      });
     } catch {
       // Table doesn't exist yet (pending prisma db push) — return empty list
       return ok({ files: [], total: 0 });
@@ -122,13 +155,20 @@ export const GET = withAuth(async (req: NextRequest) => {
 });
 
 // DELETE /api/upload?id=<fileId>
-export const DELETE = withAuth(async (req: NextRequest) => {
+export const DELETE = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return badRequest("File id required");
 
-    await prisma.evidenceFile.delete({ where: { id } });
+    const file = await prisma.evidenceFile.findFirst({ where: { id, ...evidenceInOrg(organizationId) } });
+    if (!file) return notFound("File");
+    try {
+      await deleteStoredFile(file.url); // remove the stored file, not just the database row
+    } catch (blobErr) {
+      console.warn("[upload] Blob deletion failed (continuing):", blobErr);
+    }
+    await prisma.evidenceFile.delete({ where: { id: file.id } });
     return ok({ deleted: true });
   } catch (err) {
     return serverError(err);

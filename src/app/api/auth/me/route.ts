@@ -1,35 +1,43 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyJwt, extractBearerToken } from "@/lib/auth/jwt";
+import { authenticateRequest } from "@/lib/with-auth";
 import { ok, unauthorized, serverError } from "@/lib/api-response";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
+// GET /api/auth/me — the signed-in user and organization for the current session.
 export async function GET(req: NextRequest) {
   try {
-    const token = extractBearerToken(req.headers.get("authorization"));
-    if (!token) return unauthorized();
+    const auth = await authenticateRequest(req);
+    if (auth.error) return auth.error;
 
-    const payload = await verifyJwt(token);
+    const [user, organization] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: auth.user.userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          department: true,
+          avatarUrl: true,
+          lastLoginAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.organization.findUnique({
+        where: { id: auth.user.organizationId },
+        select: { id: true, name: true, slug: true, plan: true },
+      }),
+    ]);
+    if (!user || !organization) return unauthorized("User not found");
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        department: true,
-        avatarUrl: true,
-        lastLoginAt: true,
-        createdAt: true,
-      },
+    return ok({
+      ...user,
+      role: auth.user.orgRole,
+      organizationId: organization.id,
+      organization,
     });
-
-    if (!user) return unauthorized("User not found");
-
-    return ok(user);
-  } catch {
-    return unauthorized("Invalid token");
+  } catch (err) {
+    return serverError(err);
   }
 }

@@ -3,7 +3,7 @@ import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, created, badRequest } from "@/lib/api-response";
+import { ok, created, badRequest, serverError } from "@/lib/api-response";
 import { logAudit } from "@/lib/audit-logger";
 
 export const dynamic = "force-dynamic";
@@ -11,56 +11,56 @@ export const maxDuration = 120;
 
 const CreateSchema = z.object({
   // Core
-  organizationProfile: z.string().min(20),
-  industry: z.string().min(2),
+  organizationProfile: z.string().min(20).max(5000),
+  industry: z.string().min(2).max(200),
 
   // Step 1: Business Context
-  primaryObjective: z.string().default(""),           // Revenue Increase / Cost Reduction / Risk Mitigation / CX Improvement
-  targetKPI: z.string().default(""),                  // e.g. "Reduce loan approval time"
-  kpiBaseline: z.string().default(""),               // current value e.g. "5 days"
-  kpiTarget: z.string().default(""),                  // target value e.g. "1 day"
-  timeHorizon: z.string().default("3-6 months"),
+  primaryObjective: z.string().max(500).default(""),           // Revenue Increase / Cost Reduction / Risk Mitigation / CX Improvement
+  targetKPI: z.string().max(500).default(""),                  // e.g. "Reduce loan approval time"
+  kpiBaseline: z.string().max(500).default(""),               // current value e.g. "5 days"
+  kpiTarget: z.string().max(500).default(""),                  // target value e.g. "1 day"
+  timeHorizon: z.string().max(500).default("3-6 months"),
 
   // Step 2: Process & Decisions
-  valueChainStage: z.string().default(""),           // Acquisition/Onboarding/Operations/Support/Retention
-  painPoints: z.array(z.string()).default([]),        // High manual effort, Low conversion, etc.
-  processType: z.string().default(""),               // Manual/Rule-based/Semi-automated
-  keyDecisions: z.array(z.string()).default([]),      // Pricing/Approval/Recommendation/Routing/Forecasting
-  decisionFrequency: z.string().default(""),
+  valueChainStage: z.string().max(500).default(""),           // Acquisition/Onboarding/Operations/Support/Retention
+  painPoints: z.array(z.string().max(200)).max(50).default([]),        // High manual effort, Low conversion, etc.
+  processType: z.string().max(500).default(""),               // Manual/Rule-based/Semi-automated
+  keyDecisions: z.array(z.string().max(200)).max(50).default([]),      // Pricing/Approval/Recommendation/Routing/Forecasting
+  decisionFrequency: z.string().max(500).default(""),
   isDecisionSubjective: z.boolean().default(false),
 
   // Step 3: Data Readiness
-  dataAvailability: z.array(z.string()).default([]), // Structured/Unstructured/Behavioral
-  dataVolume: z.string().default(""),               // Low/Medium/High (>1M)
-  dataQuality: z.string().default(""),              // Poor/Moderate/High
-  dataFreshness: z.string().default(""),            // Batch/Near real-time/Real-time
-  dataAccess: z.string().default(""),               // Siloed/Partially integrated/Fully accessible
-  dataSources: z.array(z.string()).default([]),
+  dataAvailability: z.array(z.string().max(200)).max(50).default([]), // Structured/Unstructured/Behavioral
+  dataVolume: z.string().max(500).default(""),               // Low/Medium/High (>1M)
+  dataQuality: z.string().max(500).default(""),              // Poor/Moderate/High
+  dataFreshness: z.string().max(500).default(""),            // Batch/Near real-time/Real-time
+  dataAccess: z.string().max(500).default(""),               // Siloed/Partially integrated/Fully accessible
+  dataSources: z.array(z.string().max(200)).max(50).default([]),
 
   // Step 4: Customer & Monetization
-  customerTouchpoints: z.array(z.string()).default([]),
-  journeyStage: z.string().default(""),
+  customerTouchpoints: z.array(z.string().max(200)).max(50).default([]),
+  journeyStage: z.string().max(500).default(""),
   personalizationRequired: z.boolean().default(false),
-  revenueLevers: z.array(z.string()).default([]),    // Upsell/Cross-sell/Pricing optimization/New product
-  estimatedRevenueImpact: z.string().default(""),   // e.g. "15%"
-  estimatedCostSaving: z.string().default(""),      // e.g. "30%"
-  transactionVolume: z.string().default(""),        // e.g. "50,000/month"
+  revenueLevers: z.array(z.string().max(200)).max(50).default([]),    // Upsell/Cross-sell/Pricing optimization/New product
+  estimatedRevenueImpact: z.string().max(500).default(""),   // e.g. "15%"
+  estimatedCostSaving: z.string().max(500).default(""),      // e.g. "30%"
+  transactionVolume: z.string().max(500).default(""),        // e.g. "50,000/month"
 
   // Step 5: Technology, Governance & Org
-  existingSystems: z.array(z.string()).default([]),
-  integrationComplexity: z.string().default(""),    // Low/Medium/High
-  cloudReadiness: z.string().default(""),            // On-prem/Hybrid/Cloud-native
-  regulatoryImpact: z.string().default(""),          // None/Moderate/High (DPDP/GDPR/HIPAA)
+  existingSystems: z.array(z.string().max(200)).max(50).default([]),
+  integrationComplexity: z.string().max(500).default(""),    // Low/Medium/High
+  cloudReadiness: z.string().max(500).default(""),            // On-prem/Hybrid/Cloud-native
+  regulatoryImpact: z.string().max(500).default(""),          // None/Moderate/High (DPDP/GDPR/HIPAA)
   explainabilityRequired: z.boolean().default(false),
-  biasRisk: z.string().default(""),                 // Low/Medium/High
-  skillAvailability: z.array(z.string()).default([]), // Data Science/Data Engineering/MLOps
-  changeImpact: z.string().default(""),              // Low/Medium/High
-  industryMetrics: z.record(z.string()).default({}), // industry-specific KPIs
+  biasRisk: z.string().max(500).default(""),                 // Low/Medium/High
+  skillAvailability: z.array(z.string().max(200)).max(50).default([]), // Data Science/Data Engineering/MLOps
+  changeImpact: z.string().max(500).default(""),              // Low/Medium/High
+  industryMetrics: z.record(z.string().max(500)).refine((o) => Object.keys(o).length <= 50, "Too many metrics").default({}), // industry-specific KPIs
 
   // Legacy compatibility
-  functions: z.array(z.string()).default([]),
+  functions: z.array(z.string().max(200)).max(50).default([]),
   maturityScore: z.number().int().min(1).max(5).default(2),
-  businessGoals: z.array(z.string()).default([]),
+  businessGoals: z.array(z.string().max(200)).max(50).default([]),
 });
 
 // ── Build the Claude prompt ───────────────────────────────────────────────────
@@ -250,9 +250,7 @@ export const GET = withAuth(async (_req, { organizationId }) => {
     });
     return ok(assessments);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[maturity-assessment GET]", err);
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    return serverError(err);
   }
 });
 
@@ -345,20 +343,17 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
         where: { id: assessment.id },
         data: {
           status: "FAILED",
-          errorMessage: aiErr instanceof Error ? aiErr.message : "AI generation failed",
+          // Raw SDK / model output can contain internals; keep the stored message generic.
+          errorMessage: "AI generation failed",
         },
       });
       throw aiErr;
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack : undefined;
-    console.error("[maturity-assessment POST] ERROR:", msg);
-    console.error("[maturity-assessment POST] STACK:", stack);
-    // Log extra detail if it looks like an Anthropic SDK error
+    // Log details server-side only; never return raw SDK / DB / model text to the client.
     if (err && typeof err === "object" && "status" in err) {
       console.error("[maturity-assessment POST] HTTP status:", (err as { status: unknown }).status);
     }
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    return serverError(err);
   }
-});
+}, "RISK_OFFICER");

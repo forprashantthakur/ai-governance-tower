@@ -118,8 +118,7 @@ export default function ProjectsPage() {
   const [healthFilter, setHealthFilter] = useState("");
 
   useEffect(() => {
-    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
-    fetch("/api/projects/portfolio", { headers: { Authorization: `Bearer ${token}` } })
+    fetch("/api/projects/portfolio", { headers: {} })
       .then((r) => r.json())
       .then((res) => {
         if (res.success) {

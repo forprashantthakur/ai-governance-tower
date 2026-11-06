@@ -42,7 +42,10 @@ interface ApprovalWorkflow {
   steps: ApprovalStep[];
 }
 
-interface UserOption { id: string; name: string; }
+interface UserOption { id: string; name: string; role?: string; }
+
+// Only these roles can decide approval steps.
+const APPROVER_ROLES = new Set(["OWNER", "ADMIN", "RISK_OFFICER"]);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -115,7 +118,9 @@ function NewWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
 
   useEffect(() => {
     api.get<{ models: { id: string; name: string }[] }>("/models?limit=200").then((r) => setModels(r.models ?? [])).catch(() => {});
-    api.get<UserOption[]>("/users").then(setUsers).catch(() => {});
+    api.get<UserOption[]>("/users")
+      .then((list) => setUsers(list.filter((u) => !u.role || APPROVER_ROLES.has(u.role))))
+      .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

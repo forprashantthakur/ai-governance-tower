@@ -45,6 +45,12 @@ const mockPrisma = {
     findFirst: jest.fn(),
     create: jest.fn(),
   },
+  // Used by withAuth to re-check membership, role and plan on every request.
+  organizationMember: {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    count: jest.fn(),
+  },
   organization: {
     findUnique: jest.fn(),
     create: jest.fn(),

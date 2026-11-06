@@ -82,7 +82,7 @@ describe("signJwt() + verifyJwt()", () => {
   it("rejects a token with wrong issuer", async () => {
     const { SignJWT } = await import("jose");
     const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET ?? "fallback-dev-secret-min-32-chars-!!"
+      process.env.JWT_SECRET ?? "dev-only-insecure-jwt-secret-do-not-deploy"
     );
     const wrongIssuerToken = await new SignJWT({ userId: "x" })
       .setProtectedHeader({ alg: "HS256" })
@@ -97,7 +97,7 @@ describe("signJwt() + verifyJwt()", () => {
   it("rejects a token with wrong audience", async () => {
     const { SignJWT } = await import("jose");
     const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET ?? "fallback-dev-secret-min-32-chars-!!"
+      process.env.JWT_SECRET ?? "dev-only-insecure-jwt-secret-do-not-deploy"
     );
     const wrongAudienceToken = await new SignJWT({ userId: "x" })
       .setProtectedHeader({ alg: "HS256" })
@@ -151,5 +151,53 @@ describe("extractBearerToken()", () => {
     const token = await signJwt(VALID_PAYLOAD);
     const result = extractBearerToken(`Bearer ${token}`);
     expect(result).toBe(token);
+  });
+});
+
+describe("JWT secret configuration", () => {
+  const env = process.env as Record<string, string | undefined>;
+  const saved = { NODE_ENV: env.NODE_ENV, JWT_SECRET: env.JWT_SECRET };
+  afterEach(() => {
+    env.NODE_ENV = saved.NODE_ENV;
+    env.JWT_SECRET = saved.JWT_SECRET;
+  });
+
+  function freshJwtModule(): typeof import("@/lib/auth/jwt") {
+    let mod!: typeof import("@/lib/auth/jwt");
+    jest.isolateModules(() => {
+      mod = require("@/lib/auth/jwt");
+    });
+    return mod;
+  }
+
+  const claims = {
+    userId: "u", email: "u@x", name: "U", organizationId: "o",
+    orgRole: "OWNER" as const, plan: "ENTERPRISE" as const,
+  };
+
+  it("refuses to sign in production when JWT_SECRET is missing", async () => {
+    env.NODE_ENV = "production";
+    delete env.JWT_SECRET;
+    await expect(freshJwtModule().signJwt(claims)).rejects.toThrow(/JWT_SECRET/);
+  });
+
+  it("refuses to verify in production when JWT_SECRET is too short", async () => {
+    env.NODE_ENV = "production";
+    env.JWT_SECRET = "short";
+    await expect(freshJwtModule().verifyJwt("a.b.c")).rejects.toThrow(/JWT_SECRET/);
+  });
+
+  it("rejects tokens signed with the old public fallback secret", async () => {
+    env.NODE_ENV = "production";
+    env.JWT_SECRET = "x".repeat(48);
+    const { SignJWT } = await import("jose");
+    const forged = await new SignJWT({ ...claims })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .setIssuer("ai-governance-tower")
+      .setAudience("ai-governance-tower-client")
+      .sign(new TextEncoder().encode("fallback-dev-secret-min-32-chars-!!"));
+    await expect(freshJwtModule().verifyJwt(forged)).rejects.toThrow();
   });
 });

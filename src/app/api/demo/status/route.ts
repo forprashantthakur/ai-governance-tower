@@ -2,10 +2,10 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
 import { ok, serverError } from "@/lib/api-response";
+import { demoOrgSlugFor } from "@/lib/demo";
 
 export const dynamic = "force-dynamic";
 
-const DEMO_ORG_SLUG = "demo-bank-cio";
 
 /** Resolve a count query, or 0 if the table doesn't exist yet on a stale DB. */
 async function safe(fn: () => Promise<number>): Promise<number> {
@@ -20,10 +20,10 @@ async function safe(fn: () => Promise<number>): Promise<number> {
 // organization ("Demo Bank — CIO Walkthrough") already exists and how far its
 // seeding got, so the UI can render "Load CIO Demo Data" vs. "Demo data
 // loaded — enter demo workspace" without ever touching the caller's own org.
-export const GET = withAuth(async (_req: NextRequest) => {
+export const GET = withAuth(async (_req: NextRequest, { user }) => {
   try {
     const demoOrg = await prisma.organization.findUnique({
-      where: { slug: DEMO_ORG_SLUG },
+      where: { slug: demoOrgSlugFor(user.userId) },
       select: { id: true, name: true },
     });
 

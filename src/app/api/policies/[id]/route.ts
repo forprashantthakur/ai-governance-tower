@@ -2,7 +2,13 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest, notFound, noContent, serverError } from "@/lib/api-response";
+import { ok, badRequest, forbidden, notFound, noContent, serverError } from "@/lib/api-response";
+import { logAudit, getClientIp } from "@/lib/audit-logger";
+
+// Recording a policy as approved or published is an approval decision:
+// RISK_OFFICERs draft and review, ADMIN/OWNER sign off.
+const APPROVED_STATUSES = new Set(["APPROVED", "PUBLISHED"]);
+const APPROVER_ROLES = new Set(["OWNER", "ADMIN"]);
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +41,7 @@ const UpdateSchema = z.object({
 });
 
 // PATCH /api/policies/:id
-export const PATCH = withAuth(async (req: NextRequest, { params, organizationId }) => {
+export const PATCH = withAuth(async (req: NextRequest, { params, user, organizationId }) => {
   try {
     const existing = await prisma.policyDocument.findFirst({ where: { id: params.id, organizationId } });
     if (!existing) return notFound("PolicyDocument");
@@ -43,6 +49,21 @@ export const PATCH = withAuth(async (req: NextRequest, { params, organizationId 
     const parsed = UpdateSchema.safeParse(await req.json());
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
     const d = parsed.data;
+
+    const isApprover = APPROVER_ROLES.has(user.orgRole);
+    const approving = d.status !== undefined && APPROVED_STATUSES.has(d.status) && !APPROVED_STATUSES.has(existing.status);
+    if (approving && !isApprover) {
+      return forbidden("Only an ADMIN or OWNER can mark a policy approved or published");
+    }
+    if (!isApprover && (d.approvedBy !== undefined || d.approvedAt !== undefined)) {
+      return forbidden("Only an ADMIN or OWNER can record who approved a policy");
+    }
+    // An approved/published document can't be silently rewritten: non-approvers
+    // move it back to review first (a status-only change), then edit.
+    const substantive = [d.title, d.type, d.version, d.summary, d.content].some((v) => v !== undefined);
+    if (!isApprover && APPROVED_STATUSES.has(existing.status) && substantive) {
+      return forbidden("This policy is approved. Move it back to In review before editing it.");
+    }
 
     const updated = await prisma.policyDocument.update({
       where: { id: params.id },
@@ -62,6 +83,17 @@ export const PATCH = withAuth(async (req: NextRequest, { params, organizationId 
         ...(d.integratesWith !== undefined && { integratesWith: d.integratesWith }),
         ...(d.frameworkRefs !== undefined && { frameworkRefs: d.frameworkRefs }),
       },
+    });
+
+    await logAudit({
+      userId: user.userId,
+      organizationId,
+      action: approving ? "APPROVE" : "UPDATE",
+      resource: "PolicyDocument",
+      resourceId: existing.id,
+      before: { status: existing.status, version: existing.version, approvedBy: existing.approvedBy },
+      after: { status: updated.status, version: updated.version, approvedBy: updated.approvedBy },
+      ipAddress: getClientIp(req),
     });
 
     return ok(updated);

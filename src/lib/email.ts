@@ -1,6 +1,14 @@
 import { Resend } from "resend";
+import { escapeHtml } from "@/lib/safe-url";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Created on first use so importing this module never throws when the key is absent.
+let client: Resend | null = null;
+const resend = {
+  emails: {
+    send: (...args: Parameters<Resend["emails"]["send"]>) =>
+      (client ??= new Resend(process.env.RESEND_API_KEY)).emails.send(...args),
+  },
+};
 const FROM = "AI Governance Tower <noreply@aigovernancetower.com>";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://aigovernancetower.com";
 
@@ -34,7 +42,7 @@ export async function sendPasswordResetEmail(to: string, name: string, token: st
             <td style="padding:40px;">
               <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;">Reset your password</h1>
               <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 28px;">
-                Hi ${name},<br/><br/>
+                Hi ${escapeHtml(name)},<br/><br/>
                 We received a request to reset your password. Click the button below to choose a new one.
               </p>
               <table cellpadding="0" cellspacing="0" width="100%">
@@ -115,7 +123,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
                 Verify your email address
               </h1>
               <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 28px;">
-                Hi ${name},<br/><br/>
+                Hi ${escapeHtml(name)},<br/><br/>
                 Welcome to AI Governance Control Tower. Click the button below to verify your email and activate your account.
               </p>
 

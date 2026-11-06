@@ -17,20 +17,25 @@ const UpdateSchema = z.object({
   isAddressed: z.boolean().optional(),
 });
 
-export const PATCH = withAuth(async (req: NextRequest, { params }) => {
+export const PATCH = withAuth(async (req: NextRequest, { params, organizationId }) => {
   try {
     const body = await req.json();
     const parsed = UpdateSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
-    const scenario = await prisma.misuseScenario.update({ where: { id: params.id }, data: parsed.data }).catch(() => null);
-    if (!scenario) return notFound("Scenario");
+    const existing = await prisma.misuseScenario.findFirst({
+      where: { id: params.id, model: { organizationId } },
+      select: { id: true },
+    });
+    if (!existing) return notFound("Scenario");
+    const scenario = await prisma.misuseScenario.update({ where: { id: existing.id }, data: parsed.data });
     return ok(scenario);
   } catch (err) { return serverError(err); }
 }, "RISK_OFFICER");
 
-export const DELETE = withAuth(async (_req: NextRequest, { params }) => {
+export const DELETE = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
-    await prisma.misuseScenario.delete({ where: { id: params.id } }).catch(() => {});
+    const res = await prisma.misuseScenario.deleteMany({ where: { id: params.id, model: { organizationId } } });
+    if (res.count === 0) return notFound("Scenario");
     return noContent();
   } catch (err) { return serverError(err); }
 }, "RISK_OFFICER");

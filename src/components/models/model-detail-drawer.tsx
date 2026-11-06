@@ -5,6 +5,7 @@ import { RiskBadge, StatusBadge, ComplianceBadge } from "@/components/shared/ris
 import { Badge } from "@/components/ui/badge";
 import type { AIModel, RiskLevel, ComplianceStatus } from "@/types";
 import { formatDate } from "@/lib/utils";
+import { safeHref } from "@/lib/safe-url";
 
 interface ModelDetailDrawerProps {
   model: AIModel;
@@ -45,12 +46,12 @@ export function ModelDetailDrawer({ model, onClose }: ModelDetailDrawerProps) {
             <InfoRow label="Department" value={model.department ?? "—"} />
             <InfoRow label="Vendor" value={model.vendor ?? "—"} />
             <InfoRow label="Framework" value={model.framework ?? "—"} />
-            {model.endpoint && (
+            {safeHref(model.endpoint) && (
               <InfoRow
                 label="Endpoint"
                 value={
-                  <a href={model.endpoint} className="flex items-center gap-1 text-primary hover:underline text-sm" target="_blank" rel="noopener noreferrer">
-                    {model.endpoint.slice(0, 40)}... <ExternalLink className="h-3 w-3" />
+                  <a href={safeHref(model.endpoint)} className="flex items-center gap-1 text-primary hover:underline text-sm" target="_blank" rel="noopener noreferrer">
+                    {(model.endpoint ?? "").slice(0, 40)}... <ExternalLink className="h-3 w-3" />
                   </a>
                 }
               />

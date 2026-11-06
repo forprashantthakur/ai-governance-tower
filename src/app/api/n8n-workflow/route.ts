@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { withAuth } from "@/lib/with-auth";
-import { ok, badRequest } from "@/lib/api-response";
+import { ok, badRequest, serverError } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -50,9 +50,9 @@ const TYPE_VERSIONS: Record<string, number> = {
 };
 
 const Schema = z.object({
-  description:  z.string().min(20, "Describe the workflow in at least 20 characters"),
+  description:  z.string().min(20, "Describe the workflow in at least 20 characters").max(4000),
   triggerType:  z.enum(["webhook", "schedule", "manual"]).default("webhook"),
-  integrations: z.array(z.string()).default([]),
+  integrations: z.array(z.string().max(100)).max(20).default([]),
   complexity:   z.enum(["simple", "medium", "complex"]).default("medium"),
 });
 
@@ -120,6 +120,15 @@ OUTPUT FORMAT — return ONLY this JSON structure:
 }
 
 export const POST = withAuth(async (req: NextRequest) => {
+  try {
+    return await buildWorkflow(req);
+  } catch (err) {
+    // Upstream SDK errors and malformed model output end up here.
+    return serverError(err);
+  }
+}, "RISK_OFFICER");
+
+async function buildWorkflow(req: NextRequest) {
   const body = await req.json();
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.errors[0]?.message ?? "Invalid input");
@@ -147,7 +156,12 @@ export const POST = withAuth(async (req: NextRequest) => {
     return NextResponse.json({ success: false, error: "AI did not return valid JSON" }, { status: 500 });
   }
 
-  const aiResult = JSON.parse(stripped.slice(start, end + 1));
+  let aiResult: ReturnType<typeof JSON.parse>;
+  try {
+    aiResult = JSON.parse(stripped.slice(start, end + 1));
+  } catch {
+    return NextResponse.json({ success: false, error: "AI did not return valid JSON" }, { status: 502 });
+  }
 
   // Build production-ready n8n import JSON
   const NODE_W = 240;
@@ -207,4 +221,4 @@ export const POST = withAuth(async (req: NextRequest) => {
     ...aiResult,
     n8n_export: n8nExport,
   });
-});
+}

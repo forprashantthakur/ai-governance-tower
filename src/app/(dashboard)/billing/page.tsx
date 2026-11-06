@@ -103,9 +103,8 @@ export default function BillingPage() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const token = localStorage.getItem("auth_token");
       const res = await fetch("/api/billing/status", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {},
       });
       const json = await res.json();
       if (json.success) setStatus(json.data);
@@ -120,14 +119,12 @@ export default function BillingPage() {
   const handleUpgrade = async (planKey: string) => {
     setLoadingPlan(planKey);
     try {
-      const token = localStorage.getItem("auth_token");
 
       // Step 1: Create order on server
       const orderRes = await fetch("/api/billing/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ plan: planKey }),
       });
@@ -158,7 +155,6 @@ export default function BillingPage() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
               razorpay_payment_id: response.razorpay_payment_id,

@@ -39,9 +39,14 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
 }
 
 export function getClientIp(req: Request): string {
+  // Prefer the platform-set address (NextRequest.ip on Vercel, which clients
+  // can't spoof); fall back to proxy headers elsewhere.
+  const platformIp = (req as Request & { ip?: string }).ip;
   return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    platformIp ??
+    req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "unknown"
   );
 }

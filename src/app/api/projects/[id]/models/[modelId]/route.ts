@@ -1,12 +1,14 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, serverError } from "@/lib/api-response";
+import { findProjectInOrg } from "@/lib/tenant";
+import { ok, serverError, notFound } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
-export const DELETE = withAuth(async (_req: NextRequest, { params }) => {
+export const DELETE = withAuth(async (_req: NextRequest, { params, organizationId }) => {
   try {
+    if (!(await findProjectInOrg(params!.id, organizationId))) return notFound("Project");
     await prisma.projectAIModel.delete({
       where: { projectId_modelId: { projectId: params!.id, modelId: params!.modelId } },
     });
@@ -14,4 +16,4 @@ export const DELETE = withAuth(async (_req: NextRequest, { params }) => {
   } catch (err) {
     return serverError(err);
   }
-});
+}, "RISK_OFFICER");

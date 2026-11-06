@@ -224,12 +224,12 @@ export async function generateAssessmentPDF(data: AssessmentReportData) {
   }
 
   function scoreBar(dimensionLabel: string, score: number, x: number, y: number, barW = 60) {
-    const maxScore = 20; // per dimension (score out of 20)
+    const maxScore = 5; // each dimension is scored 1–5 by the assessment prompt
     const pct = Math.min(score / maxScore, 1);
     const barColor: RGB =
-      score >= 16 ? C.green :
-      score >= 12 ? C.blue  :
-      score >= 8  ? C.amber : C.red;
+      score >= 4 ? C.green :
+      score >= 3 ? C.blue  :
+      score >= 2 ? C.amber : C.red;
 
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
@@ -245,7 +245,7 @@ export async function generateAssessmentPDF(data: AssessmentReportData) {
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...barColor);
-    doc.text(`${score}/20`, x + 50 + barW + 2, y);
+    doc.text(`${score}/5`, x + 50 + barW + 2, y);
   }
 
   function divider(y: number, color: RGB = C.border): number {
@@ -693,12 +693,12 @@ export async function generateAssessmentPDF(data: AssessmentReportData) {
   // Monetization score context
   if (data.useCase.score_breakdown) {
     const mScore = data.useCase.score_breakdown.monetization;
-    const mPct = Math.round((mScore / 20) * 100);
+    const mPct = Math.round((mScore / 5) * 100);
     y += 2;
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...C.body);
-    doc.text(`Monetization Potential Score: ${mScore}/20 (${mPct}th percentile) — included in the ${score}/100 priority score.`, ML, y);
+    doc.text(`Monetization Potential Score: ${mScore}/5 (${mPct}% of maximum) — included in the ${score}/100 priority score.`, ML, y);
     y += 6;
   }
 

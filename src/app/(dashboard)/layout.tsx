@@ -14,33 +14,54 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { sidebarCollapsed } = useUIStore();
-  const { setAuth } = useAuthStore();
+  const { setAuth, clearAuth } = useAuthStore();
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    // The session lives in an HttpOnly cookie the page can't read, so ask the
+    // server who is signed in. Cached display data lets the page render at once
+    // while the check runs.
+    let cancelled = false;
+    let hadCache = false;
     try {
-      // Directly read from localStorage — bypasses Zustand async hydration
-      const stored = localStorage.getItem("ai-governance-auth");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const token = parsed?.state?.token;
-        const user = parsed?.state?.user;
-        if (token && user) {
-          // Re-sync Zustand store from localStorage
-          setAuth(token, user);
+      const cached = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}")?.state?.user;
+      if (cached) {
+        hadCache = true;
+        setAuthenticated(true);
+        setReady(true);
+      }
+    } catch {}
+
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then(async (res) => {
+        if (cancelled) return;
+        const json = res.ok ? await res.json() : null;
+        if (json?.success && json.data) {
+          const me = json.data;
+          setAuth({ ...me, orgRole: me.role, plan: me.organization?.plan });
           setAuthenticated(true);
           setReady(true);
           return;
         }
-      }
-    } catch {}
-
-    // No valid token found — redirect to login
-    setReady(true);
-    setAuthenticated(false);
-    window.location.href = "/login";
-  }, []);
+        if (res.status === 401) {
+          clearAuth();
+          window.location.href = "/login";
+          return;
+        }
+        // Server or network trouble: keep cached details if we have them.
+        if (!hadCache) window.location.href = "/login";
+        setReady(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        if (!hadCache) window.location.href = "/login";
+        setReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [setAuth, clearAuth]);
 
   if (!ready) {
     return (

@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, created, badRequest, serverError } from "@/lib/api-response";
+import { findModelInOrg } from "@/lib/tenant";
+import { ok, created, badRequest, notFound, serverError } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +18,12 @@ const PartySchema = z.object({
 });
 
 // GET /api/iso42005/parties?modelId=<id>
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const modelId = searchParams.get("modelId");
     if (!modelId) return badRequest("modelId required");
+    if (!(await findModelInOrg(modelId, organizationId))) return notFound("Model");
 
     try {
       const parties = await prisma.interestedParty.findMany({
@@ -39,11 +41,12 @@ export const GET = withAuth(async (req: NextRequest) => {
 });
 
 // POST /api/iso42005/parties
-export const POST = withAuth(async (req: NextRequest) => {
+export const POST = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const body = await req.json();
     const parsed = PartySchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
+    if (!(await findModelInOrg(parsed.data.modelId, organizationId))) return notFound("Model");
 
     const party = await prisma.interestedParty.create({
       data: {
@@ -59,13 +62,14 @@ export const POST = withAuth(async (req: NextRequest) => {
 }, "RISK_OFFICER");
 
 // DELETE /api/iso42005/parties?id=<id>
-export const DELETE = withAuth(async (req: NextRequest) => {
+export const DELETE = withAuth(async (req: NextRequest, { organizationId }) => {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return badRequest("id required");
 
-    await prisma.interestedParty.delete({ where: { id } });
+    const res = await prisma.interestedParty.deleteMany({ where: { id, model: { organizationId } } });
+    if (res.count === 0) return notFound("Interested party");
     return ok({ deleted: true });
   } catch (err) {
     return serverError(err);

@@ -112,4 +112,4 @@ export const POST = withAuth(async (_req: NextRequest, { organizationId }) => {
     }
     return serverError(err);
   }
-}, "RISK_OFFICER");
+}, "ADMIN"); // seeds documents in APPROVED/PUBLISHED states, which is an admin decision
