@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { del } from "@vercel/blob";
+import { deleteStoredFile, withoutStorageUrl } from "@/lib/file-storage";
 import { ArtifactCategory } from "@prisma/client";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
@@ -52,12 +52,16 @@ export const PATCH = withAuth(async (req: NextRequest, { user, params, organizat
         action: "UPDATE",
         resource: "ProjectArtifact",
         resourceId: params!.aid,
-        before: existing,
+        // The storage URL stays out of the audit log (it's returned to readers of /api/audit).
+        before: { ...existing, url: undefined, size: Number(existing.size) },
         after: parsed.data,
         ipAddress: getClientIp(req),
       });
 
-      return ok({ ...updated, size: Number(updated.size) });
+      return ok({
+        ...withoutStorageUrl(updated, `/api/projects/${params!.id}/artifacts/${updated.id}/download`),
+        size: Number(updated.size),
+      });
     } catch (err) {
       return serverError(err);
     }
@@ -78,7 +82,7 @@ export const DELETE = withAuth(async (req: NextRequest, { user, params, organiza
 
       // Best-effort blob deletion — don't fail the request if blob removal fails
       try {
-        await del(existing.url);
+        await deleteStoredFile(existing.url);
       } catch (blobErr) {
         console.warn("[Artifacts] Blob deletion failed (continuing):", blobErr);
       }
@@ -93,7 +97,8 @@ export const DELETE = withAuth(async (req: NextRequest, { user, params, organiza
         action: "DELETE",
         resource: "ProjectArtifact",
         resourceId: params!.aid,
-        before: existing,
+        // The storage URL stays out of the audit log (it's returned to readers of /api/audit).
+        before: { ...existing, url: undefined, size: Number(existing.size) },
         ipAddress: getClientIp(req),
       });
 

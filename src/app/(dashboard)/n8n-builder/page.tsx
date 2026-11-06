@@ -204,10 +204,9 @@ export default function N8nBuilderPage() {
     setLoading(true);
     setResult(null);
     try {
-      const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
       const res = await fetch("/api/n8n-workflow", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description, triggerType, complexity, integrations }),
       });
       const json = await res.json();

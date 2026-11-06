@@ -229,8 +229,7 @@ export default function ProjectOverviewPage() {
   }>({ hasRiskAssessment: false, hasImpactAssessment: false, hasApprovalWorkflow: false, approvalStatus: null, misuseCount: 0, hasPiiModel: false });
 
   useEffect(() => {
-    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
-    const h = { Authorization: `Bearer ${token}` };
+    const h = {};
     Promise.all([
       fetch(`/api/projects/${params.id}`, { headers: h }),
       fetch(`/api/projects/${params.id}/tasks`, { headers: h }),

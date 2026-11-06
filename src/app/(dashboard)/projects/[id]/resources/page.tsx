@@ -32,7 +32,6 @@ export default function ResourcesPage() {
   const [error, setError] = useState("");
 
   const getH = () => ({
-    Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}`,
   });
 
   useEffect(() => {

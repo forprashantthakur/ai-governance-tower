@@ -47,7 +47,8 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  token: string | null;
+  /** True when the server set the session cookie (the token itself is never returned). */
+  authenticated: boolean;
   user: Pick<AuthUser, "id" | "email" | "name">;
   requiresOrgPicker?: boolean;
   requiresOrgSetup?: boolean;
@@ -473,7 +474,8 @@ export interface ProjectArtifact {
   id: string;
   projectId: string;
   name: string;
-  url: string;
+  /** Checked download route (the storage URL is never sent to the browser). */
+  downloadUrl: string;
   size: number;
   mimeType: string;
   category: ArtifactCategory;

@@ -1,5 +1,10 @@
-import { NextRequest } from "next/server";
-import { put } from "@vercel/blob";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  storePrivateFile,
+  withoutStorageUrl,
+  StorageNotConfiguredError,
+  STORAGE_NOT_CONFIGURED_MESSAGE,
+} from "@/lib/file-storage";
 import { ArtifactCategory } from "@prisma/client";
 import { prisma, withRetry } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
@@ -82,7 +87,7 @@ export const GET = withAuth(async (req: NextRequest, { params, organizationId })
     const uploaderMap = Object.fromEntries(uploaders.map((u) => [u.id, u.name]));
 
     const enriched = artifacts.map((a) => ({
-      ...a,
+      ...withoutStorageUrl(a, `/api/projects/${params!.id}/artifacts/${a.id}/download`),
       size: Number(a.size),
       uploader: { id: a.uploadedBy, name: uploaderMap[a.uploadedBy] ?? "Unknown" },
     }));
@@ -122,11 +127,11 @@ export const POST = withAuth(async (req: NextRequest, { user, params, organizati
       const rawTags = formData.get("tags") as string | null;
       const tags = rawTags ? rawTags.split(",").map((t) => t.trim()).filter(Boolean) : [];
 
-      // Upload to Vercel Blob
-      const blob = await put(
+      // Private storage: readable only through the checked download route.
+      const storedUrl = await storePrivateFile(
         `artifacts/${params!.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._\-]/g, "_")}`,
         file,
-        { access: "public", contentType: file.type, addRandomSuffix: true }
+        file.type
       );
 
       const artifact = await withRetry(() =>
@@ -134,7 +139,7 @@ export const POST = withAuth(async (req: NextRequest, { user, params, organizati
           data: {
             projectId: params!.id,
             name: file.name,
-            url: blob.url,
+            url: storedUrl,
             size: file.size,
             mimeType: file.type,
             category,
@@ -156,8 +161,14 @@ export const POST = withAuth(async (req: NextRequest, { user, params, organizati
         ipAddress: getClientIp(req),
       });
 
-      return created({ ...artifact, size: Number(artifact.size) });
+      return created({
+        ...withoutStorageUrl(artifact, `/api/projects/${params!.id}/artifacts/${artifact.id}/download`),
+        size: Number(artifact.size),
+      });
     } catch (err: unknown) {
+      if (err instanceof StorageNotConfiguredError) {
+        return NextResponse.json({ success: false, error: STORAGE_NOT_CONFIGURED_MESSAGE }, { status: 503 });
+      }
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("BLOB_READ_WRITE_TOKEN") || msg.includes("blob")) {
         return badRequest(

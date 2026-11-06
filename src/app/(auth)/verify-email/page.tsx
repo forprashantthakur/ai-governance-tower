@@ -42,10 +42,9 @@ function VerifyEmailContent() {
 
         setStatus("success");
 
-        // Auto-login if token returned
-        if (json.data?.token && json.data?.user) {
-          setAuth(json.data.token, json.data.user);
-          document.cookie = `auth_token=${json.data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+        // Signed in automatically (the server set the HttpOnly session cookie)
+        if (json.data?.authenticated && json.data?.user) {
+          setAuth(json.data.user);
           setTimeout(() => {
             window.location.href = "/models";
           }, 2000);

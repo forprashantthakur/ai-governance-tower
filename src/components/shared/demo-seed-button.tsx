@@ -18,7 +18,7 @@ interface DemoStatusResponse {
 }
 
 interface DemoSeedResponse {
-  token: string;
+  authenticated: boolean;
   user: AuthUser;
   organizationId: string;
   organizationName: string;
@@ -61,10 +61,8 @@ export function DemoSeedButton() {
     setEntering(true);
     try {
       const res = await post<DemoSeedResponse>("/demo/seed", {});
-      setAuth(res.token, res.user);
-      if (typeof document !== "undefined") {
-        document.cookie = `auth_token=${res.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-      }
+      // The server switched the HttpOnly session cookie to the demo organization.
+      setAuth(res.user);
       addNotification({
         type: "success",
         title: "Demo workspace ready",

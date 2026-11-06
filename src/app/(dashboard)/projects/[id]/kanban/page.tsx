@@ -120,8 +120,7 @@ export default function KanbanPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
-    fetch(`/api/projects/${params.id}/tasks`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/projects/${params.id}/tasks`, { headers: {} })
       .then((r) => r.json())
       .then((d) => { setKanbanTasks(d.data ?? []); setLoading(false); });
   }, [params.id]);
@@ -143,7 +142,7 @@ export default function KanbanPage() {
     const revert = () => { if (prev) updateTaskStatus(taskId, prev); };
     fetch(`/api/projects/${params.id}/tasks/${taskId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     }).then((r) => { if (!r.ok) revert(); }).catch(revert);
   }
@@ -152,10 +151,9 @@ export default function KanbanPage() {
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      const token = JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
       const res = await fetch(`/api/projects/${params.id}/tasks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: form.title.trim(),
           description: form.description || undefined,

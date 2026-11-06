@@ -12,6 +12,7 @@ jest.mock("@/lib/prisma", () => ({
 import { NextRequest } from "next/server";
 import { withAuth } from "@/lib/with-auth";
 import { signJwt } from "@/lib/auth/jwt";
+import { sessionFingerprint } from "@/lib/auth/fingerprint";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function makeRequest(authHeader?: string): NextRequest {
@@ -28,10 +29,15 @@ async function makeToken(overrides: Partial<Parameters<typeof signJwt>[0]> = {})
     organizationId: "org-abc",
     orgRole: "RISK_OFFICER" as const,
     plan: "PROFESSIONAL" as const,
+    sv: sessionFingerprint("hash-1"),
     ...overrides,
   };
   // By default the database agrees with the token.
-  mockFindMembership.mockResolvedValue({ role: claims.orgRole, organization: { plan: claims.plan } });
+  mockFindMembership.mockResolvedValue({
+    role: claims.orgRole,
+    organization: { plan: claims.plan },
+    user: { passwordHash: "hash-1" },
+  });
   return signJwt(claims);
 }
 
@@ -73,7 +79,7 @@ describe("withAuth() — invalid token", () => {
     const res = await route(makeRequest("Bearer not.a.valid.jwt"), { params: {} });
     expect(res.status).toBe(401);
     const json = await res.json();
-    expect(json.error).toMatch(/invalid|expired/i);
+    expect(json.error).toMatch(/no token|invalid|expired/i);
   });
 
   it("returns 401 for a tampered JWT", async () => {
@@ -232,7 +238,7 @@ describe("withAuth() — live membership check", () => {
 
   it("uses the current role from the database, not the token's", async () => {
     const token = await makeToken({ orgRole: "ADMIN" });
-    mockFindMembership.mockResolvedValue({ role: "VIEWER", organization: { plan: "PROFESSIONAL" } });
+    mockFindMembership.mockResolvedValue({ role: "VIEWER", organization: { plan: "PROFESSIONAL" }, user: { passwordHash: "hash-1" } });
     const route = withAuth(okHandler, "ADMIN");
     const res = await route(makeRequest(`Bearer ${token}`), { params: {} });
     expect(res.status).toBe(403);
@@ -247,5 +253,102 @@ describe("withAuth() — live membership check", () => {
         where: expect.objectContaining({ userId: "user-1", organizationId: "org-abc", isActive: true }),
       })
     );
+  });
+});
+
+describe("withAuth() — signature check", () => {
+  it("rejects a well-formed token signed with another key", async () => {
+    const { SignJWT } = await import("jose");
+    const forged = await new SignJWT({ userId: "user-1", organizationId: "org-abc", orgRole: "OWNER", plan: "ENTERPRISE", sv: "x" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .setIssuer("ai-governance-tower")
+      .setAudience("ai-governance-tower-client")
+      .sign(new TextEncoder().encode("some-other-secret-that-is-at-least-32-chars"));
+    const res = await withAuth(okHandler)(makeRequest(`Bearer ${forged}`), { params: {} });
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toMatch(/invalid|expired/i);
+    expect(okHandler).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Cookie sessions, CSRF and revocation ──────────────────────────────────
+function cookieRequest(token: string, init: { method?: string; headers?: Record<string, string> } = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("cookie", `auth_token=${token}`);
+  return new NextRequest("http://app.example/api/test", { method: init.method ?? "GET", headers });
+}
+
+describe("withAuth() — HttpOnly cookie sessions", () => {
+  it("accepts the session cookie when no Authorization header is sent", async () => {
+    const token = await makeToken();
+    const res = await withAuth(okHandler)(cookieRequest(token), { params: {} });
+    expect(res.status).toBe(200);
+  });
+
+  it("refuses a cookie-authenticated POST from another site", async () => {
+    const token = await makeToken();
+    const res = await withAuth(okHandler)(
+      cookieRequest(token, { method: "POST", headers: { "sec-fetch-site": "cross-site", origin: "https://evil.example" } }),
+      { params: {} }
+    );
+    expect(res.status).toBe(403);
+    expect(okHandler).not.toHaveBeenCalled();
+  });
+
+  it("refuses a cookie-authenticated DELETE whose Origin is another host", async () => {
+    const token = await makeToken();
+    const res = await withAuth(okHandler)(
+      cookieRequest(token, { method: "DELETE", headers: { origin: "https://evil.example", host: "app.example" } }),
+      { params: {} }
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("allows a cookie-authenticated POST from our own pages", async () => {
+    const token = await makeToken();
+    const res = await withAuth(okHandler)(
+      cookieRequest(token, { method: "POST", headers: { "sec-fetch-site": "same-origin", origin: "http://app.example" } }),
+      { params: {} }
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("does not apply the cross-site check to Bearer-header clients", async () => {
+    const token = await makeToken();
+    const req = new NextRequest("http://app.example/api/test", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "sec-fetch-site": "cross-site" },
+    });
+    const res = await withAuth(okHandler)(req, { params: {} });
+    expect(res.status).toBe(200);
+  });
+});
+
+describe("withAuth() — revocation", () => {
+  it("rejects every existing session after the password changes", async () => {
+    const token = await makeToken();
+    mockFindMembership.mockResolvedValue({
+      role: "RISK_OFFICER",
+      organization: { plan: "PROFESSIONAL" },
+      user: { passwordHash: "hash-2" },
+    });
+    const res = await withAuth(okHandler)(makeRequest(`Bearer ${token}`), { params: {} });
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toMatch(/password was changed/i);
+  });
+
+  it("rejects tokens issued before session fingerprints existed", async () => {
+    const token = await makeToken({ sv: undefined as unknown as string });
+    const res = await withAuth(okHandler)(makeRequest(`Bearer ${token}`), { params: {} });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects the session once the member is removed or deactivated", async () => {
+    const token = await makeToken();
+    mockFindMembership.mockResolvedValue(null);
+    const res = await withAuth(okHandler)(makeRequest(`Bearer ${token}`), { params: {} });
+    expect(res.status).toBe(401);
   });
 });

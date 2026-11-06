@@ -70,3 +70,15 @@ export function approvalWorkflowsInOrg(organizationId: string) {
     ],
   };
 }
+
+/** Evidence has no organizationId column; it belongs to the org of whatever it is attached to. */
+export function evidenceInOrg(organizationId: string) {
+  return {
+    OR: [
+      { model: { organizationId } },
+      { dataAsset: { organizationId } },
+      { control: { model: { organizationId } } },
+      { risk: { model: { organizationId } } },
+    ],
+  };
+}

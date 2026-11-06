@@ -23,8 +23,9 @@ import type {
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
-import { ok, forbidden, serverError } from "@/lib/api-response";
-import { signJwt } from "@/lib/auth/jwt";
+import { ok, forbidden, serverError, unauthorized } from "@/lib/api-response";
+import { signSessionToken } from "@/lib/auth/issue-session";
+import { setSessionCookie } from "@/lib/auth/session";
 import { DEMO_ORG_NAME, demoOrgSlugFor } from "@/lib/demo";
 import { POLICY_CATALOG, RACI_CATALOG } from "@/lib/frameworks/policy-catalog";
 import { AIMS_CLAUSES, ANNEX_A_CONTROLS } from "@/lib/frameworks/iso42001";
@@ -2194,17 +2195,21 @@ export const POST = withAuth(async (_req: NextRequest, { user }) => {
     const remediation = await seedRemediation(orgId);
     const training = await seedTraining(orgId);
 
-    const token = await signJwt({
-      userId: user.userId,
-      email: user.email,
-      name: user.name,
+    const account = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { id: true, email: true, name: true, passwordHash: true },
+    });
+    if (!account) return unauthorized("User not found");
+    const token = await signSessionToken({
+      user: account,
       organizationId: orgId,
       orgRole: membership.role,
       plan: demoOrg.plan,
     });
 
-    return ok({
-      token,
+    // Switch the browser's session to the demo organization (HttpOnly cookie).
+    const res = ok({
+      authenticated: true,
       user: {
         id: user.userId,
         email: user.email,
@@ -2231,6 +2236,7 @@ export const POST = withAuth(async (_req: NextRequest, { user }) => {
         training,
       },
     });
+    return setSessionCookie(res, token);
   } catch (err) {
     return serverError(err);
   }

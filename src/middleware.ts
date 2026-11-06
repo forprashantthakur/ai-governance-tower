@@ -52,8 +52,9 @@ function checkRateLimit(ip: string): boolean {
 export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
 
-  // Rate limiting for API routes
-  if (pathname.startsWith("/api/")) {
+  // Rate limiting for API routes (sign-out is never rate-limited, so a busy
+  // shared address can't leave a session cookie behind).
+  if (pathname.startsWith("/api/") && pathname !== "/api/auth/logout") {
     // On Vercel, req.ip is set by the platform and can't be spoofed by the
     // client; X-Forwarded-For is only a fallback for other hosts.
     const ip =

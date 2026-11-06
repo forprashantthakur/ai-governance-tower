@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
-import { signJwt } from "@/lib/auth/jwt";
+import { signSessionToken } from "@/lib/auth/issue-session";
+import { rejectCrossSiteAuthRequest, setSessionCookie } from "@/lib/auth/session";
+import { beginPasswordAttempt } from "@/lib/rate-limit";
 import { ok, badRequest, unauthorized, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 
@@ -17,11 +19,19 @@ const LoginSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Another site must not be able to sign a visitor into some account (login CSRF).
+    const refused = rejectCrossSiteAuthRequest(req, { requireJson: true });
+    if (refused) return refused;
+
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
 
     const { email, password, organizationId: preferredOrgId } = parsed.data;
+
+    // Password-guessing protection (see beginPasswordAttempt for the limits).
+    const attempt = await beginPasswordAttempt(req, email);
+    if (attempt.blocked) return attempt.blocked;
 
     const user = await withRetry(() =>
       prisma.user.findUnique({
@@ -47,10 +57,17 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    if (!user || !user.isActive) return unauthorized("Invalid credentials");
+    if (!user || !user.isActive) {
+      await attempt.failed();
+      return unauthorized("Invalid credentials");
+    }
 
     const valid = await verifyPassword(password, user.passwordHash);
-    if (!valid) return unauthorized("Invalid credentials");
+    if (!valid) {
+      await attempt.failed();
+      return unauthorized("Invalid credentials");
+    }
+    await attempt.succeeded();
 
     // Block login only for NEW unverified users (those with a pending verificationToken).
     // Legacy users (created before email verification was added) have verificationToken = null
@@ -74,7 +91,7 @@ export async function POST(req: NextRequest) {
       // Edge case: user exists but has no active org (legacy user pre-migration)
       // Return a list-orgs:[] signal so the client can prompt org creation
       return ok({
-        token: null,
+        authenticated: false,
         user: { id: user.id, email: user.email, name: user.name },
         requiresOrgSetup: true,
         organizations: [],
@@ -91,7 +108,7 @@ export async function POST(req: NextRequest) {
     // If user is in multiple orgs and no preference given, ask client to pick
     if (activeMemberships.length > 1 && !preferredOrgId) {
       return ok({
-        token: null,
+        authenticated: false,
         requiresOrgPicker: true,
         user: { id: user.id, email: user.email, name: user.name },
         organizations: activeMemberships.map((m) => ({
@@ -105,10 +122,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Sign JWT first — don't block the response on non-critical writes
-    const token = await signJwt({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
+    const token = await signSessionToken({
+      user,
       organizationId: membership.organizationId,
       orgRole: membership.role,
       plan: membership.organization.plan,
@@ -126,8 +141,9 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get("user-agent") ?? undefined,
     });
 
-    return ok({
-      token,
+    // The token goes only into an HttpOnly cookie; page scripts never see it.
+    const res = ok({
+      authenticated: true,
       user: {
         id: user.id,
         email: user.email,
@@ -142,6 +158,7 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+    return setSessionCookie(res, token);
   } catch (err) {
     return serverError(err);
   }
