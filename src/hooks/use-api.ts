@@ -1,20 +1,17 @@
 import { useCallback, useMemo } from "react";
 
-import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 
 type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
 
 /**
- * Returns a stable API client. The identity only changes when the auth token
- * changes, so callers can safely list `get`/`post`/etc. in a hook dependency
- * array. Before this was memoised a fresh object was built every render, and
+ * Returns a stable API client. Its identity never changes, so callers can
+ * safely list `get`/`post`/etc. in a hook dependency array. Before this was memoised a fresh object was built every render, and
  * any component that depended on one of these functions re-created its
  * callback each render, re-fired its effect, and looped requests until the
  * rate limiter rejected them.
  */
 export function useApi() {
-  const token = useAuthStore((s) => s.token);
   const addNotification = useUIStore((s) => s.addNotification);
 
   const request = useCallback(async function request<T>(
@@ -24,10 +21,8 @@ export function useApi() {
   ): Promise<T> {
     const res = await fetch(`/api${path}`, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      // The HttpOnly session cookie is sent automatically (same origin).
+      headers: { "Content-Type": "application/json" },
       ...(body !== undefined && { body: JSON.stringify(body) }),
     });
 
@@ -54,7 +49,7 @@ export function useApi() {
     }
 
     return json.data as T;
-  }, [token, addNotification]);
+  }, [addNotification]);
 
   return useMemo(
     () => ({

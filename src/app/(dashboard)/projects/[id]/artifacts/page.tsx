@@ -78,14 +78,6 @@ function FileIcon({ mimeType }: { mimeType: string }) {
   return <File className={`${cls} text-slate-400`} />;
 }
 
-function getToken(): string {
-  try {
-    return JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
-  } catch {
-    return "";
-  }
-}
-
 // ─── Upload Modal ─────────────────────────────────────────────────────────────
 
 interface UploadModalProps {
@@ -131,7 +123,7 @@ function UploadModal({ projectId, onClose, onUploaded }: UploadModalProps) {
 
       const res = await fetch(`/api/projects/${projectId}/artifacts`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: {},
         body: fd,
       });
       const data = await res.json();
@@ -313,7 +305,6 @@ function EditModal({ artifact, projectId, onClose, onUpdated }: EditModalProps) 
       const res = await fetch(`/api/projects/${projectId}/artifacts/${artifact.id}`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${getToken()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -447,7 +438,7 @@ function DeleteConfirm({ artifact, projectId, onClose, onDeleted }: DeleteConfir
     try {
       await fetch(`/api/projects/${projectId}/artifacts/${artifact.id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: {},
       });
       onDeleted(artifact.id);
       onClose();
@@ -505,7 +496,7 @@ export default function ArtifactsPage() {
     if (activeCategory !== "ALL") qs.set("category", activeCategory);
     if (search) qs.set("q", search);
     fetch(`/api/projects/${params.id}/artifacts?${qs.toString()}`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
+      headers: {},
     })
       .then((r) => r.json())
       .then((d) => {
@@ -525,7 +516,7 @@ export default function ArtifactsPage() {
   const [allArtifacts, setAllArtifacts] = useState<ProjectArtifact[]>([]);
   useEffect(() => {
     fetch(`/api/projects/${params.id}/artifacts`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
+      headers: {},
     })
       .then((r) => r.json())
       .then((d) => setAllArtifacts(d.data?.artifacts ?? []));
@@ -690,7 +681,7 @@ export default function ArtifactsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <a
-                        href={artifact.url}
+                        href={artifact.downloadUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Download"

@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { signJwt } from "@/lib/auth/jwt";
+import { signSessionToken } from "@/lib/auth/issue-session";
+import { setSessionCookie } from "@/lib/auth/session";
+import { limitByIp } from "@/lib/rate-limit";
 import { ok, badRequest } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/auth/verify-email?token=xxx
 export async function GET(req: NextRequest) {
+  const limited = await limitByIp(req, "verify-email", 30, 60 * 60);
+  if (limited) return limited;
+
   const token = req.nextUrl.searchParams.get("token");
   if (!token) return badRequest("Missing verification token");
 
@@ -59,18 +64,16 @@ export async function GET(req: NextRequest) {
     return ok({ verified: true, message: "Email verified. Please sign in." });
   }
 
-  const jwt = await signJwt({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
+  const jwt = await signSessionToken({
+    user,
     organizationId: membership.organizationId,
     orgRole: membership.role,
     plan: membership.organization.plan,
   });
 
-  return ok({
+  const res = ok({
     verified: true,
-    token: jwt,
+    authenticated: true,
     user: {
       id: user.id,
       email: user.email,
@@ -85,4 +88,5 @@ export async function GET(req: NextRequest) {
       },
     },
   });
+  return setSessionCookie(res, jwt);
 }

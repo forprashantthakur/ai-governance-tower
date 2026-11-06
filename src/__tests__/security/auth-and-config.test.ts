@@ -27,11 +27,13 @@ jest.mock("@/lib/email", () => ({ sendVerificationEmail: jest.fn(), sendPassword
 
 import { NextRequest } from "next/server";
 import { signJwt } from "@/lib/auth/jwt";
+import { sessionFingerprint } from "@/lib/auth/fingerprint";
 import { parseOutboundUrl, isBlockedAddress } from "@/lib/outbound-http";
 import { isHttpUrl, escapeHtml } from "@/lib/safe-url";
 
 async function headersFor(userId: string, organizationId: string, orgRole: string) {
-  const token = await signJwt({ userId, email: `${userId}@test`, name: userId, organizationId, orgRole: orgRole as any, plan: "STARTER" });
+  const passwordHash = fake.tables.user.find((u) => u.id === userId)?.passwordHash ?? "";
+  const token = await signJwt({ userId, email: `${userId}@test`, name: userId, organizationId, orgRole: orgRole as any, plan: "STARTER", sv: sessionFingerprint(passwordHash) });
   return { authorization: `Bearer ${token}`, "content-type": "application/json" };
 }
 
@@ -92,7 +94,10 @@ describe("invites", () => {
 
     const right = await accept("Correct-Horse1!");
     expect(right.status).toBe(201);
-    expect((await right.json()).data.user.id).toBe("u-owner-b");
+    expect(right.headers.get("set-cookie")).toMatch(/^auth_token=.*HttpOnly/i);
+    const body = await right.json();
+    expect(body.data.user.id).toBe("u-owner-b");
+    expect(body.data).not.toHaveProperty("token");
   });
 });
 

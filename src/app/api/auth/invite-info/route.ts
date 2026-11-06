@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, badRequest, notFound, serverError } from "@/lib/api-response";
+import { limitByIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,8 @@ export const dynamic = "force-dynamic";
 // Public endpoint — returns invite metadata for the accept-invite page
 export async function GET(req: NextRequest) {
   try {
+    const limited = await limitByIp(req, "invite-info", 30, 15 * 60);
+    if (limited) return limited;
     const token = req.nextUrl.searchParams.get("token");
     if (!token) return badRequest("token is required");
 

@@ -4,7 +4,9 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { isReservedSlug } from "@/lib/demo";
-import { signJwt } from "@/lib/auth/jwt";
+import { signSessionToken } from "@/lib/auth/issue-session";
+import { setSessionCookie } from "@/lib/auth/session";
+import { consume, isOverLimit, limitByIp, resetLimit, tooManyRequests } from "@/lib/rate-limit";
 import { created, badRequest, conflict, notFound, unauthorized, serverError } from "@/lib/api-response";
 import { logAudit, getClientIp } from "@/lib/audit-logger";
 import { sendVerificationEmail } from "@/lib/email";
@@ -68,6 +70,9 @@ const NewAccountFields = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = await limitByIp(req, "register", 20, 60 * 60);
+    if (limited) return limited;
+
     const body = await req.json();
 
     // ── Invite-based registration ──────────────────────────────────────────────
@@ -96,9 +101,15 @@ export async function POST(req: NextRequest) {
       if (user) {
         // Existing account: only its owner may accept, proven by its current password.
         // Otherwise whoever holds the invite link could get a session as this user.
+        // Failed attempts count against the same lockout as sign-in.
+        const failKey = `login-fail:${user.email.toLowerCase()}`;
+        const failures = await isOverLimit(failKey, 10, 15 * 60);
+        if (!failures.allowed) return tooManyRequests(failures.retryAfterSec);
         if (!user.isActive || !(await verifyPassword(password, user.passwordHash))) {
+          await consume(failKey, 10, 15 * 60);
           return unauthorized("This email already has an account. Enter that account's current password to accept the invite.");
         }
+        await resetLimit(failKey);
       } else {
         // New user — create account
         const fields = NewAccountFields.safeParse({ name, password });
@@ -131,10 +142,8 @@ export async function POST(req: NextRequest) {
         }),
       ]);
 
-      const token = await signJwt({
-        userId: user.id,
-        email: user.email,
-        name: user.name,
+      const token = await signSessionToken({
+        user,
         organizationId: membership.organizationId,
         orgRole: membership.role,
         plan: invite.organization.plan,
@@ -149,8 +158,8 @@ export async function POST(req: NextRequest) {
         ipAddress: getClientIp(req),
       });
 
-      return created({
-        token,
+      const res = created({
+        authenticated: true,
         user: {
           id: user.id,
           email: user.email,
@@ -165,6 +174,7 @@ export async function POST(req: NextRequest) {
           },
         },
       });
+      return setSessionCookie(res, token);
     }
 
     // ── New org self-registration ─────────────────────────────────────────────

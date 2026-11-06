@@ -71,10 +71,9 @@ export default function AcceptInvitePage() {
         return;
       }
 
-      const { token: authToken, user } = json.data as AuthResponse;
-      if (authToken && user) {
-        setAuth(authToken, user as never);
-        document.cookie = `auth_token=${authToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      const { authenticated, user } = json.data as AuthResponse;
+      if (authenticated && user) {
+        setAuth(user as never);
         addNotification({
           type: "success",
           title: "Welcome!",

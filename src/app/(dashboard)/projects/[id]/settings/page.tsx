@@ -47,7 +47,7 @@ export default function ProjectSettingsPage() {
     name: "", webhookUrl: "", triggerEvent: "PHASE_COMPLETE" as N8nTriggerEvent,
   });
   const [saving, setSaving] = useState(false);
-  const getH = () => ({ Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` });
+  const getH = (): Record<string, string> => ({});
 
   useEffect(() => {
     const loadAll = async () => {

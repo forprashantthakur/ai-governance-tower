@@ -8,6 +8,8 @@ export interface JwtUserPayload extends JWTPayload {
   organizationId: string;
   orgRole: OrgMemberRole;
   plan: PlanTier;
+  /** Fingerprint of the password hash at sign-in; see lib/auth/fingerprint.ts. */
+  sv: string;
 }
 
 // Only ever used outside production (local dev and tests). Any deployed
@@ -33,6 +35,15 @@ function getSigningKey(): Uint8Array {
   }
   cachedKey = new TextEncoder().encode(configured || DEV_ONLY_SECRET);
   return cachedKey;
+}
+
+/**
+ * Throws when a deployed build has no usable JWT_SECRET. Called at server
+ * start (src/instrumentation.ts) so a misconfigured deployment refuses to run
+ * instead of failing request by request.
+ */
+export function assertJwtSecretConfigured(): void {
+  getSigningKey();
 }
 
 const ALGORITHM = "HS256";

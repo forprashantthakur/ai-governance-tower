@@ -112,10 +112,9 @@ export default function RegisterPage() {
       }
 
       // Fallback: legacy direct login (invite path)
-      const { token, user } = json.data as AuthResponse;
-      if (token && user) {
-        setAuth(token, user as never);
-        document.cookie = `auth_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      const { authenticated, user } = json.data as AuthResponse;
+      if (authenticated && user) {
+        setAuth(user as never);
         addNotification({
           type: "success",
           title: "Welcome!",

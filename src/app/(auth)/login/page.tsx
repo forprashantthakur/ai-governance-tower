@@ -60,9 +60,9 @@ export default function LoginPage() {
         return;
       }
 
-      if (data.token && data.user) {
-        setAuth(data.token, data.user as never);
-        document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      // The server has set the HttpOnly session cookie.
+      if (data.authenticated && data.user) {
+        setAuth(data.user as never);
         window.location.href = "/";
       }
     } catch {

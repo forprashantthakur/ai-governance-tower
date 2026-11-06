@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { ok, badRequest, serverError } from "@/lib/api-response";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { limitByIp } from "@/lib/rate-limit";
 import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,8 @@ const Schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = await limitByIp(req, "forgot-password", 10, 60 * 60);
+    if (limited) return limited;
     const body = await req.json();
     const parsed = Schema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());

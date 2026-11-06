@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { del } from "@vercel/blob";
+import { deleteStoredFile, withoutStorageUrl } from "@/lib/file-storage";
 import { ArtifactCategory } from "@prisma/client";
 import { z } from "zod";
 import { prisma, withRetry } from "@/lib/prisma";
@@ -57,7 +57,10 @@ export const PATCH = withAuth(async (req: NextRequest, { user, params, organizat
         ipAddress: getClientIp(req),
       });
 
-      return ok({ ...updated, size: Number(updated.size) });
+      return ok({
+        ...withoutStorageUrl(updated, `/api/projects/${params!.id}/artifacts/${updated.id}/download`),
+        size: Number(updated.size),
+      });
     } catch (err) {
       return serverError(err);
     }
@@ -78,7 +81,7 @@ export const DELETE = withAuth(async (req: NextRequest, { user, params, organiza
 
       // Best-effort blob deletion — don't fail the request if blob removal fails
       try {
-        await del(existing.url);
+        await deleteStoredFile(existing.url);
       } catch (blobErr) {
         console.warn("[Artifacts] Blob deletion failed (continuing):", blobErr);
       }

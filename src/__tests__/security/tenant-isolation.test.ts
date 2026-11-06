@@ -55,6 +55,7 @@ jest.mock("@vercel/blob", () => ({ put: jest.fn(), del: jest.fn().mockResolvedVa
 
 import { NextRequest } from "next/server";
 import { signJwt } from "@/lib/auth/jwt";
+import { sessionFingerprint } from "@/lib/auth/fingerprint";
 
 const ACME = "org-acme";
 const GLOBEX = "org-globex";
@@ -66,11 +67,11 @@ function seed() {
     { id: GLOBEX, name: "Globex", slug: "globex", plan: "PROFESSIONAL", isActive: true },
   ]);
   fake.seed("user", [
-    { id: "u-acme-owner", email: "owner@acme.test", name: "Acme Owner", isActive: true },
-    { id: "u-acme-ro", email: "ro@acme.test", name: "Acme Risk", isActive: true },
-    { id: "u-acme-ro2", email: "ro2@acme.test", name: "Acme Risk 2", isActive: true },
-    { id: "u-acme-viewer", email: "viewer@acme.test", name: "Acme Viewer", isActive: true },
-    { id: "u-globex-owner", email: "owner@globex.test", name: "Globex Owner", isActive: true },
+    { id: "u-acme-owner", email: "owner@acme.test", name: "Acme Owner", isActive: true, passwordHash: "test-hash" },
+    { id: "u-acme-ro", email: "ro@acme.test", name: "Acme Risk", isActive: true, passwordHash: "test-hash" },
+    { id: "u-acme-ro2", email: "ro2@acme.test", name: "Acme Risk 2", isActive: true, passwordHash: "test-hash" },
+    { id: "u-acme-viewer", email: "viewer@acme.test", name: "Acme Viewer", isActive: true, passwordHash: "test-hash" },
+    { id: "u-globex-owner", email: "owner@globex.test", name: "Globex Owner", isActive: true, passwordHash: "test-hash" },
   ]);
   fake.seed("organizationMember", [
     { id: "m1", organizationId: ACME, userId: "u-acme-owner", role: "OWNER", isActive: true },
@@ -119,7 +120,7 @@ function seed() {
 }
 
 async function as(userId: string, organizationId: string, orgRole: string) {
-  const token = await signJwt({ userId, email: `${userId}@test`, name: userId, organizationId, orgRole: orgRole as any, plan: "PROFESSIONAL" });
+  const token = await signJwt({ userId, email: `${userId}@test`, name: userId, organizationId, orgRole: orgRole as any, plan: "PROFESSIONAL", sv: sessionFingerprint("test-hash") });
   return { authorization: `Bearer ${token}`, "content-type": "application/json" };
 }
 const req = (url: string, init: { method?: string; headers: Record<string, string>; body?: unknown }) =>

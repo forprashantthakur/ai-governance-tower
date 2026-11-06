@@ -33,17 +33,14 @@ export default function NewProjectPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getToken = () =>
-    JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? "";
 
   useEffect(() => {
-    const token = getToken();
-    fetch("/api/projects/templates", { headers: { Authorization: `Bearer ${token}` } })
+    fetch("/api/projects/templates", { headers: {} })
       .then((r) => r.json())
       .then((d) => setTemplates(d.data ?? []));
 
     // Pre-fetch models so the dropdown in Step 2 is ready instantly
-    fetch("/api/models?limit=100", { headers: { Authorization: `Bearer ${token}` } })
+    fetch("/api/models?limit=100", { headers: {} })
       .then((r) => r.json())
       .then((d) => setModels(d.data?.models ?? []));
   }, []);
@@ -52,10 +49,9 @@ export default function NewProjectPage() {
     setSaving(true);
     setError(null);
     try {
-      const token = getToken();
       const res = await fetch("/api/projects", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
           description: form.description,
@@ -78,7 +74,7 @@ export default function NewProjectPage() {
       if (form.linkedModelId && form.linkedModelId !== "OTHER") {
         await fetch(`/api/projects/${projectId}/models`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ modelId: form.linkedModelId, role: "output" }),
         });
       }

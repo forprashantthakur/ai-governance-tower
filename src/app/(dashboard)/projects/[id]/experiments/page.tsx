@@ -24,7 +24,7 @@ export default function ExperimentsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", notes: "" });
   const [saving, setSaving] = useState(false);
-  const getH = () => ({ Authorization: `Bearer ${JSON.parse(localStorage.getItem("ai-governance-auth") ?? "{}").state?.token ?? ""}` });
+  const getH = (): Record<string, string> => ({});
 
   useEffect(() => {
     fetch(`/api/projects/${params.id}/experiments`, { headers: getH() })

@@ -1,20 +1,16 @@
-import { NextRequest } from "next/server";
-import { put, del } from "@vercel/blob";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  storePrivateFile,
+  deleteStoredFile,
+  withoutStorageUrl,
+  StorageNotConfiguredError,
+  STORAGE_NOT_CONFIGURED_MESSAGE,
+} from "@/lib/file-storage";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/with-auth";
+import { evidenceInOrg } from "@/lib/tenant";
 import { ok, badRequest, notFound, serverError } from "@/lib/api-response";
 
-/** Evidence has no organizationId column; it belongs to the org of whatever it is attached to. */
-function evidenceInOrg(organizationId: string) {
-  return {
-    OR: [
-      { model: { organizationId } },
-      { dataAsset: { organizationId } },
-      { control: { model: { organizationId } } },
-      { risk: { model: { organizationId } } },
-    ],
-  };
-}
 
 /** Every parent id supplied must belong to the caller's organization. */
 async function parentsInOrg(
@@ -74,22 +70,19 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
     if (!(await parentsInOrg({ controlId, riskId, modelId, dataAssetId }, organizationId)))
       return notFound("Parent record");
 
-    // Upload to Vercel Blob (random suffix so URLs can't be guessed)
-    const blob = await put(
+    // Private storage: the file can only be read through GET /api/upload/:id,
+    // which checks the caller's organization first.
+    const storedUrl = await storePrivateFile(
       `evidence/${organizationId}/${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
       file,
-      {
-        access: "public",
-        contentType: file.type,
-        addRandomSuffix: true,
-      }
+      file.type
     );
 
     // Persist metadata to DB
     const evidenceFile = await prisma.evidenceFile.create({
       data: {
         name: file.name,
-        url: blob.url,
+        url: storedUrl,
         size: file.size,
         mimeType: file.type,
         uploadedBy: user.userId,
@@ -102,8 +95,11 @@ export const POST = withAuth(async (req: NextRequest, { user, organizationId }) 
       },
     });
 
-    return ok(evidenceFile);
+    return ok(withoutStorageUrl(evidenceFile, `/api/upload/${evidenceFile.id}`));
   } catch (err: unknown) {
+    if (err instanceof StorageNotConfiguredError) {
+      return NextResponse.json({ success: false, error: STORAGE_NOT_CONFIGURED_MESSAGE }, { status: 503 });
+    }
     const msg = err instanceof Error ? err.message : "";
     // Surface known configuration / table errors clearly regardless of NODE_ENV
     if (msg.includes("BLOB_READ_WRITE_TOKEN")) {
@@ -145,7 +141,10 @@ export const GET = withAuth(async (req: NextRequest, { organizationId }) => {
         take: 500,
         orderBy: { uploadedAt: "desc" },
       });
-      return ok({ files, total: files.length });
+      return ok({
+        files: files.map((f) => withoutStorageUrl(f, `/api/upload/${f.id}`)),
+        total: files.length,
+      });
     } catch {
       // Table doesn't exist yet (pending prisma db push) — return empty list
       return ok({ files: [], total: 0 });
@@ -165,7 +164,7 @@ export const DELETE = withAuth(async (req: NextRequest, { organizationId }) => {
     const file = await prisma.evidenceFile.findFirst({ where: { id, ...evidenceInOrg(organizationId) } });
     if (!file) return notFound("File");
     try {
-      await del(file.url); // remove the stored file, not just the database row
+      await deleteStoredFile(file.url); // remove the stored file, not just the database row
     } catch (blobErr) {
       console.warn("[upload] Blob deletion failed (continuing):", blobErr);
     }

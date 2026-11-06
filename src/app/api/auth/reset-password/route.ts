@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { ok, badRequest, serverError } from "@/lib/api-response";
 import { hashPassword } from "@/lib/auth/password";
+import { limitByIp } from "@/lib/rate-limit";
 import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,10 @@ const Schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // A new password changes the session fingerprint, which signs out every
+    // existing session for the account (see lib/auth/fingerprint.ts).
+    const limited = await limitByIp(req, "reset-password", 20, 60 * 60);
+    if (limited) return limited;
     const body = await req.json();
     const parsed = Schema.safeParse(body);
     if (!parsed.success) return badRequest("Validation failed", parsed.error.flatten());
